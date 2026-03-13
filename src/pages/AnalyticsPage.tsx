@@ -138,7 +138,8 @@ const AnalyticsPage: React.FC = () => {
     let repairRevenue = 0;
     let installRevenue = 0;
     filteredInvoices.forEach(i => {
-        const type = Array.isArray(i.tickets) ? i.tickets[0]?.service_type : i.tickets?.service_type;
+        const ticket = tickets.find(t => t.id === i.ticket_id);
+        const type = ticket?.service_type || 'REPAIR';
         if (type === 'INSTALLATION') installRevenue += i.amount_paid;
         else repairRevenue += i.amount_paid;
     });
@@ -160,7 +161,8 @@ const AnalyticsPage: React.FC = () => {
     filteredInvoices.forEach(inv => {
         const key = new Date(inv.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
         if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
-        const type = Array.isArray(inv.tickets) ? inv.tickets[0]?.service_type : inv.tickets?.service_type;
+        const ticket = tickets.find(t => t.id === inv.ticket_id);
+        const type = ticket?.service_type || 'REPAIR';
         if (type === 'INSTALLATION') {
             monthlyMap[key].installRevenue += inv.amount_paid;
         } else {
@@ -320,55 +322,7 @@ const AnalyticsPage: React.FC = () => {
                         </CardContent>
                     </Card>
                 </Grid>
-                </Grid>
 
-                {/* Payment Method Breakdown */}
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Card sx={{ height: '100%' }}>
-                        <CardContent>
-                            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                                Payment Methods
-                            </Typography>
-                            {paymentData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={paymentData}
-                                            cx="50%"
-                                            cy="45%"
-                                            innerRadius={55}
-                                            outerRadius={85}
-                                            paddingAngle={4}
-                                            dataKey="value"
-                                            nameKey="name"
-                                            label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                                            labelLine={false}
-                                        >
-                                            {paymentData.map((_, idx) => (
-                                                <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Legend
-                                            verticalAlign="bottom"
-                                            iconType="circle"
-                                            formatter={(value) => <span style={{ color: '#94A3B8', fontSize: '12px' }}>{value}</span>}
-                                        />
-                                        <RechartsTooltip
-                                            contentStyle={{
-                                                background: '#1A2332', border: '1px solid rgba(108,99,255,0.2)',
-                                                borderRadius: 8, color: '#F1F5F9',
-                                            }}
-                                            formatter={(value: any) => [formatCurrency(value), 'Amount']}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Typography color="text.secondary">No payment data yet</Typography>
-                                </Box>
-                            )}
-                        </CardContent>
-                    </Card>
                 {/* Revenue by Service Type */}
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Card sx={{ height: '100%' }}>
@@ -419,7 +373,7 @@ const AnalyticsPage: React.FC = () => {
             </Grid>
 
             {/* Charts Row 2 */}
-            <Grid container spacing={2.5}>
+            <Grid container spacing={2.5} sx={{ mb: 3 }}>
                 {/* Profit Trend */}
                 <Grid size={{ xs: 12, md: 7 }}>
                     <Card>
@@ -452,8 +406,60 @@ const AnalyticsPage: React.FC = () => {
                     </Card>
                 </Grid>
 
+                {/* Payment Method Breakdown */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Card sx={{ height: '100%' }}>
+                        <CardContent>
+                            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                                Payment Methods
+                            </Typography>
+                            {paymentData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={260}>
+                                    <PieChart>
+                                        <Pie
+                                            data={paymentData}
+                                            cx="50%"
+                                            cy="45%"
+                                            innerRadius={55}
+                                            outerRadius={85}
+                                            paddingAngle={4}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                                            labelLine={false}
+                                        >
+                                            {paymentData.map((_, idx) => (
+                                                <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Legend
+                                            verticalAlign="bottom"
+                                            iconType="circle"
+                                            formatter={(value) => <span style={{ color: '#94A3B8', fontSize: '12px' }}>{value}</span>}
+                                        />
+                                        <RechartsTooltip
+                                            contentStyle={{
+                                                background: '#1A2332', border: '1px solid rgba(108,99,255,0.2)',
+                                                borderRadius: 8, color: '#F1F5F9',
+                                            }}
+                                            formatter={(value: any) => [formatCurrency(value), 'Amount']}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Typography color="text.secondary">No payment data yet</Typography>
+                                </Box>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+
+            {/* Charts Row 3 */}
+            <Grid container spacing={2.5}>
                 {/* Top TV Brands */}
-                <Grid size={{ xs: 12, md: 5 }}>
+                <Grid size={{ xs: 12 }}>
                     <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
