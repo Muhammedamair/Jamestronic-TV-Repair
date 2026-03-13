@@ -23,6 +23,7 @@ interface InvoiceRow {
     payment_method: string;
     payment_status: string;
     created_at: string;
+    tickets?: { service_type: string } | { service_type: string }[];
 }
 
 interface PartBidRow {
@@ -39,6 +40,7 @@ interface TicketRow {
     status: string;
     estimated_cost: number | null;
     created_at: string;
+    service_type: string;
 }
 
 // ---------- CHART COLORS ----------
@@ -105,9 +107,9 @@ const AnalyticsPage: React.FC = () => {
         const fetchAll = async () => {
             setLoading(true);
             const [invRes, bidRes, tickRes] = await Promise.all([
-                supabase.from('invoices').select('id, ticket_id, amount, amount_paid, payment_method, payment_status, created_at'),
+                supabase.from('invoices').select('id, ticket_id, amount, amount_paid, payment_method, payment_status, created_at, tickets(service_type)'),
                 supabase.from('part_bids').select('id, price, is_accepted, created_at, request_id').eq('is_accepted', true),
-                supabase.from('tickets').select('id, tv_brand, status, estimated_cost, created_at'),
+                supabase.from('tickets').select('id, tv_brand, status, estimated_cost, created_at, service_type'),
             ]);
             if (invRes.data) setInvoices(invRes.data);
             if (bidRes.data) setPartBids(bidRes.data);
@@ -133,22 +135,41 @@ const AnalyticsPage: React.FC = () => {
     const filteredTickets = tickets.filter(t => filterDate(t.created_at));
 
     // ---------- KPI CALCULATIONS ----------
-    const totalRevenue = filteredInvoices.reduce((s, i) => s + i.amount_paid, 0);
+    let repairRevenue = 0;
+    let installRevenue = 0;
+    filteredInvoices.forEach(i => {
+        const type = Array.isArray(i.tickets) ? i.tickets[0]?.service_type : i.tickets?.service_type;
+        if (type === 'INSTALLATION') installRevenue += i.amount_paid;
+        else repairRevenue += i.amount_paid;
+    });
+    const totalRevenue = repairRevenue + installRevenue;
     const totalPartsCost = filteredBids.reduce((s, b) => s + b.price, 0);
     const netProfit = totalRevenue - totalPartsCost;
     const avgTicketValue = filteredInvoices.length > 0 ? totalRevenue / filteredInvoices.length : 0;
+    
+    // Service Type Breakdown Data
+    const serviceTypeData = [
+        { name: 'TV Repair', value: repairRevenue },
+        { name: 'TV Installation', value: installRevenue }
+    ].filter(d => d.value > 0);
+
     const closedTickets = filteredTickets.filter(t => t.status === 'CLOSED' || t.status === 'DELIVERED').length;
 
     // ---------- MONTHLY REVENUE VS COST ----------
-    const monthlyMap: Record<string, { month: string; revenue: number; cost: number }> = {};
+    const monthlyMap: Record<string, { month: string; repairRevenue: number; installRevenue: number; cost: number }> = {};
     filteredInvoices.forEach(inv => {
         const key = new Date(inv.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
-        if (!monthlyMap[key]) monthlyMap[key] = { month: key, revenue: 0, cost: 0 };
-        monthlyMap[key].revenue += inv.amount_paid;
+        if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
+        const type = Array.isArray(inv.tickets) ? inv.tickets[0]?.service_type : inv.tickets?.service_type;
+        if (type === 'INSTALLATION') {
+            monthlyMap[key].installRevenue += inv.amount_paid;
+        } else {
+            monthlyMap[key].repairRevenue += inv.amount_paid;
+        }
     });
     filteredBids.forEach(bid => {
         const key = new Date(bid.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
-        if (!monthlyMap[key]) monthlyMap[key] = { month: key, revenue: 0, cost: 0 };
+        if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
         monthlyMap[key].cost += bid.price;
     });
     const monthlyData = Object.values(monthlyMap).sort((a, b) => {
@@ -180,7 +201,7 @@ const AnalyticsPage: React.FC = () => {
     // ---------- REVENUE TREND (AREA) ----------
     const revenueTrend = monthlyData.map(m => ({
         month: m.month,
-        profit: m.revenue - m.cost,
+        profit: (m.repairRevenue + m.installRevenue) - m.cost,
     }));
 
     if (loading) {
@@ -238,7 +259,7 @@ const AnalyticsPage: React.FC = () => {
                         value={formatCurrency(totalRevenue)}
                         icon={<AccountBalanceWallet />}
                         color="#10B981"
-                        subtitle={`${filteredInvoices.length} invoices`}
+                        subtitle={`Repair: ${formatCurrency(repairRevenue)} • Install: ${formatCurrency(installRevenue)}`}
                     />
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
@@ -286,7 +307,8 @@ const AnalyticsPage: React.FC = () => {
                                         <XAxis dataKey="month" stroke="#64748B" fontSize={12} />
                                         <YAxis stroke="#64748B" fontSize={12} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                                         <RechartsTooltip content={<CustomTooltip />} />
-                                        <Bar dataKey="revenue" name="Revenue" fill="#10B981" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="repairRevenue" stackId="revenue" name="Repair Revenue" fill="#10B981" radius={[0, 0, 0, 0]} />
+                                        <Bar dataKey="installRevenue" stackId="revenue" name="Install Revenue" fill="#00D9FF" radius={[4, 4, 0, 0]} />
                                         <Bar dataKey="cost" name="Parts Cost" fill="#F59E0B" radius={[4, 4, 0, 0]} opacity={0.8} />
                                     </BarChart>
                                 </ResponsiveContainer>
@@ -297,6 +319,7 @@ const AnalyticsPage: React.FC = () => {
                             )}
                         </CardContent>
                     </Card>
+                </Grid>
                 </Grid>
 
                 {/* Payment Method Breakdown */}
@@ -342,6 +365,52 @@ const AnalyticsPage: React.FC = () => {
                             ) : (
                                 <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Typography color="text.secondary">No payment data yet</Typography>
+                                </Box>
+                            )}
+                        </CardContent>
+                    </Card>
+                {/* Revenue by Service Type */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Card sx={{ height: '100%' }}>
+                        <CardContent>
+                            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                                Revenue by Service
+                            </Typography>
+                            {serviceTypeData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={serviceTypeData}
+                                            cx="50%"
+                                            cy="45%"
+                                            innerRadius={55}
+                                            outerRadius={85}
+                                            paddingAngle={4}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            label={({ name, percent }) => `${name?.split(' ')[1] || ''} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                                            labelLine={false}
+                                        >
+                                            <Cell key="repair" fill="#10B981" />
+                                            <Cell key="install" fill="#00D9FF" />
+                                        </Pie>
+                                        <Legend
+                                            verticalAlign="bottom"
+                                            iconType="circle"
+                                            formatter={(value) => <span style={{ color: '#94A3B8', fontSize: '12px' }}>{value}</span>}
+                                        />
+                                        <RechartsTooltip
+                                            contentStyle={{
+                                                background: '#1A2332', border: '1px solid rgba(108,99,255,0.2)',
+                                                borderRadius: 8, color: '#F1F5F9',
+                                            }}
+                                            formatter={(value: any) => [formatCurrency(value), 'Revenue']}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Typography color="text.secondary">No revenue data yet</Typography>
                                 </Box>
                             )}
                         </CardContent>
