@@ -123,7 +123,8 @@ const TicketCreatePage: React.FC = () => {
                 console.log('📋 [TICKET] Sending Interakt message to:', mobile);
                 sendInteraktMessage({
                     phoneNumber: mobile,
-                    templateName: isInstallation ? 'installation_booking_confirmation' : 'service_booking_confirmation'
+                    templateName: isInstallation ? 'installation_booking_confirmation' : 'service_booking_confirmation',
+                    bodyValues: isInstallation ? [customerName || 'Customer', ticket.ticket_number] : undefined
                 }).then(result => {
                     console.log('📋 [TICKET] Interakt send result:', result);
                 }).catch(err => {
