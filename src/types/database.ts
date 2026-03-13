@@ -110,6 +110,7 @@ export interface Ticket {
     tv_size?: string;
     issue_description: string;
     diagnosed_issue?: string;
+    time_slot?: string;
     status: TicketStatus;
     priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
     estimated_cost?: number;

@@ -30,6 +30,7 @@ const TicketCreatePage: React.FC = () => {
     const [tvModel, setTvModel] = useState('');
     const [tvSize, setTvSize] = useState('');
     const [issueDescription, setIssueDescription] = useState('');
+    const [timeSlot, setTimeSlot] = useState('');
     const [diagnosedIssue, setDiagnosedIssue] = useState('');
     const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('MEDIUM');
     const [estimatedCost, setEstimatedCost] = useState('');
@@ -106,6 +107,7 @@ const TicketCreatePage: React.FC = () => {
                 tv_model: tvModel || undefined,
                 tv_size: tvSize || undefined,
                 issue_description: issueDescription,
+                time_slot: timeSlot || undefined,
                 diagnosed_issue: isInstallation ? undefined : (diagnosedIssue || undefined),
                 priority,
                 estimated_cost: estimatedCost ? parseFloat(estimatedCost) : undefined,
@@ -405,6 +407,17 @@ const TicketCreatePage: React.FC = () => {
                                         ? 'e.g. Wall mount needed, stand setup, tilting bracket...'
                                         : 'e.g. TV not turning on, sound but no picture...'}
                                 />
+
+                                {isInstallation && (
+                                    <TextField
+                                        fullWidth
+                                        label="Preferred Time Slot (Optional)"
+                                        value={timeSlot}
+                                        onChange={e => setTimeSlot(e.target.value)}
+                                        sx={{ mb: 2 }}
+                                        placeholder="e.g. Today 5 PM, Tomorrow Morning..."
+                                    />
+                                )}
 
                                 {!isInstallation && (
                                     <>

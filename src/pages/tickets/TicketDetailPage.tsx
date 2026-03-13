@@ -37,9 +37,9 @@ const STATUS_TEMPLATE_MAP: Record<TicketStatus, string | null> = {
     DELIVERED: 'service_delivered',
     CLOSED: 'service_review_request',
     // Installation-specific
-    CONFIRMED: null,
-    EN_ROUTE: null,
-    INSTALLED: null,
+    CONFIRMED: 'installation_confirmed',
+    EN_ROUTE: 'installation_en_route',
+    INSTALLED: 'installation_completed',
     PAYMENT_COLLECTED: null,
 };
 
@@ -139,6 +139,9 @@ const TicketDetailPage: React.FC = () => {
                         ? String(quotations[0].total)
                         : String((data as Ticket).estimated_cost || '0');
                     bodyValues = [tvBrand, tvSize, latestQuotTotal];
+                } else if (s === 'CONFIRMED' && (data as Ticket).service_type === 'INSTALLATION') {
+                    // installation_confirmed has 3 variables: brand, size, time_slot
+                    bodyValues = [tvBrand, tvSize, (data as Ticket).time_slot || 'ASAP'];
                 } else {
                     // All other templates have 2 variables: brand, size
                     bodyValues = [tvBrand, tvSize];
@@ -323,6 +326,7 @@ const TicketDetailPage: React.FC = () => {
                             <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>TV Details</Typography>
                             <Typography variant="body1" fontWeight={600}>{ticket.tv_brand} {ticket.tv_model || ''}</Typography>
                             {ticket.tv_size && <Typography variant="body2" color="text.secondary">Size: {ticket.tv_size}</Typography>}
+                            {ticket.time_slot && <Typography variant="body2" color="success.main" fontWeight={600}>Time Slot: {ticket.time_slot}</Typography>}
                             <Divider sx={{ my: 1.5, borderColor: 'rgba(108,99,255,0.1)' }} />
                             <Typography variant="caption" color="text.secondary">
                                 {ticket.service_type === 'INSTALLATION' ? 'Installation Requirements' : 'Issue'}
