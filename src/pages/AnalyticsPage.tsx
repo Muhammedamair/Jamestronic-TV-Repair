@@ -12,6 +12,7 @@ import { formatCurrency } from '../utils/formatters';
 import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip as RechartsTooltip, PieChart, Pie, Cell, Legend, AreaChart, Area,
+    ComposedChart, Line
 } from 'recharts';
 
 // ---------- TYPES ----------
@@ -47,7 +48,7 @@ interface TicketRow {
 const BRAND_COLORS = ['#6C63FF', '#00D9FF', '#10B981', '#F59E0B', '#F97316', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#64748B'];
 const PIE_COLORS = ['#6C63FF', '#10B981', '#F59E0B', '#00D9FF', '#F97316'];
 
-// ---------- CUSTOM TOOLTIP ----------
+// ---------- CUSTOM TOOLTIPS ----------
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
     return (
@@ -64,6 +65,45 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                     </Typography>
                 </Box>
             ))}
+        </Box>
+    );
+};
+
+const DashboardTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    const data = payload[0].payload;
+    return (
+        <Box sx={{
+            background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(148, 163, 184, 0.2)',
+            borderRadius: 2, p: 2, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(10px)'
+        }}>
+            <Typography variant="subtitle2" color="#F1F5F9" fontWeight={700} sx={{ mb: 1.5, pb: 1, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
+                {label} Performance
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="body2" color="#94A3B8">Total Revenue</Typography>
+                <Typography variant="body2" fontWeight={600} color="#F1F5F9">{formatCurrency(data.totalRev)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5, pl: 1, borderLeft: '2px solid #10B981' }}>
+                <Typography variant="caption" color="#94A3B8">↳ Repair</Typography>
+                <Typography variant="caption" fontWeight={600} color="#10B981">{formatCurrency(data.repairRevenue)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, pl: 1, borderLeft: '2px solid #00D9FF' }}>
+                <Typography variant="caption" color="#94A3B8">↳ Install</Typography>
+                <Typography variant="caption" fontWeight={600} color="#00D9FF">{formatCurrency(data.installRevenue)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                <Typography variant="body2" color="#F59E0B">Parts Cost</Typography>
+                <Typography variant="body2" fontWeight={600} color="#F59E0B">-{formatCurrency(data.cost)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 1, borderTop: '1px dashed rgba(148,163,184,0.2)' }}>
+                <Typography variant="body2" color="#6C63FF" fontWeight={700}>Net Profit</Typography>
+                <Typography variant="body2" fontWeight={700} color="#6C63FF">{formatCurrency(data.profit)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
+                <Chip size="small" label={`${data.margin.toFixed(1)}% margin`} sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(108,99,255,0.1)', color: '#6C63FF', fontWeight: 600 }} />
+            </Box>
         </Box>
     );
 };
@@ -203,6 +243,16 @@ const AnalyticsPage: React.FC = () => {
             return new Date(`${mon} 20${yr}`).getTime();
         };
         return parse(a.month) - parse(b.month);
+    }).map(m => {
+        const totalRev = m.repairRevenue + m.installRevenue;
+        const profit = totalRev - m.cost;
+        const margin = totalRev > 0 ? (profit / totalRev) * 100 : 0;
+        return {
+            ...m,
+            totalRev,
+            profit,
+            margin
+        };
     });
 
     // ---------- PAYMENT METHOD BREAKDOWN ----------
@@ -326,15 +376,16 @@ const AnalyticsPage: React.FC = () => {
                             </Typography>
                             {monthlyData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={monthlyData} barGap={4}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
-                                        <XAxis dataKey="month" stroke="#64748B" fontSize={12} />
-                                        <YAxis stroke="#64748B" fontSize={12} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
-                                        <RechartsTooltip content={<CustomTooltip />} />
-                                        <Bar dataKey="repairRevenue" stackId="revenue" name="Repair Revenue" fill="#10B981" radius={[0, 0, 0, 0]} />
-                                        <Bar dataKey="installRevenue" stackId="revenue" name="Install Revenue" fill="#00D9FF" radius={[4, 4, 0, 0]} />
-                                        <Bar dataKey="cost" name="Parts Cost" fill="#F59E0B" radius={[4, 4, 0, 0]} opacity={0.8} />
-                                    </BarChart>
+                                    <ComposedChart data={monthlyData} barGap={4}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" vertical={false} />
+                                        <XAxis dataKey="month" stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis yAxisId="left" stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
+                                        <RechartsTooltip content={<DashboardTooltip />} cursor={{ fill: 'rgba(148,163,184,0.05)' }} />
+                                        <Bar yAxisId="left" dataKey="repairRevenue" stackId="revenue" name="Repair Revenue" fill="#10B981" radius={[0, 0, 0, 0]} />
+                                        <Bar yAxisId="left" dataKey="installRevenue" stackId="revenue" name="Install Revenue" fill="#00D9FF" radius={[4, 4, 0, 0]} />
+                                        <Bar yAxisId="left" dataKey="cost" name="Parts Cost" fill="#F59E0B" radius={[4, 4, 0, 0]} opacity={0.8} />
+                                        <Line yAxisId="left" type="monotone" dataKey="profit" name="Net Profit" stroke="#6C63FF" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#1E293B' }} activeDot={{ r: 6, strokeWidth: 0, fill: '#6C63FF' }} />
+                                    </ComposedChart>
                                 </ResponsiveContainer>
                             ) : (
                                 <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
