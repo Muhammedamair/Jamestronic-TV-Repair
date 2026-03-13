@@ -71,9 +71,12 @@ export interface Customer {
     updated_at: string;
 }
 
+export type TicketServiceType = 'REPAIR' | 'INSTALLATION';
+
 export interface Ticket {
     id: string;
     ticket_number: string;
+    service_type: TicketServiceType;
     customer_id: string;
     customer?: Customer;
     tv_brand: string;

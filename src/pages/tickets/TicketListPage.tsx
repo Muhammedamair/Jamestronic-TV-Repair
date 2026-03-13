@@ -7,10 +7,11 @@ import {
 import {
     Search as SearchIcon, Add as AddIcon, FilterList,
     Phone as PhoneIcon, ArrowForward,
+    Build as RepairIcon, InstallDesktop as InstallIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { Ticket, TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_COLORS } from '../../types/database';
+import { Ticket, TicketStatus, TicketServiceType, TICKET_STATUS_LABELS, TICKET_STATUS_COLORS } from '../../types/database';
 import { formatRelative, formatCurrency } from '../../utils/formatters';
 
 const statusFilters: { label: string; value: string; color: string }[] = [
@@ -32,6 +33,7 @@ const TicketListPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [serviceTypeFilter, setServiceTypeFilter] = useState<'ALL' | TicketServiceType>('ALL');
 
     useEffect(() => {
         const fetchTickets = async () => {
@@ -63,7 +65,11 @@ const TicketListPage: React.FC = () => {
         else if (statusFilter === 'COMPLETED') matchesStatus = completedStatuses.includes(t.status);
         else if (statusFilter === 'CLOSED') matchesStatus = closedStatuses.includes(t.status);
 
-        return matchesSearch && matchesStatus;
+        // Service type filter
+        let matchesServiceType = true;
+        if (serviceTypeFilter !== 'ALL') matchesServiceType = t.service_type === serviceTypeFilter;
+
+        return matchesSearch && matchesStatus && matchesServiceType;
     });
 
     const getPriorityColor = (priority: string) => {
@@ -138,6 +144,45 @@ const TicketListPage: React.FC = () => {
                                 ))}
                             </Box>
                         </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                <Chip
+                                    label="All Types"
+                                    size="small"
+                                    onClick={() => setServiceTypeFilter('ALL')}
+                                    sx={{
+                                        fontWeight: 600, fontSize: '0.75rem',
+                                        backgroundColor: serviceTypeFilter === 'ALL' ? 'rgba(148,163,184,0.15)' : 'transparent',
+                                        color: serviceTypeFilter === 'ALL' ? '#94A3B8' : '#64748B',
+                                        border: `1px solid ${serviceTypeFilter === 'ALL' ? 'rgba(148,163,184,0.3)' : 'rgba(148,163,184,0.15)'}`,
+                                    }}
+                                />
+                                <Chip
+                                    icon={<RepairIcon sx={{ fontSize: 14 }} />}
+                                    label="Repair"
+                                    size="small"
+                                    onClick={() => setServiceTypeFilter('REPAIR')}
+                                    sx={{
+                                        fontWeight: 600, fontSize: '0.75rem',
+                                        backgroundColor: serviceTypeFilter === 'REPAIR' ? 'rgba(108,99,255,0.15)' : 'transparent',
+                                        color: serviceTypeFilter === 'REPAIR' ? '#6C63FF' : '#64748B',
+                                        border: `1px solid ${serviceTypeFilter === 'REPAIR' ? 'rgba(108,99,255,0.3)' : 'rgba(148,163,184,0.15)'}`,
+                                    }}
+                                />
+                                <Chip
+                                    icon={<InstallIcon sx={{ fontSize: 14 }} />}
+                                    label="Installation"
+                                    size="small"
+                                    onClick={() => setServiceTypeFilter('INSTALLATION')}
+                                    sx={{
+                                        fontWeight: 600, fontSize: '0.75rem',
+                                        backgroundColor: serviceTypeFilter === 'INSTALLATION' ? 'rgba(16,185,129,0.15)' : 'transparent',
+                                        color: serviceTypeFilter === 'INSTALLATION' ? '#10B981' : '#64748B',
+                                        border: `1px solid ${serviceTypeFilter === 'INSTALLATION' ? 'rgba(16,185,129,0.3)' : 'rgba(148,163,184,0.15)'}`,
+                                    }}
+                                />
+                            </Box>
+                        </Grid>
                     </Grid>
                 </CardContent>
             </Card>
@@ -175,9 +220,28 @@ const TicketListPage: React.FC = () => {
                                         sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(108,99,255,0.04)' } }}
                                     >
                                         <TableCell>
-                                            <Typography variant="body2" fontWeight={600} color="primary">
-                                                {ticket.ticket_number}
-                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Typography variant="body2" fontWeight={600} color="primary">
+                                                    {ticket.ticket_number}
+                                                </Typography>
+                                                <Chip
+                                                    label={ticket.service_type === 'INSTALLATION' ? 'Install' : 'Repair'}
+                                                    size="small"
+                                                    icon={ticket.service_type === 'INSTALLATION'
+                                                        ? <InstallIcon sx={{ fontSize: '12px !important' }} />
+                                                        : <RepairIcon sx={{ fontSize: '12px !important' }} />}
+                                                    sx={{
+                                                        height: 20,
+                                                        fontSize: '0.6rem',
+                                                        fontWeight: 700,
+                                                        backgroundColor: ticket.service_type === 'INSTALLATION'
+                                                            ? 'rgba(16,185,129,0.15)' : 'rgba(108,99,255,0.12)',
+                                                        color: ticket.service_type === 'INSTALLATION'
+                                                            ? '#10B981' : '#6C63FF',
+                                                        '& .MuiChip-icon': { ml: 0.3 },
+                                                    }}
+                                                />
+                                            </Box>
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" fontWeight={500}>{ticket.customer?.name || '—'}</Typography>

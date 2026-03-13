@@ -2,17 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box, Typography, TextField, Button, Card, CardContent, Grid,
     MenuItem, Autocomplete, Divider, Alert, CircularProgress, Chip,
-    InputAdornment, Tooltip, IconButton,
+    InputAdornment, Tooltip, IconButton, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import {
     Save as SaveIcon, Phone as PhoneIcon, Person as PersonIcon,
     LocationOn, Tv, Description, Speed as SpeedIcon,
     Map as MapIcon, WhatsApp as WhatsAppIcon,
+    Build as RepairIcon, InstallDesktop as InstallIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useCustomers } from '../../hooks/useCustomers';
 import { useTickets } from '../../hooks/useTickets';
-import { TV_BRANDS, Customer } from '../../types/database';
+import { TV_BRANDS, Customer, TicketServiceType } from '../../types/database';
 import { sendInteraktMessage } from '../../utils/interakt';
 
 const TicketCreatePage: React.FC = () => {
@@ -32,6 +33,9 @@ const TicketCreatePage: React.FC = () => {
     const [diagnosedIssue, setDiagnosedIssue] = useState('');
     const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('MEDIUM');
     const [estimatedCost, setEstimatedCost] = useState('');
+    const [serviceType, setServiceType] = useState<TicketServiceType>('REPAIR');
+
+    const isInstallation = serviceType === 'INSTALLATION';
 
     const [existingCustomer, setExistingCustomer] = useState<Customer | null>(null);
     const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([]);
@@ -97,11 +101,12 @@ const TicketCreatePage: React.FC = () => {
             // Create ticket
             const { data: ticket, error: ticketError } = await createTicket({
                 customer_id: customerId,
+                service_type: serviceType,
                 tv_brand: tvBrand,
                 tv_model: tvModel || undefined,
                 tv_size: tvSize || undefined,
                 issue_description: issueDescription,
-                diagnosed_issue: diagnosedIssue || undefined,
+                diagnosed_issue: isInstallation ? undefined : (diagnosedIssue || undefined),
                 priority,
                 estimated_cost: estimatedCost ? parseFloat(estimatedCost) : undefined,
             });
@@ -118,7 +123,7 @@ const TicketCreatePage: React.FC = () => {
                 console.log('📋 [TICKET] Sending Interakt message to:', mobile);
                 sendInteraktMessage({
                     phoneNumber: mobile,
-                    templateName: 'service_booking_confirmation'
+                    templateName: isInstallation ? 'installation_booking_confirmation' : 'service_booking_confirmation'
                 }).then(result => {
                     console.log('📋 [TICKET] Interakt send result:', result);
                 }).catch(err => {
@@ -141,14 +146,20 @@ const TicketCreatePage: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                 <Box sx={{
                     p: 1.2, borderRadius: 2,
-                    background: 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,217,255,0.1))',
+                    background: isInstallation
+                        ? 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,217,255,0.1))'
+                        : 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,217,255,0.1))',
                 }}>
-                    <PhoneIcon sx={{ color: '#6C63FF', fontSize: 24 }} />
+                    {isInstallation
+                        ? <InstallIcon sx={{ color: '#10B981', fontSize: 24 }} />
+                        : <PhoneIcon sx={{ color: '#6C63FF', fontSize: 24 }} />}
                 </Box>
                 <Box>
-                    <Typography variant="h5" fontWeight={700}>New Ticket</Typography>
+                    <Typography variant="h5" fontWeight={700}>
+                        {isInstallation ? 'New Installation Ticket' : 'New Repair Ticket'}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Quick create during call — fill details fast
+                        {isInstallation ? 'Book TV wall-mount / stand installation' : 'Quick create during call — fill details fast'}
                     </Typography>
                 </Box>
                 <Chip
@@ -169,6 +180,53 @@ const TicketCreatePage: React.FC = () => {
                     }}
                 />
             </Box>
+
+            {/* Service Type Toggle */}
+            <Card sx={{ mb: 3 }}>
+                <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                        Service Type:
+                    </Typography>
+                    <ToggleButtonGroup
+                        value={serviceType}
+                        exclusive
+                        onChange={(_, val) => val && setServiceType(val)}
+                        size="small"
+                        sx={{ flexGrow: 1 }}
+                    >
+                        <ToggleButton
+                            value="REPAIR"
+                            sx={{
+                                flex: 1,
+                                gap: 1,
+                                fontWeight: 700,
+                                '&.Mui-selected': {
+                                    background: 'linear-gradient(135deg, rgba(108,99,255,0.25), rgba(108,99,255,0.1))',
+                                    color: '#6C63FF',
+                                    borderColor: '#6C63FF',
+                                },
+                            }}
+                        >
+                            <RepairIcon fontSize="small" /> TV Repair
+                        </ToggleButton>
+                        <ToggleButton
+                            value="INSTALLATION"
+                            sx={{
+                                flex: 1,
+                                gap: 1,
+                                fontWeight: 700,
+                                '&.Mui-selected': {
+                                    background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.1))',
+                                    color: '#10B981',
+                                    borderColor: '#10B981',
+                                },
+                            }}
+                        >
+                            <InstallIcon fontSize="small" /> TV Installation
+                        </ToggleButton>
+                    </ToggleButtonGroup>
+                </CardContent>
+            </Card>
 
             {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
             {success && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{success}</Alert>}
@@ -292,9 +350,9 @@ const TicketCreatePage: React.FC = () => {
                         <Card>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
-                                    <Tv sx={{ color: '#00D9FF' }} />
+                                    <Tv sx={{ color: isInstallation ? '#10B981' : '#00D9FF' }} />
                                     <Typography variant="subtitle1" fontWeight={600} color="text.primary">
-                                        TV & Issue Details
+                                        {isInstallation ? 'TV & Installation Details' : 'TV & Issue Details'}
                                     </Typography>
                                 </Box>
 
@@ -335,35 +393,41 @@ const TicketCreatePage: React.FC = () => {
 
                                 <TextField
                                     fullWidth
-                                    label="Issue Description (Customer's words)"
+                                    label={isInstallation ? 'Installation Requirements' : "Issue Description (Customer's words)"}
                                     value={issueDescription}
                                     onChange={e => setIssueDescription(e.target.value)}
                                     required
                                     multiline
                                     rows={2}
                                     sx={{ mb: 2 }}
-                                    placeholder="e.g. TV not turning on, sound but no picture..."
+                                    placeholder={isInstallation
+                                        ? 'e.g. Wall mount needed, stand setup, tilting bracket...'
+                                        : 'e.g. TV not turning on, sound but no picture...'}
                                 />
 
-                                <Divider sx={{ my: 2, borderColor: 'rgba(108,99,255,0.1)' }} />
+                                {!isInstallation && (
+                                    <>
+                                        <Divider sx={{ my: 2, borderColor: 'rgba(108,99,255,0.1)' }} />
 
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <Description sx={{ color: '#10B981' }} />
-                                    <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                                        Your Diagnosis (Optional — add on call)
-                                    </Typography>
-                                </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                            <Description sx={{ color: '#10B981' }} />
+                                            <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                                                Your Diagnosis (Optional — add on call)
+                                            </Typography>
+                                        </Box>
 
-                                <TextField
-                                    fullWidth
-                                    label="Diagnosed Issue"
-                                    value={diagnosedIssue}
-                                    onChange={e => setDiagnosedIssue(e.target.value)}
-                                    multiline
-                                    rows={2}
-                                    sx={{ mb: 2 }}
-                                    placeholder="e.g. Likely backlight issue, need to check LED strips..."
-                                />
+                                        <TextField
+                                            fullWidth
+                                            label="Diagnosed Issue"
+                                            value={diagnosedIssue}
+                                            onChange={e => setDiagnosedIssue(e.target.value)}
+                                            multiline
+                                            rows={2}
+                                            sx={{ mb: 2 }}
+                                            placeholder="e.g. Likely backlight issue, need to check LED strips..."
+                                        />
+                                    </>
+                                )}
 
                                 <Grid container spacing={2}>
                                     <Grid size={{ xs: 6 }}>
@@ -412,7 +476,7 @@ const TicketCreatePage: React.FC = () => {
                                 startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                                 sx={{ minWidth: 200 }}
                             >
-                                {submitting ? 'Creating...' : 'Create Ticket'}
+                                {submitting ? 'Creating...' : (isInstallation ? 'Create Installation Ticket' : 'Create Repair Ticket')}
                             </Button>
                         </Box>
                     </Grid>

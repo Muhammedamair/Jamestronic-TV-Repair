@@ -8,7 +8,8 @@ import {
 } from '@mui/material';
 import {
     ArrowBack, Phone, LocationOn, Add, Delete,
-    WhatsApp, Receipt, NoteAdd, Map, Star, Download
+    WhatsApp, Receipt, NoteAdd, Map, Star, Download,
+    Build as RepairIcon, InstallDesktop as InstallIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -229,6 +230,18 @@ const TicketDetailPage: React.FC = () => {
                 <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                         <Typography variant="h5" fontWeight={700}>{ticket.ticket_number}</Typography>
+                        <Chip
+                            icon={ticket.service_type === 'INSTALLATION'
+                                ? <InstallIcon sx={{ fontSize: '16px !important' }} />
+                                : <RepairIcon sx={{ fontSize: '16px !important' }} />}
+                            label={ticket.service_type === 'INSTALLATION' ? 'Installation' : 'Repair'}
+                            sx={{
+                                backgroundColor: ticket.service_type === 'INSTALLATION' ? 'rgba(16,185,129,0.15)' : 'rgba(108,99,255,0.12)',
+                                color: ticket.service_type === 'INSTALLATION' ? '#10B981' : '#6C63FF',
+                                fontWeight: 700,
+                                '& .MuiChip-icon': { ml: 0.3 },
+                            }}
+                        />
                         <Chip label={TICKET_STATUS_LABELS[ticket.status]} sx={{ backgroundColor: `${TICKET_STATUS_COLORS[ticket.status]}20`, color: TICKET_STATUS_COLORS[ticket.status], fontWeight: 600 }} />
                     </Box>
                     <Typography variant="body2" color="text.secondary">Created {formatRelative(ticket.created_at)}</Typography>
@@ -302,9 +315,11 @@ const TicketDetailPage: React.FC = () => {
                             <Typography variant="body1" fontWeight={600}>{ticket.tv_brand} {ticket.tv_model || ''}</Typography>
                             {ticket.tv_size && <Typography variant="body2" color="text.secondary">Size: {ticket.tv_size}</Typography>}
                             <Divider sx={{ my: 1.5, borderColor: 'rgba(108,99,255,0.1)' }} />
-                            <Typography variant="caption" color="text.secondary">Issue</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                {ticket.service_type === 'INSTALLATION' ? 'Installation Requirements' : 'Issue'}
+                            </Typography>
                             <Typography variant="body2" sx={{ mt: 0.3 }}>{ticket.issue_description}</Typography>
-                            {ticket.diagnosed_issue && (<><Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Diagnosis</Typography><Typography variant="body2" sx={{ mt: 0.3, color: '#10B981' }}>{ticket.diagnosed_issue}</Typography></>)}
+                            {ticket.service_type !== 'INSTALLATION' && ticket.diagnosed_issue && (<><Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Diagnosis</Typography><Typography variant="body2" sx={{ mt: 0.3, color: '#10B981' }}>{ticket.diagnosed_issue}</Typography></>)}
                             {ticket.estimated_cost != null && ticket.estimated_cost > 0 && (
                                 <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 2, backgroundColor: 'rgba(16,185,129,0.08)' }}>
                                     <Typography variant="caption" color="text.secondary">Estimated Cost</Typography>
