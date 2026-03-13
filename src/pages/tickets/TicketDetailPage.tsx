@@ -15,7 +15,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import {
     Ticket, TicketNote, Quotation, QuotationItem, Invoice,
-    TICKET_STATUS_ORDER, TICKET_STATUS_LABELS, TICKET_STATUS_COLORS,
+    TICKET_STATUS_ORDER, INSTALLATION_STATUS_ORDER,
+    TICKET_STATUS_LABELS, TICKET_STATUS_COLORS,
     TicketStatus,
 } from '../../types/database';
 import { formatDateTime, formatRelative, formatCurrency } from '../../utils/formatters';
@@ -35,6 +36,11 @@ const STATUS_TEMPLATE_MAP: Record<TicketStatus, string | null> = {
     DELIVERY_SCHEDULED: 'service_delivery_scheduled',
     DELIVERED: 'service_delivered',
     CLOSED: 'service_review_request',
+    // Installation-specific
+    CONFIRMED: null,
+    EN_ROUTE: null,
+    INSTALLED: null,
+    PAYMENT_COLLECTED: null,
 };
 
 const TicketDetailPage: React.FC = () => {
@@ -78,7 +84,9 @@ const TicketDetailPage: React.FC = () => {
         });
     }, [id]);
 
-    const currentStep = ticket ? TICKET_STATUS_ORDER.indexOf(ticket.status) : 0;
+    const isInstall = ticket?.service_type === 'INSTALLATION';
+    const statusOrder = isInstall ? INSTALLATION_STATUS_ORDER : TICKET_STATUS_ORDER;
+    const currentStep = ticket ? statusOrder.indexOf(ticket.status) : 0;
 
     const changeStatus = async (s: TicketStatus, specificWarrantyMonths?: number) => {
         if (!ticket) return;
@@ -152,9 +160,10 @@ const TicketDetailPage: React.FC = () => {
 
     const nextStatuses = (): TicketStatus[] => {
         if (!ticket) return [];
-        const idx = TICKET_STATUS_ORDER.indexOf(ticket.status);
+        const order = ticket.service_type === 'INSTALLATION' ? INSTALLATION_STATUS_ORDER : TICKET_STATUS_ORDER;
+        const idx = order.indexOf(ticket.status);
         const r: TicketStatus[] = [];
-        if (idx < TICKET_STATUS_ORDER.length - 1) r.push(TICKET_STATUS_ORDER[idx + 1]);
+        if (idx < order.length - 1) r.push(order[idx + 1]);
         if (ticket.status !== 'CLOSED') r.push('CLOSED');
         return [...new Set(r)];
     };
@@ -271,8 +280,8 @@ const TicketDetailPage: React.FC = () => {
 
             <Card sx={{ mb: 3, overflow: 'auto' }}>
                 <CardContent sx={{ py: 2 }}>
-                    <Stepper activeStep={currentStep} alternativeLabel sx={{ minWidth: 800 }}>
-                        {TICKET_STATUS_ORDER.map((s, i) => (
+                    <Stepper activeStep={currentStep} alternativeLabel sx={{ minWidth: isInstall ? 500 : 800 }}>
+                        {statusOrder.map((s, i) => (
                             <Step key={s} completed={i < currentStep}>
                                 <StepLabel sx={{ '& .MuiStepLabel-label': { fontSize: '0.65rem', color: i <= currentStep ? TICKET_STATUS_COLORS[s] : '#4B5563', fontWeight: i === currentStep ? 700 : 400 }, '& .MuiStepIcon-root': { color: i <= currentStep ? TICKET_STATUS_COLORS[s] : '#374151' } }}>
                                     {TICKET_STATUS_LABELS[s]}
@@ -334,7 +343,7 @@ const TicketDetailPage: React.FC = () => {
                     <Card>
                         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ borderBottom: '1px solid rgba(108,99,255,0.1)', '& .MuiTab-root': { textTransform: 'none', fontWeight: 500, fontSize: '0.85rem' } }}>
                             <Tab label={`Notes (${notes.length})`} />
-                            <Tab label={`Quotations (${quotations.length})`} />
+                            {!isInstall && <Tab label={`Quotations (${quotations.length})`} />}
                             <Tab label={`Invoices (${invoices.length})`} />
                         </Tabs>
                         <CardContent>
@@ -349,7 +358,7 @@ const TicketDetailPage: React.FC = () => {
                                 </Box>))}
                                 {notes.length === 0 && <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No notes yet.</Typography>}
                             </Box>)}
-                            {activeTab === 1 && (<Box>
+                            {!isInstall && activeTab === 1 && (<Box>
                                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                                     <Button startIcon={<Add />} onClick={() => setQuotDialogOpen(true)} variant="outlined" size="small" sx={{ borderColor: 'rgba(108,99,255,0.3)', color: '#6C63FF' }}>Create Quotation</Button>
                                     {quotations.length > 0 && <Tooltip title="Copy for WhatsApp"><IconButton size="small" onClick={() => navigator.clipboard.writeText(whatsappText())} sx={{ color: '#25D366' }}><WhatsApp /></IconButton></Tooltip>}
@@ -365,7 +374,7 @@ const TicketDetailPage: React.FC = () => {
                                 </Box>))}
                                 {quotations.length === 0 && <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No quotations yet.</Typography>}
                             </Box>)}
-                            {activeTab === 2 && (<Box>
+                            {activeTab === (isInstall ? 1 : 2) && (<Box>
                                 <Button startIcon={<Receipt />} onClick={() => { setInvAmount(quotations[0]?.total || ticket.estimated_cost || 0); setInvDialogOpen(true); }} variant="outlined" size="small" sx={{ mb: 2, borderColor: 'rgba(108,99,255,0.3)', color: '#6C63FF' }}>Create Invoice</Button>
                                 {invoices.map(inv => (<Box key={inv.id} sx={{ mb: 2, p: 2, borderRadius: 2, backgroundColor: 'rgba(17,24,39,0.5)' }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>

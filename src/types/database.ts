@@ -9,8 +9,14 @@ export type TicketStatus =
     | 'REPAIRED'
     | 'DELIVERY_SCHEDULED'
     | 'DELIVERED'
-    | 'CLOSED';
+    | 'CLOSED'
+    // Installation-specific statuses
+    | 'CONFIRMED'
+    | 'EN_ROUTE'
+    | 'INSTALLED'
+    | 'PAYMENT_COLLECTED';
 
+// ---- REPAIR workflow (11 steps) ----
 export const TICKET_STATUS_ORDER: TicketStatus[] = [
     'CREATED',
     'DIAGNOSED',
@@ -22,6 +28,16 @@ export const TICKET_STATUS_ORDER: TicketStatus[] = [
     'REPAIRED',
     'DELIVERY_SCHEDULED',
     'DELIVERED',
+    'CLOSED',
+];
+
+// ---- INSTALLATION workflow (6 steps) ----
+export const INSTALLATION_STATUS_ORDER: TicketStatus[] = [
+    'CREATED',
+    'CONFIRMED',
+    'EN_ROUTE',
+    'INSTALLED',
+    'PAYMENT_COLLECTED',
     'CLOSED',
 ];
 
@@ -37,6 +53,11 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
     DELIVERY_SCHEDULED: 'Delivery Scheduled',
     DELIVERED: 'Delivered',
     CLOSED: 'Closed',
+    // Installation labels
+    CONFIRMED: 'Confirmed',
+    EN_ROUTE: 'Technician Dispatched',
+    INSTALLED: 'TV Installed',
+    PAYMENT_COLLECTED: 'Payment Collected',
 };
 
 export const TICKET_STATUS_COLORS: Record<TicketStatus, string> = {
@@ -51,6 +72,11 @@ export const TICKET_STATUS_COLORS: Record<TicketStatus, string> = {
     DELIVERY_SCHEDULED: '#3B82F6',
     DELIVERED: '#10B981',
     CLOSED: '#6B7280',
+    // Installation colors
+    CONFIRMED: '#10B981',
+    EN_ROUTE: '#3B82F6',
+    INSTALLED: '#00D9FF',
+    PAYMENT_COLLECTED: '#F59E0B',
 };
 
 export const TV_BRANDS = [
