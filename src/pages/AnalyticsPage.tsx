@@ -143,6 +143,16 @@ const AnalyticsPage: React.FC = () => {
         if (type === 'INSTALLATION') installRevenue += i.amount_paid;
         else repairRevenue += i.amount_paid;
     });
+    
+    // Installation tickets often skip the invoice process. If they are completed, add their estimated cost.
+    filteredTickets.forEach(t => {
+        if (t.service_type === 'INSTALLATION' && (t.status === 'PAYMENT_COLLECTED' || t.status === 'CLOSED')) {
+            const hasInvoice = filteredInvoices.some(i => i.ticket_id === t.id);
+            if (!hasInvoice) {
+                installRevenue += (t.estimated_cost || 0);
+            }
+        }
+    });
     const totalRevenue = repairRevenue + installRevenue;
     const totalPartsCost = filteredBids.reduce((s, b) => s + b.price, 0);
     const netProfit = totalRevenue - totalPartsCost;
@@ -167,6 +177,18 @@ const AnalyticsPage: React.FC = () => {
             monthlyMap[key].installRevenue += inv.amount_paid;
         } else {
             monthlyMap[key].repairRevenue += inv.amount_paid;
+        }
+    });
+
+    // Add un-invoiced Installation ticket revenue to months
+    filteredTickets.forEach(t => {
+        if (t.service_type === 'INSTALLATION' && (t.status === 'PAYMENT_COLLECTED' || t.status === 'CLOSED')) {
+            const hasInvoice = filteredInvoices.some(inv => inv.ticket_id === t.id);
+            if (!hasInvoice) {
+                const key = new Date(t.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
+                if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
+                monthlyMap[key].installRevenue += (t.estimated_cost || 0);
+            }
         }
     });
     filteredBids.forEach(bid => {
