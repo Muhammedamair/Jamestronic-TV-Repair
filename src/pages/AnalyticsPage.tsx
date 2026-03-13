@@ -209,7 +209,7 @@ const AnalyticsPage: React.FC = () => {
     // ---------- MONTHLY REVENUE VS COST ----------
     const monthlyMap: Record<string, { month: string; repairRevenue: number; installRevenue: number; cost: number }> = {};
     filteredInvoices.forEach(inv => {
-        const key = new Date(inv.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
+        const key = new Date(inv.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
         if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
         const ticket = tickets.find(t => t.id === inv.ticket_id);
         const type = ticket?.service_type || 'REPAIR';
@@ -225,22 +225,23 @@ const AnalyticsPage: React.FC = () => {
         if (t.service_type === 'INSTALLATION' && (t.status === 'PAYMENT_COLLECTED' || t.status === 'CLOSED')) {
             const hasInvoice = filteredInvoices.some(inv => inv.ticket_id === t.id);
             if (!hasInvoice) {
-                const key = new Date(t.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
+                const key = new Date(t.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
                 if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
                 monthlyMap[key].installRevenue += (t.estimated_cost || 0);
             }
         }
     });
     filteredBids.forEach(bid => {
-        const key = new Date(bid.created_at).toLocaleString('default', { month: 'short', year: '2-digit' });
+        const key = new Date(bid.created_at).toLocaleString('default', { month: 'short', year: 'numeric' });
         if (!monthlyMap[key]) monthlyMap[key] = { month: key, repairRevenue: 0, installRevenue: 0, cost: 0 };
         monthlyMap[key].cost += bid.price;
     });
+    
     const monthlyData = Object.values(monthlyMap).sort((a, b) => {
         // Sort chronologically
         const parse = (s: string) => {
             const [mon, yr] = s.split(' ');
-            return new Date(`${mon} 20${yr}`).getTime();
+            return new Date(`${mon} ${yr}`).getTime();
         };
         return parse(a.month) - parse(b.month);
     }).map(m => {
