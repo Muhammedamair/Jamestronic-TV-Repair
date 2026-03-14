@@ -4,22 +4,37 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, CircularProgress, Chip, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton, CardMedia, Switch, FormControlLabel, Checkbox, FormGroup
+    IconButton, CardMedia, Switch, FormControlLabel, Checkbox, FormGroup,
+    Avatar, LinearProgress, Tooltip,
 } from '@mui/material';
-import { Add, PhotoCamera, Delete, LocalShipping, DirectionsCar, TwoWheeler, Map } from '@mui/icons-material';
+import {
+    Add, PhotoCamera, Delete, LocalShipping, DirectionsCar, TwoWheeler, Map,
+    ShoppingCart, Gavel, CheckCircle, HourglassEmpty, Cancel,
+    RateReview, TrendingUp, AttachMoney,
+} from '@mui/icons-material';
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { supabase } from '../../supabaseClient';
-import { PartRequest, PartBid, Dealer } from '../../types/database';
-import { formatDateTime } from '../../utils/formatters';
+import { PartRequest, PartBid, Dealer, PartRequestStatus } from '../../types/database';
+import { formatDateTime, formatCurrency, formatRelative } from '../../utils/formatters';
 
 // Dark Store (JamesTronic) fixed address
 const DARK_STORE_ADDRESS = 'Jamestronic TV Repair & Installation, Main Road, Laxman Nagar, Friends Colony, Gulshan Colony, Qutub Shahi Tombs, Manikonda, Hyderabad, Telangana 500008';
 
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    PENDING_REVIEW: { label: 'Pending Review', color: '#F59E0B', icon: <RateReview fontSize="small" /> },
+    OPEN: { label: 'Open', color: '#00D9FF', icon: <ShoppingCart fontSize="small" /> },
+    BIDS_RECEIVED: { label: 'Bids Received', color: '#6C63FF', icon: <Gavel fontSize="small" /> },
+    APPROVED: { label: 'Approved', color: '#10B981', icon: <CheckCircle fontSize="small" /> },
+    RECEIVED: { label: 'Received', color: '#34D399', icon: <LocalShipping fontSize="small" /> },
+    CANCELLED: { label: 'Cancelled', color: '#EF4444', icon: <Cancel fontSize="small" /> },
+};
+
 const PartRequestsPage: React.FC = () => {
     const [requests, setRequests] = useState<PartRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState('ALL');
 
     // Image Viewer state
     const [viewImages, setViewImages] = useState<{ urls: string[], index: number } | null>(null);
@@ -115,7 +130,6 @@ const PartRequestsPage: React.FC = () => {
         
         let uploadedUrls: string[] = [];
 
-        // Upload images if any
         if (selectedFiles.length > 0) {
             for (const file of selectedFiles) {
                 const fileExt = file.name.split('.').pop();
@@ -148,7 +162,6 @@ const PartRequestsPage: React.FC = () => {
         }).select().single();
         
         if (!error && insertedData) {
-            // Trigger push notifications to dealers
             supabase.functions.invoke('send-push-notification', {
                 body: {
                     request_id: insertedData.id,
@@ -158,10 +171,8 @@ const PartRequestsPage: React.FC = () => {
                 }
             }).then(res => {
                 console.log('Push response:', res.data);
-                alert(`Push Response: Sent=${res.data?.sent}, Failed=${res.data?.failed}, Errors=${JSON.stringify(res.data?.errors)}`);
             }).catch(err => {
                 console.error('Push notification error:', err);
-                alert(`Push API Error: ${err.message}`);
             });
 
             setCreateDialogOpen(false);
@@ -181,14 +192,12 @@ const PartRequestsPage: React.FC = () => {
         if (!reviewRequest) return;
         setReviewSubmitting(true);
         
-        // Update the request
         const { error } = await supabase.from('part_requests').update({
             status: 'OPEN',
             target_dealer_ids: broadcastAll ? null : selectedDealerIds
         }).eq('id', reviewRequest.id);
 
         if (!error) {
-            // Trigger push notifications
             supabase.functions.invoke('send-push-notification', {
                 body: {
                     request_id: reviewRequest.id,
@@ -235,15 +244,8 @@ const PartRequestsPage: React.FC = () => {
         return `https://www.google.com/maps/dir/?api=1&origin=${pickup}&destination=${drop}&travelmode=driving`;
     };
 
-    const getRapidoUrl = () => {
-        // Rapido deep link - opens the app, user picks from there
-        return `https://www.rapido.bike`;
-    };
-
-    const getPorterUrl = () => {
-        // Porter deep link - opens the app/web, user books from there
-        return `https://porter.in`;
-    };
+    const getRapidoUrl = () => `https://www.rapido.bike`;
+    const getPorterUrl = () => `https://porter.in`;
 
     const ImageThumbnail = ({ urls, index }: { urls: string[], index: number }) => (
         <Card 
@@ -254,172 +256,433 @@ const PartRequestsPage: React.FC = () => {
         </Card>
     );
 
+    // ----------- KPI Calculations -----------
+    const totalRequests = requests.length;
+    const pendingReview = requests.filter(r => r.status === 'PENDING_REVIEW').length;
+    const openRequests = requests.filter(r => r.status === 'OPEN' || r.status === 'BIDS_RECEIVED').length;
+    const approvedRequests = requests.filter(r => r.status === 'APPROVED' || r.status === 'RECEIVED').length;
+    const totalBids = requests.reduce((sum, r) => sum + (r.bids?.length || 0), 0);
+    const totalSpend = requests.reduce((sum, r) => sum + (r.approved_price || 0), 0);
+
+    // ----------- Status Filters -----------
+    const statusFilterOptions = [
+        { label: 'All', value: 'ALL', color: '#F1F5F9', count: totalRequests },
+        { label: 'Pending Review', value: 'PENDING_REVIEW', color: '#F59E0B', count: pendingReview },
+        { label: 'Open', value: 'OPEN', color: '#00D9FF', count: openRequests },
+        { label: 'Approved', value: 'APPROVED', color: '#10B981', count: approvedRequests },
+        { label: 'Cancelled', value: 'CANCELLED', color: '#EF4444', count: requests.filter(r => r.status === 'CANCELLED').length },
+    ];
+
+    const filteredRequests = requests.filter(req => {
+        if (statusFilter === 'ALL') return true;
+        if (statusFilter === 'OPEN') return req.status === 'OPEN' || req.status === 'BIDS_RECEIVED';
+        if (statusFilter === 'APPROVED') return req.status === 'APPROVED' || req.status === 'RECEIVED';
+        return req.status === statusFilter;
+    });
+
     if (loading) return <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
 
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold">Part Requests / Procurement</Typography>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold">Procurement Hub</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Manage part requests, dealer bids, and supply chain
+                    </Typography>
+                </Box>
                 <Button 
                     variant="contained" 
-                    color="primary" 
                     startIcon={<Add />}
                     onClick={() => setCreateDialogOpen(true)}
-                    sx={{ borderRadius: 2, px: 3, py: 1 }}
+                    sx={{
+                        borderRadius: 2, px: 3, py: 1,
+                        background: 'linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)',
+                        '&:hover': { background: 'linear-gradient(135deg, #5A52E0 0%, #7A74FF 100%)' },
+                    }}
                 >
-                    Broadcast New Request
+                    Broadcast Request
                 </Button>
             </Box>
 
-            <Grid container spacing={3}>
-                {requests.map(req => (
-                    <Grid size={{ xs: 12 }} key={req.id}>
-                        <Card sx={{ borderRadius: 3, bgcolor: '#1A2235' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                    <Box>
-                                        <Typography variant="h6" fontWeight="bold" sx={{ color: '#E2E8F0' }}>
-                                            {req.part_name}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: '#94A3B8', mt: 0.5 }}>
-                                            <strong>Requested On:</strong> {formatDateTime(req.created_at)} | <strong>TV:</strong> {req.tv_brand} {req.tv_size ? `${req.tv_size}"` : ''} {req.tv_model}
-                                        </Typography>
-                                    </Box>
-                                    <Chip 
-                                        label={req.status} 
-                                        color={req.status === 'OPEN' ? 'warning' : req.status === 'APPROVED' ? 'success' : 'default'}
-                                    />
-                                </Box>
-                                
-                                {req.description && (
-                                    <Typography variant="body2" sx={{ color: '#94A3B8', mb: 2, fontStyle: 'italic', bgcolor: 'rgba(255,255,255,0.03)', p: 1.5, borderRadius: 2 }}>
-                                        Notes: {req.description}
-                                    </Typography>
-                                )}
+            {/* Global KPI Cards */}
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid size={{ xs: 6, md: 2.4 }}>
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, rgba(108,99,255,0.12) 0%, rgba(108,99,255,0.04) 100%)',
+                        border: '1px solid rgba(108,99,255,0.15)',
+                    }}>
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(108,99,255,0.15)', color: '#6C63FF' }}>
+                                    <ShoppingCart sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    TOTAL
+                                </Typography>
+                            </Box>
+                            <Typography variant="h4" fontWeight={800} sx={{ color: '#6C63FF' }}>
+                                {totalRequests}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748B' }}>Requests</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
-                                {/* Admin Images */}
-                                {req.image_urls && req.image_urls.length > 0 && (
-                                    <Box sx={{ display: 'flex', overflowX: 'auto', mt: 2, pb: 1, gap: 1 }}>
-                                        {req.image_urls.map((_, i) => <ImageThumbnail key={i} urls={req.image_urls!} index={i} />)}
-                                    </Box>
-                                )}
+                <Grid size={{ xs: 6, md: 2.4 }}>
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%)',
+                        border: '1px solid rgba(245,158,11,0.15)',
+                    }}>
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>
+                                    <RateReview sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    PENDING
+                                </Typography>
+                            </Box>
+                            <Typography variant="h4" fontWeight={800} sx={{ color: '#F59E0B' }}>
+                                {pendingReview}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748B' }}>Need Review</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
-                                {req.status === 'PENDING_REVIEW' ? (
-                                    <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(245,158,11,0.05)', borderRadius: 2, border: '1px solid rgba(245,158,11,0.2)' }}>
-                                        <Typography variant="subtitle2" sx={{ color: '#F59E0B', mb: 1 }}>Action Required: Review Technician Request</Typography>
-                                        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 2 }}>This part was requested by a technician. Please review the details and images before broadcasting to the dealer network.</Typography>
-                                        <Button 
-                                            variant="contained" 
-                                            color="warning" 
-                                            onClick={() => {
-                                                setReviewRequest(req);
-                                                setBroadcastAll(true);
-                                                setSelectedDealerIds([]);
-                                                setReviewDialogOpen(true);
-                                            }}
-                                            sx={{ fontWeight: 'bold' }}
-                                        >
-                                            Review & Broadcast
-                                        </Button>
-                                    </Box>
-                                ) : (
-                                    <>
-                                        <Typography variant="subtitle2" sx={{ color: '#E2E8F0', mb: 1, mt: 3, borderBottom: '1px solid rgba(255,255,255,0.05)', pb: 1 }}>
-                                            Dealer Bids ({req.bids?.length || 0})
-                                        </Typography>
+                <Grid size={{ xs: 6, md: 2.4 }}>
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, rgba(0,217,255,0.12) 0%, rgba(0,217,255,0.04) 100%)',
+                        border: '1px solid rgba(0,217,255,0.15)',
+                    }}>
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(0,217,255,0.15)', color: '#00D9FF' }}>
+                                    <Gavel sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    BIDS
+                                </Typography>
+                            </Box>
+                            <Typography variant="h4" fontWeight={800} sx={{ color: '#00D9FF' }}>
+                                {totalBids}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748B' }}>Received</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid size={{ xs: 6, md: 2.4 }}>
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.04) 100%)',
+                        border: '1px solid rgba(16,185,129,0.15)',
+                    }}>
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(16,185,129,0.15)', color: '#10B981' }}>
+                                    <CheckCircle sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    APPROVED
+                                </Typography>
+                            </Box>
+                            <Typography variant="h4" fontWeight={800} sx={{ color: '#10B981' }}>
+                                {approvedRequests}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748B' }}>Fulfilled</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid size={{ xs: 6, md: 2.4 }}>
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.04) 100%)',
+                        border: '1px solid rgba(239,68,68,0.15)',
+                    }}>
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(239,68,68,0.15)', color: '#EF4444' }}>
+                                    <AttachMoney sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    SPEND
+                                </Typography>
+                            </Box>
+                            <Typography variant="h4" fontWeight={800} sx={{ color: '#EF4444' }}>
+                                {formatCurrency(totalSpend)}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748B' }}>Approved total</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+
+            {/* Status Filter Chips */}
+            <Card sx={{ mb: 3 }}>
+                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                        {statusFilterOptions.map(sf => (
+                            <Chip
+                                key={sf.value}
+                                label={`${sf.label} (${sf.count})`}
+                                size="small"
+                                onClick={() => setStatusFilter(sf.value)}
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: '0.75rem',
+                                    backgroundColor: statusFilter === sf.value ? `${sf.color}20` : 'transparent',
+                                    color: statusFilter === sf.value ? sf.color : '#64748B',
+                                    border: `1px solid ${statusFilter === sf.value ? `${sf.color}40` : 'rgba(148,163,184,0.15)'}`,
+                                    '&:hover': { backgroundColor: `${sf.color}15` },
+                                }}
+                            />
+                        ))}
+                    </Box>
+                </CardContent>
+            </Card>
+
+            {/* Part Request Cards */}
+            {filteredRequests.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 10 }}>
+                    <ShoppingCart sx={{ fontSize: 64, color: '#334155', mb: 2 }} />
+                    <Typography color="text.secondary">
+                        {statusFilter === 'ALL' ? 'No part requests yet. Click "Broadcast Request" to get started.' : 'No requests matching this filter.'}
+                    </Typography>
+                </Box>
+            ) : (
+                <Grid container spacing={2}>
+                    {filteredRequests.map(req => {
+                        const statusConf = STATUS_CONFIG[req.status] || STATUS_CONFIG.OPEN;
+                        const bidCount = req.bids?.length || 0;
+                        const acceptedBid = req.bids?.find(b => b.is_accepted);
+
+                        return (
+                            <Grid size={{ xs: 12 }} key={req.id}>
+                                <Card sx={{
+                                    border: req.status === 'PENDING_REVIEW'
+                                        ? '1px solid rgba(245,158,11,0.3)'
+                                        : '1px solid rgba(255,255,255,0.05)',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': { border: '1px solid rgba(108,99,255,0.2)' },
+                                }}>
+                                    <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                        {/* Request Header */}
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                                <Avatar sx={{
+                                                    width: 44, height: 44,
+                                                    bgcolor: `${statusConf.color}15`,
+                                                    color: statusConf.color,
+                                                }}>
+                                                    {statusConf.icon}
+                                                </Avatar>
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight={700} sx={{ color: '#E2E8F0', lineHeight: 1.2 }}>
+                                                        {req.part_name}
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                                                        <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                                            📺 {req.tv_brand} {req.tv_size ? `${req.tv_size}"` : ''} {req.tv_model || ''}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: '#475569' }}>
+                                                            {formatRelative(req.created_at)}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                {bidCount > 0 && (
+                                                    <Chip
+                                                        icon={<Gavel sx={{ fontSize: '14px !important' }} />}
+                                                        label={`${bidCount} Bid${bidCount !== 1 ? 's' : ''}`}
+                                                        size="small"
+                                                        sx={{
+                                                            height: 24, fontSize: '0.7rem', fontWeight: 700,
+                                                            bgcolor: 'rgba(108,99,255,0.12)', color: '#6C63FF',
+                                                        }}
+                                                    />
+                                                )}
+                                                <Chip
+                                                    label={statusConf.label}
+                                                    size="small"
+                                                    sx={{
+                                                        height: 24, fontSize: '0.7rem', fontWeight: 700,
+                                                        bgcolor: `${statusConf.color}20`,
+                                                        color: statusConf.color,
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Box>
                                         
-                                        {req.bids && req.bids.length > 0 ? (
-                                            <TableContainer component={Paper} sx={{ bgcolor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
-                                                <Table size="small">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)', pl: 0 }}>Dealer</TableCell>
-                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Price</TableCell>
-                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Photos</TableCell>
-                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Notes</TableCell>
-                                                            <TableCell align="right" sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)', pr: 0 }}>Action</TableCell>
-                                                        </TableRow>
-                                                    </TableHead>
-                                                    <TableBody>
-                                                        {req.bids.map(bid => (
-                                                            <TableRow key={bid.id}>
-                                                                <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)', pl: 0 }}>
-                                                                    {bid.dealer?.name || 'Unknown Dealer'}
-                                                                </TableCell>
-                                                                <TableCell sx={{ color: '#10B981', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                    ₹{bid.price}
-                                                                </TableCell>
-                                                                <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                    {bid.image_urls && bid.image_urls.length > 0 ? (
-                                                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                                            {bid.image_urls.map((url, i) => (
-                                                                                <Box 
-                                                                                    key={i} 
-                                                                                    onClick={() => setViewImages({ urls: bid.image_urls!, index: i })}
-                                                                                    sx={{ 
-                                                                                        width: 40, height: 40, cursor: 'pointer', borderRadius: 1, 
-                                                                                        backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                                                                                        border: '1px solid rgba(255,255,255,0.2)'
-                                                                                    }} 
-                                                                                />
-                                                                            ))}
-                                                                        </Box>
-                                                                    ) : (
-                                                                        <Typography variant="caption" color="text.secondary">-</Typography>
-                                                                    )}
-                                                                </TableCell>
-                                                                <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                    {bid.notes || '-'}
-                                                                </TableCell>
-                                                                <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)', pr: 0 }}>
-                                                                    {bid.is_accepted ? (
-                                                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                                                            <Chip label="Accepted" color="success" size="small" />
-                                                                            <Button
-                                                                                variant="contained"
-                                                                                size="small"
-                                                                                startIcon={<LocalShipping />}
-                                                                                onClick={() => openTransportDialog(bid.dealer?.address || '')}
-                                                                                sx={{
-                                                                                    borderRadius: 2,
-                                                                                    textTransform: 'none',
-                                                                                    fontSize: '0.75rem',
-                                                                                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                                                                                    '&:hover': { background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)' }
-                                                                                }}
-                                                                            >
-                                                                                Book Transport
-                                                                            </Button>
-                                                                        </Box>
-                                                                    ) : req.status === 'OPEN' ? (
-                                                                        <Button 
-                                                                            variant="outlined" 
-                                                                            color="primary" 
-                                                                            size="small"
-                                                                            onClick={() => handleApproveBid(req, bid)}
-                                                                            sx={{ borderRadius: 2 }}
-                                                                        >
-                                                                            Approve
-                                                                        </Button>
-                                                                    ) : null}
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                        ) : (
-                                            <Typography variant="body2" sx={{ color: '#64748B' }}>
-                                                No bids received yet.
+                                        {req.description && (
+                                            <Typography variant="body2" sx={{
+                                                color: '#94A3B8', mb: 2, fontStyle: 'italic',
+                                                bgcolor: 'rgba(255,255,255,0.03)', p: 1.5, borderRadius: 2,
+                                            }}>
+                                                {req.description}
                                             </Typography>
                                         )}
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+
+                                        {/* Images */}
+                                        {req.image_urls && req.image_urls.length > 0 && (
+                                            <Box sx={{ display: 'flex', overflowX: 'auto', mb: 2, pb: 1, gap: 1 }}>
+                                                {req.image_urls.map((_, i) => <ImageThumbnail key={i} urls={req.image_urls!} index={i} />)}
+                                            </Box>
+                                        )}
+
+                                        {/* Approved Bid Summary */}
+                                        {acceptedBid && (
+                                            <Box sx={{
+                                                p: 2, mb: 2, borderRadius: 2,
+                                                bgcolor: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)',
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1,
+                                            }}>
+                                                <Box>
+                                                    <Typography variant="caption" sx={{ color: '#10B981', fontWeight: 600 }}>
+                                                        ✅ Approved Dealer
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={700} sx={{ color: '#E2E8F0' }}>
+                                                        {acceptedBid.dealer?.name || 'Unknown'}
+                                                    </Typography>
+                                                </Box>
+                                                <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981' }}>
+                                                    {formatCurrency(acceptedBid.price)}
+                                                </Typography>
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    startIcon={<LocalShipping />}
+                                                    onClick={() => openTransportDialog(acceptedBid.dealer?.address || '')}
+                                                    sx={{
+                                                        borderRadius: 2, textTransform: 'none', fontSize: '0.75rem',
+                                                        background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                                                        '&:hover': { background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)' }
+                                                    }}
+                                                >
+                                                    Book Transport
+                                                </Button>
+                                            </Box>
+                                        )}
+
+                                        {/* Pending Review Action */}
+                                        {req.status === 'PENDING_REVIEW' && (
+                                            <Box sx={{ p: 2, bgcolor: 'rgba(245,158,11,0.05)', borderRadius: 2, border: '1px solid rgba(245,158,11,0.2)' }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <Box>
+                                                        <Typography variant="subtitle2" sx={{ color: '#F59E0B' }}>
+                                                            Action Required: Review Technician Request
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                                            Review the details before broadcasting to the dealer network.
+                                                        </Typography>
+                                                    </Box>
+                                                    <Button 
+                                                        variant="contained" 
+                                                        color="warning" 
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setReviewRequest(req);
+                                                            setBroadcastAll(true);
+                                                            setSelectedDealerIds([]);
+                                                            setReviewDialogOpen(true);
+                                                        }}
+                                                        sx={{ fontWeight: 'bold', borderRadius: 2, textTransform: 'none' }}
+                                                    >
+                                                        Review & Broadcast
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        )}
+
+                                        {/* Bids Table (for non-pending requests) */}
+                                        {req.status !== 'PENDING_REVIEW' && req.bids && req.bids.length > 0 && (
+                                            <Box sx={{ mt: 1 }}>
+                                                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, mb: 1, display: 'block' }}>
+                                                    DEALER BIDS
+                                                </Typography>
+                                                <TableContainer component={Paper} sx={{ bgcolor: 'rgba(15,23,42,0.5)', backgroundImage: 'none', borderRadius: 2 }}>
+                                                    <Table size="small">
+                                                        <TableHead>
+                                                            <TableRow>
+                                                                <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Dealer</TableCell>
+                                                                <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Price</TableCell>
+                                                                <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Photos</TableCell>
+                                                                <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Notes</TableCell>
+                                                                <TableCell align="right" sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Action</TableCell>
+                                                            </TableRow>
+                                                        </TableHead>
+                                                        <TableBody>
+                                                            {req.bids.map(bid => (
+                                                                <TableRow key={bid.id} sx={{ '&:hover': { bgcolor: 'rgba(108,99,255,0.05)' } }}>
+                                                                    <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                        <Typography variant="body2" fontWeight={600}>{bid.dealer?.name || 'Unknown'}</Typography>
+                                                                    </TableCell>
+                                                                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                        <Typography variant="body2" fontWeight={700} sx={{ color: '#F59E0B' }}>
+                                                                            {formatCurrency(bid.price)}
+                                                                        </Typography>
+                                                                    </TableCell>
+                                                                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                        {bid.image_urls && bid.image_urls.length > 0 ? (
+                                                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                                {bid.image_urls.map((url, i) => (
+                                                                                    <Box 
+                                                                                        key={i} 
+                                                                                        onClick={() => setViewImages({ urls: bid.image_urls!, index: i })}
+                                                                                        sx={{ 
+                                                                                            width: 36, height: 36, cursor: 'pointer', borderRadius: 1, 
+                                                                                            backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                                                                                            border: '1px solid rgba(255,255,255,0.2)'
+                                                                                        }} 
+                                                                                    />
+                                                                                ))}
+                                                                            </Box>
+                                                                        ) : (
+                                                                            <Typography variant="caption" color="text.secondary">—</Typography>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                        <Typography variant="body2">{bid.notes || '—'}</Typography>
+                                                                    </TableCell>
+                                                                    <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                        {bid.is_accepted ? (
+                                                                            <Chip label="Accepted ✓" size="small" sx={{
+                                                                                height: 22, fontSize: '0.65rem', fontWeight: 700,
+                                                                                bgcolor: 'rgba(16,185,129,0.2)', color: '#10B981',
+                                                                            }} />
+                                                                        ) : req.status === 'OPEN' || req.status === 'BIDS_RECEIVED' ? (
+                                                                            <Button
+                                                                                variant="outlined" color="primary" size="small"
+                                                                                onClick={() => handleApproveBid(req, bid)}
+                                                                                sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem' }}
+                                                                            >
+                                                                                Approve
+                                                                            </Button>
+                                                                        ) : null}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </TableContainer>
+                                            </Box>
+                                        )}
+
+                                        {/* No bids message */}
+                                        {req.status !== 'PENDING_REVIEW' && (!req.bids || req.bids.length === 0) && (
+                                            <Typography variant="body2" sx={{ color: '#475569', mt: 1, fontStyle: 'italic' }}>
+                                                No bids received yet. Dealers have been notified.
+                                            </Typography>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        );
+                    })}
+                </Grid>
+            )}
 
             {/* Transport Booking Dialog */}
             <Dialog open={transportDialogOpen} onClose={() => setTransportDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3, width: '100%', maxWidth: 420 } }}>
@@ -449,66 +712,31 @@ const PartRequestsPage: React.FC = () => {
 
                     <Typography variant="subtitle2" sx={{ color: '#94A3B8', mb: 2 }}>Choose a transport service:</Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<TwoWheeler />}
-                            onClick={() => {
-                                navigator.clipboard.writeText(`Pickup: ${transportDealerAddress}\nDrop: ${DARK_STORE_ADDRESS}`);
-                                window.open(getRapidoUrl(), '_blank');
-                            }}
-                            sx={{
-                                justifyContent: 'flex-start',
-                                borderRadius: 2,
-                                py: 1.5,
-                                color: '#FCD34D',
-                                borderColor: 'rgba(252,211,77,0.3)',
-                                '&:hover': { bgcolor: 'rgba(252,211,77,0.08)', borderColor: '#FCD34D' }
-                            }}
+                        <Button fullWidth variant="outlined" startIcon={<TwoWheeler />}
+                            onClick={() => { navigator.clipboard.writeText(`Pickup: ${transportDealerAddress}\nDrop: ${DARK_STORE_ADDRESS}`); window.open(getRapidoUrl(), '_blank'); }}
+                            sx={{ justifyContent: 'flex-start', borderRadius: 2, py: 1.5, color: '#FCD34D', borderColor: 'rgba(252,211,77,0.3)', '&:hover': { bgcolor: 'rgba(252,211,77,0.08)', borderColor: '#FCD34D' } }}
                         >
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="body2" fontWeight="bold">Rapido</Typography>
-                                <Typography variant="caption" sx={{ color: '#94A3B8' }}>2-Wheeler • Addresses copied to clipboard</Typography>
+                                <Typography variant="caption" sx={{ color: '#94A3B8' }}>2-Wheeler • Addresses copied</Typography>
                             </Box>
                         </Button>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<DirectionsCar />}
-                            onClick={() => {
-                                navigator.clipboard.writeText(`Pickup: ${transportDealerAddress}\nDrop: ${DARK_STORE_ADDRESS}`);
-                                window.open(getPorterUrl(), '_blank');
-                            }}
-                            sx={{
-                                justifyContent: 'flex-start',
-                                borderRadius: 2,
-                                py: 1.5,
-                                color: '#60A5FA',
-                                borderColor: 'rgba(96,165,250,0.3)',
-                                '&:hover': { bgcolor: 'rgba(96,165,250,0.08)', borderColor: '#60A5FA' }
-                            }}
+                        <Button fullWidth variant="outlined" startIcon={<DirectionsCar />}
+                            onClick={() => { navigator.clipboard.writeText(`Pickup: ${transportDealerAddress}\nDrop: ${DARK_STORE_ADDRESS}`); window.open(getPorterUrl(), '_blank'); }}
+                            sx={{ justifyContent: 'flex-start', borderRadius: 2, py: 1.5, color: '#60A5FA', borderColor: 'rgba(96,165,250,0.3)', '&:hover': { bgcolor: 'rgba(96,165,250,0.08)', borderColor: '#60A5FA' } }}
                         >
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="body2" fontWeight="bold">Porter</Typography>
-                                <Typography variant="caption" sx={{ color: '#94A3B8' }}>4-Wheeler • Addresses copied to clipboard</Typography>
+                                <Typography variant="caption" sx={{ color: '#94A3B8' }}>4-Wheeler • Addresses copied</Typography>
                             </Box>
                         </Button>
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            startIcon={<Map />}
+                        <Button fullWidth variant="contained" startIcon={<Map />}
                             onClick={() => window.open(getGoogleMapsUrl(), '_blank')}
-                            sx={{
-                                justifyContent: 'flex-start',
-                                borderRadius: 2,
-                                py: 1.5,
-                                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                                '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }
-                            }}
+                            sx={{ justifyContent: 'flex-start', borderRadius: 2, py: 1.5, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' } }}
                         >
                             <Box sx={{ textAlign: 'left' }}>
                                 <Typography variant="body2" fontWeight="bold">Google Maps Directions</Typography>
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>Route auto-filled • Share link with driver</Typography>
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>Route auto-filled</Typography>
                             </Box>
                         </Button>
                     </Box>
@@ -524,71 +752,25 @@ const PartRequestsPage: React.FC = () => {
                     <DialogTitle>Broadcast Part Request</DialogTitle>
                     <DialogContent>
                         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <TextField
-                                label="Part Name (e.g. Backlight, Motherboard)"
-                                required fullWidth variant="outlined"
-                                value={formData.part_name}
-                                onChange={e => setFormData({...formData, part_name: e.target.value})}
-                            />
+                            <TextField label="Part Name (e.g. Backlight, Motherboard)" required fullWidth variant="outlined" value={formData.part_name} onChange={e => setFormData({...formData, part_name: e.target.value})} />
                             <Grid container spacing={2}>
-                                <Grid size={{ xs: 6 }}>
-                                    <TextField
-                                        label="TV Brand"
-                                        required fullWidth variant="outlined"
-                                        value={formData.tv_brand}
-                                        onChange={e => setFormData({...formData, tv_brand: e.target.value})}
-                                    />
-                                </Grid>
-                                <Grid size={{ xs: 6 }}>
-                                    <TextField
-                                        label="TV Size (inch)"
-                                        type="number" fullWidth variant="outlined"
-                                        value={formData.tv_size}
-                                        onChange={e => setFormData({...formData, tv_size: e.target.value})}
-                                    />
-                                </Grid>
+                                <Grid size={{ xs: 6 }}><TextField label="TV Brand" required fullWidth variant="outlined" value={formData.tv_brand} onChange={e => setFormData({...formData, tv_brand: e.target.value})} /></Grid>
+                                <Grid size={{ xs: 6 }}><TextField label="TV Size (inch)" type="number" fullWidth variant="outlined" value={formData.tv_size} onChange={e => setFormData({...formData, tv_size: e.target.value})} /></Grid>
                             </Grid>
-                            <TextField
-                                label="TV Model Number (Optional)"
-                                fullWidth variant="outlined"
-                                value={formData.tv_model}
-                                onChange={e => setFormData({...formData, tv_model: e.target.value})}
-                            />
-                            <TextField
-                                label="Additional Notes/Description"
-                                multiline rows={3} fullWidth variant="outlined"
-                                value={formData.description}
-                                onChange={e => setFormData({...formData, description: e.target.value})}
-                            />
+                            <TextField label="TV Model Number (Optional)" fullWidth variant="outlined" value={formData.tv_model} onChange={e => setFormData({...formData, tv_model: e.target.value})} />
+                            <TextField label="Additional Notes/Description" multiline rows={3} fullWidth variant="outlined" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
 
-                            {/* Image Upload Area */}
                             <Box sx={{ mt: 1 }}>
-                                <Button
-                                    component="label"
-                                    variant="outlined"
-                                    startIcon={<PhotoCamera />}
-                                    sx={{ borderRadius: 2, color: '#94A3B8', borderColor: 'rgba(255,255,255,0.2)' }}
-                                >
+                                <Button component="label" variant="outlined" startIcon={<PhotoCamera />} sx={{ borderRadius: 2, color: '#94A3B8', borderColor: 'rgba(255,255,255,0.2)' }}>
                                     Attach Reference Photos
-                                    <input
-                                        type="file"
-                                        hidden
-                                        multiple
-                                        accept="image/*"
-                                        onChange={handleFileSelect}
-                                    />
+                                    <input type="file" hidden multiple accept="image/*" onChange={handleFileSelect} />
                                 </Button>
-                                
                                 {selectedFiles.length > 0 && (
                                     <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                         {selectedFiles.map((file, i) => (
                                             <Box key={i} sx={{ position: 'relative', width: 60, height: 60, borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
                                                 <img src={URL.createObjectURL(file)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <IconButton 
-                                                    size="small" 
-                                                    onClick={() => removeFile(i)}
-                                                    sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.6)', p: 0.2, '&:hover': { bgcolor: 'rgba(239,68,68,0.8)' } }}
-                                                >
+                                                <IconButton size="small" onClick={() => removeFile(i)} sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.6)', p: 0.2, '&:hover': { bgcolor: 'rgba(239,68,68,0.8)' } }}>
                                                     <Delete sx={{ fontSize: 14, color: '#FFF' }} />
                                                 </IconButton>
                                             </Box>
@@ -596,24 +778,11 @@ const PartRequestsPage: React.FC = () => {
                                     </Box>
                                 )}
                             </Box>
-                            {/* Dealer Targeting Section */}
+
                             <Box sx={{ mt: 1, p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                                 <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={broadcastAll}
-                                            onChange={(e) => {
-                                                setBroadcastAll(e.target.checked);
-                                                if (e.target.checked) setSelectedDealerIds([]);
-                                            }}
-                                            sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#6C63FF' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#6C63FF' } }}
-                                        />
-                                    }
-                                    label={
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                            {broadcastAll ? '📡 Broadcast to All Dealers' : '🎯 Send to Selected Dealers'}
-                                        </Typography>
-                                    }
+                                    control={<Switch checked={broadcastAll} onChange={(e) => { setBroadcastAll(e.target.checked); if (e.target.checked) setSelectedDealerIds([]); }} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#6C63FF' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#6C63FF' } }} />}
+                                    label={<Typography variant="body2" sx={{ fontWeight: 600 }}>{broadcastAll ? '📡 Broadcast to All Dealers' : '🎯 Send to Selected Dealers'}</Typography>}
                                 />
                                 {!broadcastAll && (
                                     <FormGroup sx={{ mt: 1, pl: 1 }}>
@@ -621,27 +790,9 @@ const PartRequestsPage: React.FC = () => {
                                             <Typography variant="caption" sx={{ color: '#64748B' }}>No active dealers found.</Typography>
                                         ) : (
                                             allDealers.map(d => (
-                                                <FormControlLabel
-                                                    key={d.id}
-                                                    control={
-                                                        <Checkbox
-                                                            checked={selectedDealerIds.includes(d.id)}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) {
-                                                                    setSelectedDealerIds(prev => [...prev, d.id]);
-                                                                } else {
-                                                                    setSelectedDealerIds(prev => prev.filter(id => id !== d.id));
-                                                                }
-                                                            }}
-                                                            sx={{ color: '#64748B', '&.Mui-checked': { color: '#6C63FF' } }}
-                                                        />
-                                                    }
-                                                    label={
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{d.name}</Typography>
-                                                            <Typography variant="caption" sx={{ color: '#64748B' }}>{d.contact_person} • {d.mobile}</Typography>
-                                                        </Box>
-                                                    }
+                                                <FormControlLabel key={d.id}
+                                                    control={<Checkbox checked={selectedDealerIds.includes(d.id)} onChange={(e) => { if (e.target.checked) setSelectedDealerIds(prev => [...prev, d.id]); else setSelectedDealerIds(prev => prev.filter(id => id !== d.id)); }} sx={{ color: '#64748B', '&.Mui-checked': { color: '#6C63FF' } }} />}
+                                                    label={<Box><Typography variant="body2" sx={{ fontWeight: 600 }}>{d.name}</Typography><Typography variant="caption" sx={{ color: '#64748B' }}>{d.contact_person} • {d.mobile}</Typography></Box>}
                                                 />
                                             ))
                                         )}
@@ -652,9 +803,7 @@ const PartRequestsPage: React.FC = () => {
                     </DialogContent>
                     <DialogActions sx={{ p: 2, pt: 0 }}>
                         <Button onClick={() => setCreateDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
-                        <Button type="submit" variant="contained" disabled={submitting}>
-                            {submitting ? 'Broadcasting...' : 'Broadcast to Dealers'}
-                        </Button>
+                        <Button type="submit" variant="contained" disabled={submitting}>{submitting ? 'Broadcasting...' : 'Broadcast to Dealers'}</Button>
                     </DialogActions>
                 </form>
             </Dialog>
@@ -663,27 +812,11 @@ const PartRequestsPage: React.FC = () => {
             <Dialog open={reviewDialogOpen} onClose={() => setReviewDialogOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3 } }}>
                 <DialogTitle>Broadcast Technician Request</DialogTitle>
                 <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Select the dealers you want to send this part request to.
-                    </Typography>
-
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Select the dealers you want to send this part request to.</Typography>
                     <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={broadcastAll}
-                                    onChange={(e) => {
-                                        setBroadcastAll(e.target.checked);
-                                        if (e.target.checked) setSelectedDealerIds([]);
-                                    }}
-                                    sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#6C63FF' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#6C63FF' } }}
-                                />
-                            }
-                            label={
-                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                    {broadcastAll ? '📡 Broadcast to All Dealers' : '🎯 Send to Selected Dealers'}
-                                </Typography>
-                            }
+                            control={<Switch checked={broadcastAll} onChange={(e) => { setBroadcastAll(e.target.checked); if (e.target.checked) setSelectedDealerIds([]); }} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#6C63FF' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#6C63FF' } }} />}
+                            label={<Typography variant="body2" sx={{ fontWeight: 600 }}>{broadcastAll ? '📡 Broadcast to All Dealers' : '🎯 Send to Selected Dealers'}</Typography>}
                         />
                         {!broadcastAll && (
                             <FormGroup sx={{ mt: 1, pl: 1, maxHeight: 200, overflowY: 'auto' }}>
@@ -691,24 +824,9 @@ const PartRequestsPage: React.FC = () => {
                                     <Typography variant="caption" sx={{ color: '#64748B' }}>No active dealers found.</Typography>
                                 ) : (
                                     allDealers.map(d => (
-                                        <FormControlLabel
-                                            key={d.id}
-                                            control={
-                                                <Checkbox
-                                                    checked={selectedDealerIds.includes(d.id)}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) setSelectedDealerIds(prev => [...prev, d.id]);
-                                                        else setSelectedDealerIds(prev => prev.filter(id => id !== d.id));
-                                                    }}
-                                                    sx={{ color: '#64748B', '&.Mui-checked': { color: '#6C63FF' } }}
-                                                />
-                                            }
-                                            label={
-                                                <Box>
-                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{d.name}</Typography>
-                                                    <Typography variant="caption" sx={{ color: '#64748B' }}>{d.contact_person} • {d.mobile}</Typography>
-                                                </Box>
-                                            }
+                                        <FormControlLabel key={d.id}
+                                            control={<Checkbox checked={selectedDealerIds.includes(d.id)} onChange={(e) => { if (e.target.checked) setSelectedDealerIds(prev => [...prev, d.id]); else setSelectedDealerIds(prev => prev.filter(id => id !== d.id)); }} sx={{ color: '#64748B', '&.Mui-checked': { color: '#6C63FF' } }} />}
+                                            label={<Box><Typography variant="body2" sx={{ fontWeight: 600 }}>{d.name}</Typography><Typography variant="caption" sx={{ color: '#64748B' }}>{d.contact_person} • {d.mobile}</Typography></Box>}
                                         />
                                     ))
                                 )}
@@ -718,13 +836,11 @@ const PartRequestsPage: React.FC = () => {
                 </DialogContent>
                 <DialogActions sx={{ p: 2, pt: 0 }}>
                     <Button onClick={() => setReviewDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
-                    <Button onClick={handleReviewBroadcast} variant="contained" color="warning" disabled={reviewSubmitting}>
-                        {reviewSubmitting ? 'Broadcasting...' : 'Broadcast to Dealers'}
-                    </Button>
+                    <Button onClick={handleReviewBroadcast} variant="contained" color="warning" disabled={reviewSubmitting}>{reviewSubmitting ? 'Broadcasting...' : 'Broadcast to Dealers'}</Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Fullscreen Swipeable Image Gallery */}
+            {/* Fullscreen Image Gallery */}
             <Lightbox
                 open={!!viewImages}
                 close={() => setViewImages(null)}
@@ -733,7 +849,6 @@ const PartRequestsPage: React.FC = () => {
                 plugins={[Zoom]}
                 zoom={{ maxZoomPixelRatio: 5 }}
             />
-
         </Box>
     );
 };
