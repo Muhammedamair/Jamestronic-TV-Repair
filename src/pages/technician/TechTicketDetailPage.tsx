@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import {
     ArrowBack, PlayArrow, CheckCircle, Cancel, ShoppingCart, NoteAdd, Timer,
-    PhotoCamera, Delete as DeleteIcon
+    PhotoCamera, Delete as DeleteIcon, Check, DoneAll
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -74,7 +74,14 @@ const TechTicketDetailPage: React.FC = () => {
 
             // Get notes
             const { data: noteData } = await supabase.from('ticket_notes').select('*').eq('ticket_id', id).order('created_at', { ascending: false });
-            if (noteData) setNotes(noteData);
+            if (noteData) {
+                setNotes(noteData);
+                // Mark unread admin notes as read
+                const unreadAdminNotes = noteData.filter(n => n.sender_type === 'ADMIN' && !n.is_read);
+                if (unreadAdminNotes.length > 0) {
+                    await supabase.from('ticket_notes').update({ is_read: true }).in('id', unreadAdminNotes.map(un => un.id));
+                }
+            }
 
             setLoading(false);
         };
@@ -83,16 +90,26 @@ const TechTicketDetailPage: React.FC = () => {
         // Real-time subscription for notes
         const channel = supabase.channel(`tech_ticket_notes_${id}`)
             .on('postgres_changes', { 
-                event: 'INSERT', 
+                event: '*', 
                 schema: 'public', 
                 table: 'ticket_notes',
                 filter: `ticket_id=eq.${id}`
             }, (payload) => {
-                const newNote = payload.new as TicketNote;
-                setNotes(prev => {
-                    if (prev.some(n => n.id === newNote.id)) return prev;
-                    return [newNote, ...prev];
-                });
+                if (payload.eventType === 'INSERT') {
+                    const newNote = payload.new as TicketNote;
+                    setNotes(prev => {
+                        if (prev.some(n => n.id === newNote.id)) return prev;
+                        // Mark as read immediately if it's from Admin
+                        if (newNote.sender_type === 'ADMIN' && !newNote.is_read) {
+                            supabase.from('ticket_notes').update({ is_read: true }).eq('id', newNote.id).then();
+                            newNote.is_read = true;
+                        }
+                        return [newNote, ...prev];
+                    });
+                } else if (payload.eventType === 'UPDATE') {
+                    const updatedNote = payload.new as TicketNote;
+                    setNotes(prev => prev.map(n => n.id === updatedNote.id ? updatedNote : n));
+                }
             })
             .subscribe();
 
@@ -120,7 +137,7 @@ const TechTicketDetailPage: React.FC = () => {
     const addNote = async () => {
         if (!id || !noteContent.trim() || !ticket) return;
         const { data } = await supabase.from('ticket_notes')
-            .insert({ ticket_id: id, note_type: 'INTERNAL', content: noteContent.trim() }).select().single();
+            .insert({ ticket_id: id, note_type: 'INTERNAL', content: noteContent.trim(), sender_type: 'TECHNICIAN', is_read: false }).select().single();
         if (data) {
             setNotes(p => [data as TicketNote, ...p]);
             
@@ -315,12 +332,24 @@ const TechTicketDetailPage: React.FC = () => {
                     ) : (
                         notes.map(n => (
                             <Box key={n.id} sx={{ mb: 1.5, pl: 2, borderLeft: `3px solid ${noteColor(n.note_type)}` }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                    <Chip label={n.note_type.replace('_', ' ')} size="small"
-                                        sx={{ height: 20, fontSize: '0.65rem', bgcolor: `${noteColor(n.note_type)}15`, color: noteColor(n.note_type) }} />
-                                    <Typography variant="caption" color="text.secondary">
-                                        {new Date(n.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                    </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Chip label={n.note_type.replace('_', ' ')} size="small"
+                                            sx={{ height: 20, fontSize: '0.65rem', bgcolor: `${noteColor(n.note_type)}15`, color: noteColor(n.note_type) }} />
+                                        {n.sender_type && (
+                                            <Typography variant="caption" sx={{ color: n.sender_type === 'TECHNICIAN' ? 'warning.main' : n.sender_type === 'ADMIN' ? 'primary.main' : 'text.secondary', fontWeight: 600 }}>
+                                                {n.sender_type === 'TECHNICIAN' ? 'You' : n.sender_type === 'ADMIN' ? 'Admin' : 'Customer'}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(n.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </Typography>
+                                        {n.sender_type === 'TECHNICIAN' && (
+                                            n.is_read ? <DoneAll sx={{ fontSize: 16, color: '#3b82f6' }} /> : <Check sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                        )}
+                                    </Box>
                                 </Box>
                                 <Typography variant="body2">{n.content}</Typography>
                             </Box>

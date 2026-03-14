@@ -126,6 +126,8 @@ export interface TicketNote {
     ticket_id: string;
     note_type: 'DIAGNOSIS' | 'FOLLOW_UP' | 'INTERNAL' | 'CUSTOMER_UPDATE';
     content: string;
+    sender_type?: 'ADMIN' | 'TECHNICIAN' | 'CUSTOMER';
+    is_read?: boolean;
     created_at: string;
 }
 

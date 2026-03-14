@@ -10,6 +10,7 @@ import {
     ArrowBack, Phone, LocationOn, Add, Delete,
     WhatsApp, Receipt, NoteAdd, Map, Star, Download,
     Build as RepairIcon, InstallDesktop as InstallIcon,
+    Check, DoneAll,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -80,12 +81,23 @@ const TicketDetailPage: React.FC = () => {
             supabase.from('quotations').select('*').eq('ticket_id', id).order('created_at', { ascending: false }),
             supabase.from('invoices').select('*').eq('ticket_id', id).order('created_at', { ascending: false }),
             supabase.from('technicians').select('*').eq('status', 'ACTIVE').order('name'),
-        ]).then(([t, n, q, i, techRes]) => {
+        ]).then(async ([t, n, q, i, techRes]) => {
             if (t.data) {
                 setTicket(t.data as Ticket);
                 setSelectedTechId((t.data as Ticket).assigned_technician_id || '');
             }
-            if (n.data) setNotes(n.data as TicketNote[]);
+            if (n.data) {
+                const fetchedNotes = n.data as TicketNote[];
+                setNotes(fetchedNotes);
+                
+                // Mark unread technician notes as read by admin
+                const unreadTechNotes = fetchedNotes.filter(note => note.sender_type === 'TECHNICIAN' && !note.is_read);
+                if (unreadTechNotes.length > 0) {
+                    await supabase.from('ticket_notes')
+                        .update({ is_read: true })
+                        .in('id', unreadTechNotes.map(un => un.id));
+                }
+            }
             if (q.data) setQuotations(q.data as Quotation[]);
             if (i.data) setInvoices(i.data as Invoice[]);
             if (techRes.data) setTechnicians(techRes.data as Technician[]);
@@ -95,16 +107,26 @@ const TicketDetailPage: React.FC = () => {
         // Real-time subscription for notes
         const channel = supabase.channel(`ticket_notes_${id}`)
             .on('postgres_changes', { 
-                event: 'INSERT', 
+                event: '*', 
                 schema: 'public', 
                 table: 'ticket_notes',
                 filter: `ticket_id=eq.${id}`
             }, (payload) => {
-                const newNote = payload.new as TicketNote;
-                setNotes(prev => {
-                    if (prev.some(n => n.id === newNote.id)) return prev;
-                    return [newNote, ...prev];
-                });
+                if (payload.eventType === 'INSERT') {
+                    const newNote = payload.new as TicketNote;
+                    setNotes(prev => {
+                        if (prev.some(n => n.id === newNote.id)) return prev;
+                        // Mark as read immediately if it's from Tech
+                        if (newNote.sender_type === 'TECHNICIAN' && !newNote.is_read) {
+                            supabase.from('ticket_notes').update({ is_read: true }).eq('id', newNote.id).then();
+                            newNote.is_read = true;
+                        }
+                        return [newNote, ...prev];
+                    });
+                } else if (payload.eventType === 'UPDATE') {
+                    const updatedNote = payload.new as TicketNote;
+                    setNotes(prev => prev.map(n => n.id === updatedNote.id ? updatedNote : n));
+                }
             })
             .subscribe();
 
@@ -201,7 +223,7 @@ const TicketDetailPage: React.FC = () => {
     const addNote = async () => {
         if (!id || !noteContent.trim() || !ticket) return;
         const { data } = await supabase.from('ticket_notes')
-            .insert({ ticket_id: id, note_type: noteType, content: noteContent.trim() }).select().single();
+            .insert({ ticket_id: id, note_type: noteType, content: noteContent.trim(), sender_type: 'ADMIN', is_read: false }).select().single();
         if (data) {
             setNotes(p => [data as TicketNote, ...p]);
             
@@ -454,8 +476,20 @@ const TicketDetailPage: React.FC = () => {
                                 <Button startIcon={<NoteAdd />} onClick={() => setNoteDialogOpen(true)} variant="outlined" size="small" sx={{ mb: 2, borderColor: 'rgba(108,99,255,0.3)', color: '#6C63FF' }}>Add Note</Button>
                                 {notes.map(n => (<Box key={n.id} sx={{ mb: 2, p: 2, borderRadius: 2, backgroundColor: 'rgba(17,24,39,0.5)', border: '1px solid rgba(148,163,184,0.08)' }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <Chip label={n.note_type.replace('_', ' ')} size="small" sx={{ backgroundColor: `${noteColor(n.note_type)}15`, color: noteColor(n.note_type), fontWeight: 600, fontSize: '0.65rem' }} />
-                                        <Typography variant="caption" color="text.secondary">{formatDateTime(n.created_at)}</Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                            <Chip label={n.note_type.replace('_', ' ')} size="small" sx={{ backgroundColor: `${noteColor(n.note_type)}15`, color: noteColor(n.note_type), fontWeight: 600, fontSize: '0.65rem' }} />
+                                            {n.sender_type && (
+                                                <Typography variant="caption" sx={{ color: n.sender_type === 'ADMIN' ? 'primary.main' : n.sender_type === 'TECHNICIAN' ? 'warning.main' : 'text.secondary', fontWeight: 600 }}>
+                                                    {n.sender_type === 'ADMIN' ? 'Admin' : n.sender_type === 'TECHNICIAN' ? 'Technician' : 'Customer'}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary">{formatDateTime(n.created_at)}</Typography>
+                                            {n.sender_type === 'ADMIN' && (
+                                                n.is_read ? <DoneAll sx={{ fontSize: 16, color: '#3b82f6' }} /> : <Check sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                            )}
+                                        </Box>
                                     </Box>
                                     <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{n.content}</Typography>
                                 </Box>))}
