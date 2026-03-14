@@ -43,30 +43,31 @@ const TechDashboardPage: React.FC = () => {
 
     useEffect(() => {
         if (!user) return;
+        const fetchTech = async () => {
+            if (!technician) {
+                const { data } = await supabase.from('technicians').select('*').eq('user_id', user.id).single();
+                if (data) setTechnician(data);
+            }
+        };
+        fetchTech();
+    }, [user]);
+
+    useEffect(() => {
+        if (!technician) return;
         const fetchData = async () => {
             setLoading(true);
-            // 1. Get technician profile
-            const { data: techData } = await supabase
-                .from('technicians')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
-            
-            if (!techData) { setLoading(false); return; }
-            setTechnician(techData);
-
-            // 2. Get assigned tickets
+            // 1. Get assigned tickets
             const { data: ticketData } = await supabase
                 .from('tickets')
                 .select('*, customer:customers(name, mobile)')
-                .eq('assigned_technician_id', techData.id)
+                .eq('assigned_technician_id', technician.id)
                 .order('created_at', { ascending: false });
 
-            // 3. Get tech logs for these tickets
+            // 2. Get tech logs for these tickets
             const { data: logData } = await supabase
                 .from('ticket_technician_log')
                 .select('*')
-                .eq('technician_id', techData.id);
+                .eq('technician_id', technician.id);
 
             // Merge log data into tickets
             const merged: AssignedTicket[] = (ticketData || []).map(t => {
@@ -83,7 +84,26 @@ const TechDashboardPage: React.FC = () => {
             setLoading(false);
         };
         fetchData();
-    }, [user]);
+
+        // Realtime subscription for ticket assignments
+        if (!technician) return;
+        const channel = supabase.channel('tech_dashboard_updates')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'tickets' },
+                () => { fetchData(); } // Re-fetch on any ticket change
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'ticket_technician_log', filter: `technician_id=eq.${technician.id}` },
+                () => { fetchData(); } // Re-fetch on log updates
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, technician?.id]);
 
     if (loading) return (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>

@@ -45,6 +45,11 @@ const PartRequestsPage: React.FC = () => {
     const [transportDialogOpen, setTransportDialogOpen] = useState(false);
     const [transportDealerAddress, setTransportDealerAddress] = useState('');
 
+    // Review & Broadcast state
+    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+    const [reviewRequest, setReviewRequest] = useState<PartRequest | null>(null);
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
     const fetchRequests = async () => {
         const { data } = await supabase
             .from('part_requests')
@@ -172,6 +177,38 @@ const PartRequestsPage: React.FC = () => {
         setSubmitting(false);
     };
 
+    const handleReviewBroadcast = async () => {
+        if (!reviewRequest) return;
+        setReviewSubmitting(true);
+        
+        // Update the request
+        const { error } = await supabase.from('part_requests').update({
+            status: 'OPEN',
+            target_dealer_ids: broadcastAll ? null : selectedDealerIds
+        }).eq('id', reviewRequest.id);
+
+        if (!error) {
+            // Trigger push notifications
+            supabase.functions.invoke('send-push-notification', {
+                body: {
+                    request_id: reviewRequest.id,
+                    part_name: reviewRequest.part_name,
+                    tv_brand: reviewRequest.tv_brand,
+                    target_dealer_ids: broadcastAll ? null : selectedDealerIds
+                }
+            }).catch(console.error);
+
+            setReviewDialogOpen(false);
+            setReviewRequest(null);
+            setBroadcastAll(true);
+            setSelectedDealerIds([]);
+            fetchRequests();
+        } else {
+            alert('Failed to broadcast request.');
+        }
+        setReviewSubmitting(false);
+    };
+
     const handleApproveBid = async (request: PartRequest, bid: PartBid) => {
         if (!window.confirm(`Approve bid from ${bid.dealer?.name} for ₹${bid.price}?`)) return;
 
@@ -267,94 +304,116 @@ const PartRequestsPage: React.FC = () => {
                                     </Box>
                                 )}
 
-                                <Typography variant="subtitle2" sx={{ color: '#E2E8F0', mb: 1, mt: 3, borderBottom: '1px solid rgba(255,255,255,0.05)', pb: 1 }}>
-                                    Dealer Bids ({req.bids?.length || 0})
-                                </Typography>
-                                
-                                {req.bids && req.bids.length > 0 ? (
-                                    <TableContainer component={Paper} sx={{ bgcolor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
-                                        <Table size="small">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)', pl: 0 }}>Dealer</TableCell>
-                                                    <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Price</TableCell>
-                                                    <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Photos</TableCell>
-                                                    <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Notes</TableCell>
-                                                    <TableCell align="right" sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)', pr: 0 }}>Action</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {req.bids.map(bid => (
-                                                    <TableRow key={bid.id}>
-                                                        <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)', pl: 0 }}>
-                                                            {bid.dealer?.name || 'Unknown Dealer'}
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: '#10B981', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                            ₹{bid.price}
-                                                        </TableCell>
-                                                        <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                            {bid.image_urls && bid.image_urls.length > 0 ? (
-                                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                                    {bid.image_urls.map((url, i) => (
-                                                                        <Box 
-                                                                            key={i} 
-                                                                            onClick={() => setViewImages({ urls: bid.image_urls!, index: i })}
-                                                                            sx={{ 
-                                                                                width: 40, height: 40, cursor: 'pointer', borderRadius: 1, 
-                                                                                backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                                                                                border: '1px solid rgba(255,255,255,0.2)'
-                                                                            }} 
-                                                                        />
-                                                                    ))}
-                                                                </Box>
-                                                            ) : (
-                                                                <Typography variant="caption" color="text.secondary">-</Typography>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                            {bid.notes || '-'}
-                                                        </TableCell>
-                                                        <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)', pr: 0 }}>
-                                                            {bid.is_accepted ? (
-                                                                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                                                    <Chip label="Accepted" color="success" size="small" />
-                                                                    <Button
-                                                                        variant="contained"
-                                                                        size="small"
-                                                                        startIcon={<LocalShipping />}
-                                                                        onClick={() => openTransportDialog(bid.dealer?.address || '')}
-                                                                        sx={{
-                                                                            borderRadius: 2,
-                                                                            textTransform: 'none',
-                                                                            fontSize: '0.75rem',
-                                                                            background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                                                                            '&:hover': { background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)' }
-                                                                        }}
-                                                                    >
-                                                                        Book Transport
-                                                                    </Button>
-                                                                </Box>
-                                                            ) : req.status === 'OPEN' ? (
-                                                                <Button 
-                                                                    variant="outlined" 
-                                                                    color="primary" 
-                                                                    size="small"
-                                                                    onClick={() => handleApproveBid(req, bid)}
-                                                                    sx={{ borderRadius: 2 }}
-                                                                >
-                                                                    Approve
-                                                                </Button>
-                                                            ) : null}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
+                                {req.status === 'PENDING_REVIEW' ? (
+                                    <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(245,158,11,0.05)', borderRadius: 2, border: '1px solid rgba(245,158,11,0.2)' }}>
+                                        <Typography variant="subtitle2" sx={{ color: '#F59E0B', mb: 1 }}>Action Required: Review Technician Request</Typography>
+                                        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 2 }}>This part was requested by a technician. Please review the details and images before broadcasting to the dealer network.</Typography>
+                                        <Button 
+                                            variant="contained" 
+                                            color="warning" 
+                                            onClick={() => {
+                                                setReviewRequest(req);
+                                                setBroadcastAll(true);
+                                                setSelectedDealerIds([]);
+                                                setReviewDialogOpen(true);
+                                            }}
+                                            sx={{ fontWeight: 'bold' }}
+                                        >
+                                            Review & Broadcast
+                                        </Button>
+                                    </Box>
                                 ) : (
-                                    <Typography variant="body2" sx={{ color: '#64748B' }}>
-                                        No bids received yet.
-                                    </Typography>
+                                    <>
+                                        <Typography variant="subtitle2" sx={{ color: '#E2E8F0', mb: 1, mt: 3, borderBottom: '1px solid rgba(255,255,255,0.05)', pb: 1 }}>
+                                            Dealer Bids ({req.bids?.length || 0})
+                                        </Typography>
+                                        
+                                        {req.bids && req.bids.length > 0 ? (
+                                            <TableContainer component={Paper} sx={{ bgcolor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
+                                                <Table size="small">
+                                                    <TableHead>
+                                                        <TableRow>
+                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)', pl: 0 }}>Dealer</TableCell>
+                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Price</TableCell>
+                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Photos</TableCell>
+                                                            <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Notes</TableCell>
+                                                            <TableCell align="right" sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.05)', pr: 0 }}>Action</TableCell>
+                                                        </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {req.bids.map(bid => (
+                                                            <TableRow key={bid.id}>
+                                                                <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)', pl: 0 }}>
+                                                                    {bid.dealer?.name || 'Unknown Dealer'}
+                                                                </TableCell>
+                                                                <TableCell sx={{ color: '#10B981', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    ₹{bid.price}
+                                                                </TableCell>
+                                                                <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    {bid.image_urls && bid.image_urls.length > 0 ? (
+                                                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                            {bid.image_urls.map((url, i) => (
+                                                                                <Box 
+                                                                                    key={i} 
+                                                                                    onClick={() => setViewImages({ urls: bid.image_urls!, index: i })}
+                                                                                    sx={{ 
+                                                                                        width: 40, height: 40, cursor: 'pointer', borderRadius: 1, 
+                                                                                        backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                                                                                        border: '1px solid rgba(255,255,255,0.2)'
+                                                                                    }} 
+                                                                                />
+                                                                            ))}
+                                                                        </Box>
+                                                                    ) : (
+                                                                        <Typography variant="caption" color="text.secondary">-</Typography>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    {bid.notes || '-'}
+                                                                </TableCell>
+                                                                <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)', pr: 0 }}>
+                                                                    {bid.is_accepted ? (
+                                                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                                            <Chip label="Accepted" color="success" size="small" />
+                                                                            <Button
+                                                                                variant="contained"
+                                                                                size="small"
+                                                                                startIcon={<LocalShipping />}
+                                                                                onClick={() => openTransportDialog(bid.dealer?.address || '')}
+                                                                                sx={{
+                                                                                    borderRadius: 2,
+                                                                                    textTransform: 'none',
+                                                                                    fontSize: '0.75rem',
+                                                                                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                                                                                    '&:hover': { background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)' }
+                                                                                }}
+                                                                            >
+                                                                                Book Transport
+                                                                            </Button>
+                                                                        </Box>
+                                                                    ) : req.status === 'OPEN' ? (
+                                                                        <Button 
+                                                                            variant="outlined" 
+                                                                            color="primary" 
+                                                                            size="small"
+                                                                            onClick={() => handleApproveBid(req, bid)}
+                                                                            sx={{ borderRadius: 2 }}
+                                                                        >
+                                                                            Approve
+                                                                        </Button>
+                                                                    ) : null}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        ) : (
+                                            <Typography variant="body2" sx={{ color: '#64748B' }}>
+                                                No bids received yet.
+                                            </Typography>
+                                        )}
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -598,6 +657,71 @@ const PartRequestsPage: React.FC = () => {
                         </Button>
                     </DialogActions>
                 </form>
+            </Dialog>
+
+            {/* Review & Broadcast Dialog */}
+            <Dialog open={reviewDialogOpen} onClose={() => setReviewDialogOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3 } }}>
+                <DialogTitle>Broadcast Technician Request</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Select the dealers you want to send this part request to.
+                    </Typography>
+
+                    <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={broadcastAll}
+                                    onChange={(e) => {
+                                        setBroadcastAll(e.target.checked);
+                                        if (e.target.checked) setSelectedDealerIds([]);
+                                    }}
+                                    sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#6C63FF' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#6C63FF' } }}
+                                />
+                            }
+                            label={
+                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    {broadcastAll ? '📡 Broadcast to All Dealers' : '🎯 Send to Selected Dealers'}
+                                </Typography>
+                            }
+                        />
+                        {!broadcastAll && (
+                            <FormGroup sx={{ mt: 1, pl: 1, maxHeight: 200, overflowY: 'auto' }}>
+                                {allDealers.length === 0 ? (
+                                    <Typography variant="caption" sx={{ color: '#64748B' }}>No active dealers found.</Typography>
+                                ) : (
+                                    allDealers.map(d => (
+                                        <FormControlLabel
+                                            key={d.id}
+                                            control={
+                                                <Checkbox
+                                                    checked={selectedDealerIds.includes(d.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) setSelectedDealerIds(prev => [...prev, d.id]);
+                                                        else setSelectedDealerIds(prev => prev.filter(id => id !== d.id));
+                                                    }}
+                                                    sx={{ color: '#64748B', '&.Mui-checked': { color: '#6C63FF' } }}
+                                                />
+                                            }
+                                            label={
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{d.name}</Typography>
+                                                    <Typography variant="caption" sx={{ color: '#64748B' }}>{d.contact_person} • {d.mobile}</Typography>
+                                                </Box>
+                                            }
+                                        />
+                                    ))
+                                )}
+                            </FormGroup>
+                        )}
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, pt: 0 }}>
+                    <Button onClick={() => setReviewDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
+                    <Button onClick={handleReviewBroadcast} variant="contained" color="warning" disabled={reviewSubmitting}>
+                        {reviewSubmitting ? 'Broadcasting...' : 'Broadcast to Dealers'}
+                    </Button>
+                </DialogActions>
             </Dialog>
 
             {/* Fullscreen Swipeable Image Gallery */}

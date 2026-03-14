@@ -207,7 +207,7 @@ export interface Dealer {
     bids?: PartBid[];
 }
 
-export type PartRequestStatus = 'OPEN' | 'BIDS_RECEIVED' | 'APPROVED' | 'RECEIVED' | 'CANCELLED';
+export type PartRequestStatus = 'PENDING_REVIEW' | 'OPEN' | 'BIDS_RECEIVED' | 'APPROVED' | 'RECEIVED' | 'CANCELLED';
 
 export interface PartRequest {
     id: string;

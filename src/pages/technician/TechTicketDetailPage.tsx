@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box, Typography, Card, CardContent, Grid, Chip, CircularProgress,
     Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions,
-    IconButton, Divider
+    IconButton, Divider, CardMedia
 } from '@mui/material';
 import {
-    ArrowBack, PlayArrow, CheckCircle, Cancel, ShoppingCart, NoteAdd, Timer
+    ArrowBack, PlayArrow, CheckCircle, Cancel, ShoppingCart, NoteAdd, Timer,
+    PhotoCamera, Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -46,6 +47,9 @@ const TechTicketDetailPage: React.FC = () => {
     // Part request dialog
     const [partDialogOpen, setPartDialogOpen] = useState(false);
     const [partForm, setPartForm] = useState({ part_name: '', description: '' });
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!id || !user) return;
@@ -105,6 +109,21 @@ const TechTicketDetailPage: React.FC = () => {
 
     const createPartRequest = async () => {
         if (!id || !ticket || !partForm.part_name.trim()) return;
+        setUploading(true);
+
+        // Upload images to Supabase Storage
+        const imageUrls: string[] = [];
+        for (const file of selectedFiles) {
+            const ext = file.name.split('.').pop();
+            const path = `part-requests/${id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+            const { data, error } = await supabase.storage.from('part-images').upload(path, file);
+            if (data) {
+                const { data: urlData } = supabase.storage.from('part-images').getPublicUrl(data.path);
+                if (urlData?.publicUrl) imageUrls.push(urlData.publicUrl);
+            }
+        }
+
+        // Insert with PENDING_REVIEW so Admin must approve before broadcasting to dealers
         await supabase.from('part_requests').insert({
             ticket_id: id,
             part_name: partForm.part_name.trim(),
@@ -112,13 +131,16 @@ const TechTicketDetailPage: React.FC = () => {
             tv_model: ticket.tv_model || '',
             tv_size: ticket.tv_size || '',
             description: partForm.description.trim(),
-            status: 'OPEN'
+            status: 'PENDING_REVIEW',
+            image_urls: imageUrls.length > 0 ? imageUrls : null,
         });
         // Update tech status to PART_REQUIRED
         await updateTechStatus('PART_REQUIRED');
         setPartForm({ part_name: '', description: '' });
+        setSelectedFiles([]);
         setPartDialogOpen(false);
-        alert('Part request submitted! Admin will process it.');
+        setUploading(false);
+        alert('Part request submitted! Admin will review and broadcast to dealers.');
     };
 
     // Calculate time since assignment
@@ -314,15 +336,59 @@ const TechTicketDetailPage: React.FC = () => {
                             value={partForm.description}
                             onChange={e => setPartForm({ ...partForm, description: e.target.value })}
                         />
+
+                        {/* Image Upload */}
+                        <Box>
+                            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Attach Photos</Typography>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<PhotoCamera />}
+                                    size="small"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    sx={{ borderColor: '#6C63FF', color: '#6C63FF', fontWeight: 600 }}
+                                >
+                                    Camera / Gallery
+                                </Button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    multiple
+                                    hidden
+                                    onChange={e => {
+                                        if (e.target.files) setSelectedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                                    }}
+                                />
+                            </Box>
+                            {selectedFiles.length > 0 && (
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    {selectedFiles.map((file, idx) => (
+                                        <Box key={idx} sx={{ position: 'relative', width: 70, height: 70, borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                            <img src={URL.createObjectURL(file)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                                sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(0,0,0,0.6)', color: '#EF4444', p: 0.3 }}
+                                            >
+                                                <DeleteIcon sx={{ fontSize: 14 }} />
+                                            </IconButton>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            )}
+                        </Box>
+
                         <Typography variant="caption" color="text.secondary">
-                            TV: {ticket.tv_brand} {ticket.tv_model || ''} — This will be sent to Admin for procurement.
+                            TV: {ticket.tv_brand} {ticket.tv_model || ''} — Admin will review before broadcasting to dealers.
                         </Typography>
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 2, pt: 0 }}>
-                    <Button onClick={() => setPartDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
-                    <Button onClick={createPartRequest} variant="contained" color="warning" disabled={!partForm.part_name.trim()}>
-                        Submit Request
+                    <Button onClick={() => { setPartDialogOpen(false); setSelectedFiles([]); }} sx={{ color: 'text.secondary' }}>Cancel</Button>
+                    <Button onClick={createPartRequest} variant="contained" color="warning" disabled={!partForm.part_name.trim() || uploading}>
+                        {uploading ? 'Uploading...' : 'Submit Request'}
                     </Button>
                 </DialogActions>
             </Dialog>
