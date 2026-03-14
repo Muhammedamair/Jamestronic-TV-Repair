@@ -199,10 +199,27 @@ const TicketDetailPage: React.FC = () => {
     };
 
     const addNote = async () => {
-        if (!id || !noteContent.trim()) return;
+        if (!id || !noteContent.trim() || !ticket) return;
         const { data } = await supabase.from('ticket_notes')
             .insert({ ticket_id: id, note_type: noteType, content: noteContent.trim() }).select().single();
-        if (data) setNotes(p => [data as TicketNote, ...p]);
+        if (data) {
+            setNotes(p => [data as TicketNote, ...p]);
+            
+            // Send push notification to assigned Tech
+            if (selectedTechId) {
+                const assignedTech = technicians.find(t => t.id === selectedTechId);
+                if (assignedTech?.user_id) {
+                    supabase.functions.invoke('send-push-notification', {
+                        body: {
+                            title: `📝 Note from Admin on Ticket #${ticket.ticket_number}`,
+                            body: `Admin: "${noteContent.substring(0, 50)}${noteContent.length > 50 ? '...' : ''}"`,
+                            url: `/tech`,
+                            target_user_ids: [assignedTech.user_id]
+                        }
+                    }).catch(console.error);
+                }
+            }
+        }
         setNoteContent(''); setNoteDialogOpen(false);
     };
 

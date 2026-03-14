@@ -118,10 +118,22 @@ const TechTicketDetailPage: React.FC = () => {
     };
 
     const addNote = async () => {
-        if (!id || !noteContent.trim()) return;
+        if (!id || !noteContent.trim() || !ticket) return;
         const { data } = await supabase.from('ticket_notes')
             .insert({ ticket_id: id, note_type: 'INTERNAL', content: noteContent.trim() }).select().single();
-        if (data) setNotes(p => [data as TicketNote, ...p]);
+        if (data) {
+            setNotes(p => [data as TicketNote, ...p]);
+            
+            // Send push notification to Admins
+            supabase.functions.invoke('send-push-notification', {
+                body: {
+                    title: `📝 Note from Tech on Ticket #${ticket.ticket_number}`,
+                    body: `Tech: "${noteContent.substring(0, 50)}${noteContent.length > 50 ? '...' : ''}"`,
+                    url: `/tickets/${id}`,
+                    target_admin: true
+                }
+            }).catch(console.error);
+        }
         setNoteContent(''); setNoteDialogOpen(false);
     };
 

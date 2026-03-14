@@ -32,6 +32,8 @@ Deno.serve(async (req: Request) => {
     const url = payloadData.url || (isPartRequest ? "/dealer" : "/");
     let target_user_ids = payloadData.target_user_ids || [];
 
+    const target_admin = payloadData.target_admin || false;
+
     // Create admin client to read all subscriptions
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -64,6 +66,15 @@ Deno.serve(async (req: Request) => {
     let query = supabase.from("push_subscriptions").select(
       "endpoint, p256dh_key, auth_key, user_id"
     );
+
+    // Resolve admin IDs if needed
+    if (target_admin) {
+      const { data: admins } = await supabase.from("profiles").select("id").eq("role", "ADMIN");
+      if (admins && admins.length > 0) {
+        const adminIds = admins.map(a => a.id).filter(Boolean);
+        target_user_ids = [...target_user_ids, ...adminIds];
+      }
+    }
 
     // Resolve dealer_ids to user_ids if needed (legacy support)
     if (target_dealer_ids && target_dealer_ids.length > 0) {
