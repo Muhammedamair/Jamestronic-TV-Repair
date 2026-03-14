@@ -16,7 +16,7 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { supabase } from '../../supabaseClient';
-import { PartRequest, PartBid, Dealer, PartRequestStatus } from '../../types/database';
+import { PartRequest, PartBid, Dealer, PartRequestStatus, Transporter } from '../../types/database';
 import { formatDateTime, formatCurrency, formatRelative } from '../../utils/formatters';
 
 // Dark Store (JamesTronic) fixed address
@@ -59,6 +59,10 @@ const PartRequestsPage: React.FC = () => {
     // Transport booking state
     const [transportDialogOpen, setTransportDialogOpen] = useState(false);
     const [transportDealerAddress, setTransportDealerAddress] = useState('');
+    const [transportPartRequestId, setTransportPartRequestId] = useState<string | null>(null);
+    const [transporters, setTransporters] = useState<Transporter[]>([]);
+    const [selectedTransporterId, setSelectedTransporterId] = useState('');
+    const [assigningTransporter, setAssigningTransporter] = useState(false);
 
     // Review & Broadcast state
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -233,9 +237,39 @@ const PartRequestsPage: React.FC = () => {
         fetchRequests();
     };
 
-    const openTransportDialog = (dealerAddress: string) => {
+    const openTransportDialog = (dealerAddress: string, partRequestId?: string) => {
         setTransportDealerAddress(dealerAddress || 'Hyderabad, Telangana');
+        setTransportPartRequestId(partRequestId || null);
+        setSelectedTransporterId('');
         setTransportDialogOpen(true);
+        // Fetch available transporters
+        supabase.from('transporters').select('*').eq('status', 'ACTIVE').then(({ data }) => {
+            if (data) setTransporters(data);
+        });
+    };
+
+    const handleAssignTransporter = async () => {
+        if (!selectedTransporterId || !transportPartRequestId) return;
+        setAssigningTransporter(true);
+        try {
+            const acceptedBid = requests.find(r => r.id === transportPartRequestId)
+                ?.bids?.find(b => b.is_accepted);
+            const { error } = await supabase.from('transport_jobs').insert({
+                part_request_id: transportPartRequestId,
+                transporter_id: selectedTransporterId,
+                pickup_address: transportDealerAddress,
+                pickup_contact_name: acceptedBid?.dealer?.name || '',
+                pickup_contact_mobile: acceptedBid?.dealer?.mobile || '',
+                drop_address: DARK_STORE_ADDRESS,
+                item_description: requests.find(r => r.id === transportPartRequestId)?.part_name || 'Part pickup',
+            });
+            if (error) throw error;
+            setTransportDialogOpen(false);
+            alert('✅ Transporter assigned! They will receive a notification.');
+        } catch (err: any) {
+            alert('Error: ' + err.message);
+        }
+        setAssigningTransporter(false);
     };
 
     const getGoogleMapsUrl = () => {
@@ -554,7 +588,7 @@ const PartRequestsPage: React.FC = () => {
                                                     variant="contained"
                                                     size="small"
                                                     startIcon={<LocalShipping />}
-                                                    onClick={() => openTransportDialog(acceptedBid.dealer?.address || '')}
+                                                    onClick={() => openTransportDialog(acceptedBid.dealer?.address || '', req.id)}
                                                     sx={{
                                                         borderRadius: 2, textTransform: 'none', fontSize: '0.75rem',
                                                         background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
@@ -685,7 +719,7 @@ const PartRequestsPage: React.FC = () => {
             )}
 
             {/* Transport Booking Dialog */}
-            <Dialog open={transportDialogOpen} onClose={() => setTransportDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3, width: '100%', maxWidth: 420 } }}>
+            <Dialog open={transportDialogOpen} onClose={() => setTransportDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3, width: '100%', maxWidth: 460 } }}>
                 <DialogTitle sx={{ pb: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <LocalShipping sx={{ color: '#F59E0B' }} />
@@ -710,7 +744,41 @@ const PartRequestsPage: React.FC = () => {
                         </Box>
                     </Box>
 
-                    <Typography variant="subtitle2" sx={{ color: '#94A3B8', mb: 2 }}>Choose a transport service:</Typography>
+                    {/* Assign Transporter Section */}
+                    <Box sx={{ mb: 2.5, p: 2, borderRadius: 2, bgcolor: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        <Typography variant="subtitle2" sx={{ color: '#F59E0B', mb: 1.5, fontWeight: 700 }}>🚀 Assign Your Transporter</Typography>
+                        <TextField
+                            select
+                            fullWidth
+                            size="small"
+                            label="Select Transporter"
+                            value={selectedTransporterId}
+                            onChange={e => setSelectedTransporterId(e.target.value)}
+                            SelectProps={{ native: true }}
+                            sx={{ mb: 1.5 }}
+                        >
+                            <option value="">Choose a transporter...</option>
+                            {transporters.map(t => (
+                                <option key={t.id} value={t.id}>{t.name} ({t.vehicle_type}{t.vehicle_number ? ` • ${t.vehicle_number}` : ''})</option>
+                            ))}
+                        </TextField>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            disabled={!selectedTransporterId || assigningTransporter}
+                            onClick={handleAssignTransporter}
+                            startIcon={assigningTransporter ? <CircularProgress size={18} color="inherit" /> : <LocalShipping />}
+                            sx={{
+                                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                                fontWeight: 700, textTransform: 'none', borderRadius: 2, py: 1.2,
+                                '&:hover': { background: 'linear-gradient(135deg, #D97706, #B45309)' },
+                            }}
+                        >
+                            {assigningTransporter ? 'Assigning...' : 'Assign & Notify Transporter'}
+                        </Button>
+                    </Box>
+
+                    <Typography variant="subtitle2" sx={{ color: '#94A3B8', mb: 1.5 }}>Or use an external service:</Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         <Button fullWidth variant="outlined" startIcon={<TwoWheeler />}
                             onClick={() => { navigator.clipboard.writeText(`Pickup: ${transportDealerAddress}\nDrop: ${DARK_STORE_ADDRESS}`); window.open(getRapidoUrl(), '_blank'); }}

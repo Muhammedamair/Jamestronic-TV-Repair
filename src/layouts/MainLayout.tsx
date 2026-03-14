@@ -11,6 +11,7 @@ import {
     Menu as MenuIcon, ChevronLeft as ChevronLeftIcon, Settings as SettingsIcon,
     Logout as LogoutIcon, Build as BuildIcon, Store as StoreIcon,
     BarChart as AnalyticsIcon, Engineering as TechIcon,
+    LocalShipping as TransportIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -23,6 +24,7 @@ const navItems = [
     { label: 'Customers', icon: <PeopleIcon />, path: '/customers' },
     { label: 'Dealer Network', icon: <StoreIcon />, path: '/dealers' },
     { label: 'Tech Network', icon: <TechIcon />, path: '/technicians' },
+    { label: 'Transporters', icon: <TransportIcon />, path: '/transporters' },
     { label: 'Procurement', icon: <BuildIcon />, path: '/parts' },
     { label: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
 ];

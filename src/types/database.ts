@@ -277,3 +277,79 @@ export interface TicketTechnicianLog {
     technician?: Technician;
     ticket?: Ticket;
 }
+
+// ============================================
+// TRANSPORTER TYPES
+// ============================================
+
+export type TransportJobStatus = 'ASSIGNED' | 'ACCEPTED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+
+export interface Transporter {
+    id: string;
+    user_id?: string | null;
+    name: string;
+    mobile: string;
+    vehicle_type: 'Bike' | 'Auto' | 'Mini Truck' | 'Truck';
+    vehicle_number?: string;
+    status: 'ACTIVE' | 'INACTIVE';
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TransportJob {
+    id: string;
+    part_request_id?: string | null;
+    transporter_id?: string | null;
+
+    pickup_address: string;
+    pickup_lat?: number | null;
+    pickup_lng?: number | null;
+    pickup_contact_name?: string | null;
+    pickup_contact_mobile?: string | null;
+
+    drop_address: string;
+    drop_lat?: number | null;
+    drop_lng?: number | null;
+    drop_contact_name?: string | null;
+    drop_contact_mobile?: string | null;
+
+    item_description?: string | null;
+
+    status: TransportJobStatus;
+
+    live_lat?: number | null;
+    live_lng?: number | null;
+    live_updated_at?: string | null;
+
+    assigned_at: string;
+    accepted_at?: string | null;
+    picked_up_at?: string | null;
+    started_at?: string | null;
+    completed_at?: string | null;
+
+    notes?: string | null;
+    created_at: string;
+    updated_at: string;
+
+    // Joined relations
+    transporter?: Transporter;
+    part_request?: PartRequest;
+}
+
+export const TRANSPORT_JOB_STATUS_LABELS: Record<TransportJobStatus, string> = {
+    ASSIGNED: 'Assigned',
+    ACCEPTED: 'Accepted',
+    PICKED_UP: 'Picked Up',
+    IN_TRANSIT: 'In Transit',
+    DELIVERED: 'Delivered',
+    CANCELLED: 'Cancelled',
+};
+
+export const TRANSPORT_JOB_STATUS_COLORS: Record<TransportJobStatus, string> = {
+    ASSIGNED: '#6C63FF',
+    ACCEPTED: '#F59E0B',
+    PICKED_UP: '#00D9FF',
+    IN_TRANSIT: '#3B82F6',
+    DELIVERED: '#10B981',
+    CANCELLED: '#EF4444',
+};
