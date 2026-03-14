@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Card, CardContent, Grid, Chip, CircularProgress,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton
+    IconButton, Button
 } from '@mui/material';
 import {
     Engineering, CheckCircle, Build, Warning, Visibility
@@ -11,7 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Ticket, TICKET_STATUS_LABELS, TICKET_STATUS_COLORS, Technician, TechStatus } from '../../types/database';
-
+import { subscribeToPush, isPushSubscribed } from '../../utils/pushSubscription';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 const TECH_STATUS_LABELS: Record<TechStatus, string> = {
     ASSIGNED: 'Assigned',
     IN_PROGRESS: 'In Progress',
@@ -40,6 +41,7 @@ const TechDashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [technician, setTechnician] = useState<Technician | null>(null);
     const [tickets, setTickets] = useState<AssignedTicket[]>([]);
+    const [pushEnabled, setPushEnabled] = useState(true);
 
     const playNotificationSound = () => {
         try {
@@ -153,6 +155,48 @@ const TechDashboardPage: React.FC = () => {
                     Your repair workbench — view and update assigned tickets
                 </Typography>
             </Box>
+
+            {/* Push Notification Banner */}
+            {!pushEnabled && (
+                <Box
+                    sx={{
+                        mb: 3,
+                        p: 2,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(0,217,255,0.1) 100%)',
+                        border: '1px solid rgba(16,185,129,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                    }}
+                >
+                    <NotificationsActiveIcon sx={{ color: '#10B981', fontSize: 28 }} />
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#10B981' }}>
+                            Enable Push Notifications
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                            Get instant alerts when assigned a new ticket — even when your phone is locked.
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={async () => {
+                            const result = await subscribeToPush();
+                            setPushEnabled(result);
+                        }}
+                        sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }
+                        }}
+                    >
+                        Enable
+                    </Button>
+                </Box>
+            )}
 
             {/* KPI Cards */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
