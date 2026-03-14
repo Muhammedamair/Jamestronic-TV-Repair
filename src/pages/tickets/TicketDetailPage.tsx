@@ -17,7 +17,7 @@ import {
     Ticket, TicketNote, Quotation, QuotationItem, Invoice,
     TICKET_STATUS_ORDER, INSTALLATION_STATUS_ORDER,
     TICKET_STATUS_LABELS, TICKET_STATUS_COLORS,
-    TicketStatus,
+    TicketStatus, Technician,
 } from '../../types/database';
 import { formatDateTime, formatRelative, formatCurrency } from '../../utils/formatters';
 import { sendInteraktMessage } from '../../utils/interakt';
@@ -67,6 +67,10 @@ const TicketDetailPage: React.FC = () => {
     const [warrantyDialogOpen, setWarrantyDialogOpen] = useState(false);
     const [warrantyMonths, setWarrantyMonths] = useState(0);
 
+    // Technician assignment state
+    const [technicians, setTechnicians] = useState<Technician[]>([]);
+    const [selectedTechId, setSelectedTechId] = useState<string>('');
+
     useEffect(() => {
         if (!id) return;
         setLoading(true);
@@ -75,11 +79,16 @@ const TicketDetailPage: React.FC = () => {
             supabase.from('ticket_notes').select('*').eq('ticket_id', id).order('created_at', { ascending: false }),
             supabase.from('quotations').select('*').eq('ticket_id', id).order('created_at', { ascending: false }),
             supabase.from('invoices').select('*').eq('ticket_id', id).order('created_at', { ascending: false }),
-        ]).then(([t, n, q, i]) => {
-            if (t.data) setTicket(t.data as Ticket);
+            supabase.from('technicians').select('*').eq('status', 'ACTIVE').order('name'),
+        ]).then(([t, n, q, i, techRes]) => {
+            if (t.data) {
+                setTicket(t.data as Ticket);
+                setSelectedTechId((t.data as Ticket).assigned_technician_id || '');
+            }
             if (n.data) setNotes(n.data as TicketNote[]);
             if (q.data) setQuotations(q.data as Quotation[]);
             if (i.data) setInvoices(i.data as Invoice[]);
+            if (techRes.data) setTechnicians(techRes.data as Technician[]);
             setLoading(false);
         });
     }, [id]);
@@ -338,6 +347,48 @@ const TicketDetailPage: React.FC = () => {
                                     <Typography variant="caption" color="text.secondary">Estimated Cost</Typography>
                                     <Typography variant="h6" fontWeight={700} color="success.main">{formatCurrency(ticket.estimated_cost)}</Typography>
                                 </Box>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Technician Assignment Card */}
+                    <Card sx={{ mt: 2 }}>
+                        <CardContent>
+                            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>Assign Technician</Typography>
+                            <TextField
+                                select
+                                fullWidth
+                                size="small"
+                                value={selectedTechId}
+                                onChange={async (e) => {
+                                    const techId = e.target.value;
+                                    setSelectedTechId(techId);
+                                    if (!id) return;
+                                    // Update ticket
+                                    await supabase.from('tickets').update({ assigned_technician_id: techId || null }).eq('id', id);
+                                    // Create tech log if assigning (not unassigning)
+                                    if (techId) {
+                                        await supabase.from('ticket_technician_log').insert({
+                                            ticket_id: id,
+                                            technician_id: techId,
+                                            tech_status: 'ASSIGNED',
+                                        });
+                                    }
+                                    setTicket(prev => prev ? { ...prev, assigned_technician_id: techId || null } : prev);
+                                }}
+                                sx={{ '& .MuiSelect-select': { display: 'flex', alignItems: 'center' } }}
+                            >
+                                <MenuItem value=""><em>Unassigned</em></MenuItem>
+                                {technicians.map(t => (
+                                    <MenuItem key={t.id} value={t.id}>{t.name} ({t.specialization || 'All'})</MenuItem>
+                                ))}
+                            </TextField>
+                            {selectedTechId && (
+                                <Chip
+                                    label={`Assigned: ${technicians.find(t => t.id === selectedTechId)?.name || 'Unknown'}`}
+                                    size="small"
+                                    sx={{ mt: 1, bgcolor: 'rgba(0,217,255,0.1)', color: '#00D9FF', fontWeight: 600 }}
+                                />
                             )}
                         </CardContent>
                     </Card>

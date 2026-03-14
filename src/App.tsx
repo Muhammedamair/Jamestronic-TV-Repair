@@ -15,6 +15,10 @@ import DealerLayout from './layouts/DealerLayout';
 import DealerDashboardPage from './pages/dealer/DealerDashboardPage';
 import PartRequestsPage from './pages/part-requests/PartRequestsPage';
 import AdminDealersPage from './pages/part-requests/AdminDealersPage';
+import AdminTechniciansPage from './pages/technicians/AdminTechniciansPage';
+import TechnicianLayout from './layouts/TechnicianLayout';
+import TechDashboardPage from './pages/technician/TechDashboardPage';
+import TechTicketDetailPage from './pages/technician/TechTicketDetailPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import { Box, CircularProgress } from '@mui/material';
 
@@ -27,9 +31,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: strin
   );
   if (!user) return <Navigate to="/login" replace />;
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // If not allowed, redirect to their appropriate home
     if (role === 'DEALER') return <Navigate to="/dealer" replace />;
-    return <Navigate to="/" replace />; // Default fallback for ADMIN
+    if (role === 'TECHNICIAN') return <Navigate to="/tech" replace />;
+    return <Navigate to="/" replace />;
   }
   return <>{children}</>;
 };
@@ -39,6 +43,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (loading) return null;
   if (user) {
     if (role === 'DEALER') return <Navigate to="/dealer" replace />;
+    if (role === 'TECHNICIAN') return <Navigate to="/tech" replace />;
     return <Navigate to="/" replace />;
   }
   return <>{children}</>;
@@ -62,12 +67,19 @@ const App: React.FC = () => (
             <Route path="customers/:id" element={<CustomerDetailPage />} />
             <Route path="parts" element={<PartRequestsPage />} />
             <Route path="dealers" element={<AdminDealersPage />} />
+            <Route path="technicians" element={<AdminTechniciansPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 
           {/* Dealer Routes */}
           <Route path="/dealer" element={<ProtectedRoute allowedRoles={['DEALER']}><DealerLayout /></ProtectedRoute>}>
             <Route index element={<DealerDashboardPage />} />
+          </Route>
+
+          {/* Technician Routes */}
+          <Route path="/tech" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><TechnicianLayout /></ProtectedRoute>}>
+            <Route index element={<TechDashboardPage />} />
+            <Route path=":id" element={<TechTicketDetailPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

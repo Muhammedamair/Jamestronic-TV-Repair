@@ -114,6 +114,7 @@ export interface Ticket {
     status: TicketStatus;
     priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
     estimated_cost?: number;
+    assigned_technician_id?: string | null;
     warranty_months?: number;
     warranty_expiry_date?: string;
     created_at: string;
@@ -241,4 +242,36 @@ export interface PartBid {
     updated_at: string;
     // Joined relations
     dealer?: Dealer;
+}
+
+// ============================================
+// TECHNICIAN TYPES
+// ============================================
+
+export type TechStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANT_REPAIR' | 'PART_REQUIRED';
+
+export interface Technician {
+    id: string;
+    user_id?: string | null;
+    name: string;
+    mobile: string;
+    specialization?: string;
+    status: 'ACTIVE' | 'INACTIVE';
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TicketTechnicianLog {
+    id: string;
+    ticket_id: string;
+    technician_id: string;
+    assigned_at: string;
+    started_at?: string | null;
+    completed_at?: string | null;
+    tech_status: TechStatus;
+    notes?: string | null;
+    created_at: string;
+    // Joined
+    technician?: Technician;
+    ticket?: Ticket;
 }

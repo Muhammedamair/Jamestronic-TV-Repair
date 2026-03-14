@@ -10,7 +10,7 @@ import {
     People as PeopleIcon, Add as AddIcon,
     Menu as MenuIcon, ChevronLeft as ChevronLeftIcon, Settings as SettingsIcon,
     Logout as LogoutIcon, Build as BuildIcon, Store as StoreIcon,
-    BarChart as AnalyticsIcon,
+    BarChart as AnalyticsIcon, Engineering as TechIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -22,6 +22,7 @@ const navItems = [
     { label: 'Tickets', icon: <TicketIcon />, path: '/tickets' },
     { label: 'Customers', icon: <PeopleIcon />, path: '/customers' },
     { label: 'Dealers Network', icon: <StoreIcon />, path: '/dealers' },
+    { label: 'Technicians', icon: <TechIcon />, path: '/technicians' },
     { label: 'Procurement', icon: <BuildIcon />, path: '/parts' },
     { label: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
 ];
