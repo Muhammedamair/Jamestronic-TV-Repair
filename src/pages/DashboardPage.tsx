@@ -34,31 +34,48 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon, color, trend 
     <Card sx={{
         position: 'relative',
         overflow: 'hidden',
+        background: 'rgba(26, 34, 53, 0.7)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(148, 163, 184, 0.1)',
+        boxShadow: `0 4px 20px -2px ${color}15`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: `0 12px 28px -4px ${color}30`,
+            border: `1px solid ${color}30`,
+            '& .icon-bg': {
+                transform: 'scale(1.1) rotate(5deg)',
+            }
+        },
         '&::after': {
             content: '""',
             position: 'absolute',
             top: 0,
             right: 0,
-            width: 100,
-            height: 100,
+            width: 120,
+            height: 120,
             borderRadius: '50%',
-            background: `radial-gradient(circle, ${color}15, transparent)`,
+            background: `radial-gradient(circle, ${color}20, transparent 70%)`,
             transform: 'translate(30%, -30%)',
+            transition: 'transform 0.5s ease',
         },
+        '&:hover::after': {
+            transform: 'translate(20%, -20%) scale(1.2)',
+        }
     }}>
-        <CardContent sx={{ p: 2.5 }}>
+        <CardContent sx={{ p: 2.5, position: 'relative', zIndex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {title}
                     </Typography>
-                    <Typography variant="h4" fontWeight={700} sx={{ mt: 0.5, color }}>
+                    <Typography variant="h4" fontWeight={800} sx={{ mt: 0.5, color, textShadow: `0 2px 10px ${color}40` }}>
                         {value}
                     </Typography>
                     {trend && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                             <TrendingUp sx={{ fontSize: 14, color: '#10B981' }} />
-                            <Typography variant="caption" color="success.main">{trend}</Typography>
+                            <Typography variant="caption" color="success.main" fontWeight={600}>{trend}</Typography>
                         </Box>
                     )}
                 </Box>
@@ -135,11 +152,19 @@ const DashboardPage: React.FC = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
                 <Box>
-                    <Typography variant="h5" fontWeight={700}>Dashboard</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Welcome back! Here's your repair overview.
+                    <Typography variant="h5" fontWeight={800} sx={{
+                        background: 'linear-gradient(135deg, #fff 0%, #cbd5e1 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        letterSpacing: '-0.5px'
+                    }}>
+                        Admin Command Center
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Enterprise overview and performance metrics
                     </Typography>
                 </Box>
                 <IconButton
@@ -172,36 +197,48 @@ const DashboardPage: React.FC = () => {
             <Grid container spacing={2.5}>
                 {/* Monthly Trend Chart */}
                 <Grid size={{ xs: 12, md: 7 }}>
-                    <Card>
+                    <Card sx={{ 
+                        height: '100%',
+                        background: 'rgba(26, 34, 53, 0.7)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(148, 163, 184, 0.1)',
+                    }}>
                         <CardContent>
-                            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 3, color: '#E2E8F0', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                                 Monthly Ticket Trend
                             </Typography>
                             {monthlyData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <AreaChart data={monthlyData}>
+                                <ResponsiveContainer width="100%" height={260}>
+                                    <AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="ticketGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#6C63FF" stopOpacity={0} />
+                                                <stop offset="5%" stopColor="#8B85FF" stopOpacity={0.6} />
+                                                <stop offset="95%" stopColor="#8B85FF" stopOpacity={0.0} />
                                             </linearGradient>
+                                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                                <feGaussianBlur stdDeviation="4" result="blur" />
+                                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                            </filter>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
-                                        <XAxis dataKey="month" stroke="#64748B" fontSize={12} />
-                                        <YAxis stroke="#64748B" fontSize={12} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.05)" vertical={false} />
+                                        <XAxis dataKey="month" stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                        <YAxis stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} />
                                         <RechartsTooltip
                                             contentStyle={{
-                                                background: '#1A2332',
-                                                border: '1px solid rgba(108,99,255,0.2)',
-                                                borderRadius: 8,
+                                                background: 'rgba(15, 23, 42, 0.9)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: '1px solid rgba(139, 133, 255, 0.3)',
+                                                borderRadius: 12,
                                                 color: '#F1F5F9',
+                                                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                                             }}
+                                            itemStyle={{ color: '#8B85FF', fontWeight: 600 }}
                                         />
-                                        <Area type="monotone" dataKey="tickets" stroke="#6C63FF" fill="url(#ticketGradient)" strokeWidth={2} />
+                                        <Area type="monotone" dataKey="tickets" stroke="#8B85FF" fill="url(#ticketGradient)" strokeWidth={3} filter="url(#glow)" activeDot={{ r: 6, fill: '#fff', stroke: '#8B85FF', strokeWidth: 2 }} />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <Box sx={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Typography color="text.secondary">No data yet</Typography>
                                 </Box>
                             )}
@@ -211,29 +248,56 @@ const DashboardPage: React.FC = () => {
 
                 {/* Revenue Card */}
                 <Grid size={{ xs: 12, md: 5 }}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <Card sx={{ 
+                        height: '100%', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        background: 'rgba(26, 34, 53, 0.7)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(148, 163, 184, 0.1)',
+                    }}>
                         <CardContent sx={{ flex: 1 }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 Revenue (Completed)
                             </Typography>
-                            <Typography variant="h3" fontWeight={700} sx={{
-                                mt: 1,
-                                background: 'linear-gradient(135deg, #10B981, #00D9FF)',
+                            <Typography variant="h3" fontWeight={800} sx={{
+                                mt: 1.5,
+                                background: 'linear-gradient(135deg, #10B981 0%, #00D9FF 100%)',
                                 backgroundClip: 'text',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
+                                filter: 'drop-shadow(0px 4px 12px rgba(16, 185, 129, 0.4))',
+                                letterSpacing: '-1px'
                             }}>
                                 {formatCurrency(revenue)}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 500 }}>
                                 From {completed} completed repairs
                             </Typography>
 
                             {monthlyData.length > 0 && (
-                                <Box sx={{ mt: 2 }}>
-                                    <ResponsiveContainer width="100%" height={120}>
-                                        <BarChart data={monthlyData}>
-                                            <Bar dataKey="revenue" fill="#10B981" radius={[4, 4, 0, 0]} opacity={0.8} />
+                                <Box sx={{ mt: 3 }}>
+                                    <ResponsiveContainer width="100%" height={140}>
+                                        <BarChart data={monthlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
+                                                    <stop offset="100%" stopColor="#00D9FF" stopOpacity={0.6} />
+                                                </linearGradient>
+                                            </defs>
+                                            <RechartsTooltip
+                                                cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                                                contentStyle={{
+                                                    background: 'rgba(15, 23, 42, 0.9)',
+                                                    backdropFilter: 'blur(10px)',
+                                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                    borderRadius: 12,
+                                                    color: '#F1F5F9',
+                                                }}
+                                                formatter={(value: any) => [formatCurrency(Number(value) || 0), 'Revenue']}
+                                            />
+                                            <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={5} />
+                                            <Bar dataKey="revenue" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={40} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </Box>
@@ -244,10 +308,16 @@ const DashboardPage: React.FC = () => {
 
                 {/* Recent Tickets */}
                 <Grid size={{ xs: 12 }}>
-                    <Card>
+                    <Card sx={{
+                        background: 'rgba(26, 34, 53, 0.7)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(148, 163, 184, 0.1)',
+                    }}>
                         <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="subtitle2" fontWeight={600}>Recent Tickets</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#E2E8F0', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                                    Recent Tickets
+                                </Typography>
                                 <Chip
                                     label="View All"
                                     size="small"
@@ -261,15 +331,20 @@ const DashboardPage: React.FC = () => {
                                     }}
                                 />
                             </Box>
-                            <TableContainer>
+                            <TableContainer sx={{ 
+                                mt: 1, 
+                                borderRadius: 3, 
+                                border: '1px solid rgba(148, 163, 184, 0.1)',
+                                overflow: 'hidden'
+                            }}>
                                 <Table size="small">
-                                    <TableHead>
+                                    <TableHead sx={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}>
                                         <TableRow>
-                                            <TableCell>Ticket #</TableCell>
-                                            <TableCell>Customer</TableCell>
-                                            <TableCell>Brand</TableCell>
-                                            <TableCell>Status</TableCell>
-                                            <TableCell>Created</TableCell>
+                                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>Ticket #</TableCell>
+                                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>Customer</TableCell>
+                                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>Brand</TableCell>
+                                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>Status</TableCell>
+                                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>Created</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -278,37 +353,45 @@ const DashboardPage: React.FC = () => {
                                                 key={ticket.id}
                                                 hover
                                                 onClick={() => navigate(`/tickets/${ticket.id}`)}
-                                                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(108,99,255,0.04)' } }}
+                                                sx={{ 
+                                                    cursor: 'pointer', 
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': { backgroundColor: 'rgba(108,99,255,0.08)' },
+                                                    '& td': { borderBottom: '1px solid rgba(148, 163, 184, 0.05)' }
+                                                }}
                                             >
                                                 <TableCell>
-                                                    <Typography variant="body2" fontWeight={600} color="primary">
+                                                    <Typography variant="body2" fontWeight={700} color="primary" sx={{ letterSpacing: '0.02em' }}>
                                                         {ticket.ticket_number}
                                                     </Typography>
                                                 </TableCell>
-                                                <TableCell>{ticket.customer?.name || '—'}</TableCell>
-                                                <TableCell>{ticket.tv_brand}</TableCell>
+                                                <TableCell sx={{ color: '#E2E8F0', fontWeight: 500 }}>{ticket.customer?.name || '—'}</TableCell>
+                                                <TableCell sx={{ color: '#CBD5E1' }}>{ticket.tv_brand}</TableCell>
                                                 <TableCell>
                                                     <Chip
                                                         label={TICKET_STATUS_LABELS[ticket.status]}
                                                         size="small"
                                                         sx={{
-                                                            backgroundColor: `${TICKET_STATUS_COLORS[ticket.status]}20`,
+                                                            backgroundColor: `${TICKET_STATUS_COLORS[ticket.status]}15`,
                                                             color: TICKET_STATUS_COLORS[ticket.status],
-                                                            fontWeight: 600,
+                                                            fontWeight: 700,
                                                             fontSize: '0.7rem',
+                                                            border: `1px solid ${TICKET_STATUS_COLORS[ticket.status]}30`,
+                                                            boxShadow: `0 2px 8px ${TICKET_STATUS_COLORS[ticket.status]}20`
                                                         }}
                                                     />
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography variant="caption" color="text.secondary">
+                                                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
                                                         {formatRelative(ticket.created_at)}
                                                     </Typography>
                                                 </TableCell>
                                             </TableRow>
                                         )) : (
                                             <TableRow>
-                                                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                                                    <Typography color="text.secondary">No tickets yet. Create your first ticket!</Typography>
+                                                <TableCell colSpan={5} align="center" sx={{ py: 6, borderBottom: 'none' }}>
+                                                    <ConfirmationNumber sx={{ fontSize: 40, color: 'text.secondary', opacity: 0.5, mb: 1 }} />
+                                                    <Typography color="text.secondary" fontWeight={500}>No tickets yet. Create your first ticket!</Typography>
                                                 </TableCell>
                                             </TableRow>
                                         )}
