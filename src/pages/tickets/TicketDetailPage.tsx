@@ -91,6 +91,24 @@ const TicketDetailPage: React.FC = () => {
             if (techRes.data) setTechnicians(techRes.data as Technician[]);
             setLoading(false);
         });
+
+        // Real-time subscription for notes
+        const channel = supabase.channel(`ticket_notes_${id}`)
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'ticket_notes',
+                filter: `ticket_id=eq.${id}`
+            }, (payload) => {
+                const newNote = payload.new as TicketNote;
+                setNotes(prev => {
+                    if (prev.some(n => n.id === newNote.id)) return prev;
+                    return [newNote, ...prev];
+                });
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
     }, [id]);
 
     const isInstall = ticket?.service_type === 'INSTALLATION';
