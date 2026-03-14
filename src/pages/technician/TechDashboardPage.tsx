@@ -41,7 +41,7 @@ const TechDashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [technician, setTechnician] = useState<Technician | null>(null);
     const [tickets, setTickets] = useState<AssignedTicket[]>([]);
-    const [pushEnabled, setPushEnabled] = useState(true);
+    const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
 
     const playNotificationSound = () => {
         try {
@@ -61,6 +61,10 @@ const TechDashboardPage: React.FC = () => {
     };
 
     useEffect(() => {
+        isPushSubscribed().then(setPushEnabled);
+    }, []);
+
+    useEffect(() => {
         if (!user) return;
         const fetchTech = async () => {
             if (!technician) {
@@ -68,14 +72,7 @@ const TechDashboardPage: React.FC = () => {
                 if (data) setTechnician(data);
             }
         };
-
-        const checkPushStatus = async () => {
-            const isSubbed = await isPushSubscribed();
-            setPushEnabled(isSubbed);
-        };
-
         fetchTech();
-        checkPushStatus();
     }, [user]);
 
     useEffect(() => {
@@ -164,7 +161,7 @@ const TechDashboardPage: React.FC = () => {
             </Box>
 
             {/* Push Notification Banner */}
-            {!pushEnabled && (
+            {pushEnabled === false && (
                 <Box
                     sx={{
                         mb: 3,
