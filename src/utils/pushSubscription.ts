@@ -87,3 +87,36 @@ export async function isPushSubscribed(): Promise<boolean> {
         return false;
     }
 }
+
+/**
+ * Ensures the existing browser subscription is associated with the current user in the database.
+ * Useful when switching accounts on the same device.
+ */
+export async function syncPushSubscription(): Promise<void> {
+    try {
+        if (!('serviceWorker' in navigator)) return;
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const subscriptionJSON = subscription.toJSON();
+        const { endpoint, keys } = subscriptionJSON;
+        if (!endpoint || !keys?.p256dh || !keys?.auth) return;
+
+        await supabase.from('push_subscriptions').upsert(
+            {
+                user_id: user.id,
+                endpoint,
+                p256dh_key: keys.p256dh,
+                auth_key: keys.auth
+            },
+            { onConflict: 'user_id,endpoint' }
+        );
+        console.log('🔄 Push subscription synced with current user.');
+    } catch (err) {
+        console.error('Error syncing push subscription:', err);
+    }
+}

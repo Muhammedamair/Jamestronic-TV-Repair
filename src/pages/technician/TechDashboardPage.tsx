@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Ticket, TICKET_STATUS_LABELS, TICKET_STATUS_COLORS, Technician, TechStatus } from '../../types/database';
-import { subscribeToPush, isPushSubscribed } from '../../utils/pushSubscription';
+import { subscribeToPush, isPushSubscribed, syncPushSubscription } from '../../utils/pushSubscription';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 const TECH_STATUS_LABELS: Record<TechStatus, string> = {
     ASSIGNED: 'Assigned',
@@ -61,7 +61,10 @@ const TechDashboardPage: React.FC = () => {
     };
 
     useEffect(() => {
-        isPushSubscribed().then(setPushEnabled);
+        isPushSubscribed().then(isSub => {
+            setPushEnabled(isSub);
+            if (isSub) syncPushSubscription();
+        });
     }, []);
 
     useEffect(() => {

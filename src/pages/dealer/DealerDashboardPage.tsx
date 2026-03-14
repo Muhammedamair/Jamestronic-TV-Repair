@@ -12,7 +12,7 @@ import { supabase } from '../../supabaseClient';
 import { PartRequest, PartBid, Dealer } from '../../types/database';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDateTime } from '../../utils/formatters';
-import { subscribeToPush, isPushSubscribed } from '../../utils/pushSubscription';
+import { subscribeToPush, isPushSubscribed, syncPushSubscription } from '../../utils/pushSubscription';
 
 const DealerDashboardPage: React.FC = () => {
     const { user } = useAuth();
@@ -50,7 +50,10 @@ const DealerDashboardPage: React.FC = () => {
 
     // Check push subscription status on mount
     useEffect(() => {
-        isPushSubscribed().then(setPushEnabled);
+        isPushSubscribed().then(isSub => {
+            setPushEnabled(isSub);
+            if (isSub) syncPushSubscription();
+        });
     }, []);
 
     useEffect(() => {
