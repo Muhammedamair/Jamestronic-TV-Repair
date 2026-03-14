@@ -68,7 +68,14 @@ const TechDashboardPage: React.FC = () => {
                 if (data) setTechnician(data);
             }
         };
+
+        const checkPushStatus = async () => {
+            const isSubbed = await isPushSubscribed();
+            setPushEnabled(isSubbed);
+        };
+
         fetchTech();
+        checkPushStatus();
     }, [user]);
 
     useEffect(() => {
