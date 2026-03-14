@@ -213,7 +213,7 @@ const TicketDetailPage: React.FC = () => {
                         body: {
                             title: `📝 Note from Admin on Ticket #${ticket.ticket_number}`,
                             body: `Admin: "${noteContent.substring(0, 50)}${noteContent.length > 50 ? '...' : ''}"`,
-                            url: `/tech`,
+                            url: `/tech/${id}`,
                             target_user_ids: [assignedTech.user_id]
                         }
                     }).catch(console.error);
