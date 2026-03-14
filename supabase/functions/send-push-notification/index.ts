@@ -17,18 +17,31 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { request_id, part_name, tv_brand, target_dealer_ids } = await req.json();
+    const payloadData = await req.json();
+    
+    // Backward compatibility for part requests
+    const isPartRequest = !!payloadData.part_name;
+    const request_id = payloadData.request_id;
+    const part_name = payloadData.part_name;
+    const tv_brand = payloadData.tv_brand;
+    const target_dealer_ids = payloadData.target_dealer_ids;
+
+    // Generic payload support
+    const title = payloadData.title || (isPartRequest ? "🔔 New Part Request!" : "Notification");
+    const bodyText = payloadData.body || (isPartRequest ? `New request: ${part_name} (${tv_brand || "Unknown brand"}). Tap to view and submit your bid.` : "You have a new notification.");
+    const url = payloadData.url || (isPartRequest ? "/dealer" : "/");
+    let target_user_ids = payloadData.target_user_ids || [];
 
     // Create admin client to read all subscriptions
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Build notification payload
-    const body = `New request: ${part_name} (${tv_brand || "Unknown brand"}). Tap to view and submit your bid.`;
-    const payload = JSON.stringify({
-      title: "🔔 New Part Request!",
-      body,
-      request_id,
-      url: "/dealer",
+    const pushPayload = JSON.stringify({
+      title,
+      body: bodyText,
+      url,
+      request_id, // include if exists
+      ticket_id: payloadData.ticket_id, // include if exists
     });
 
     // Get VAPID keys from environment
@@ -47,22 +60,26 @@ Deno.serve(async (req: Request) => {
     // Configure Web Push with VAPID keys
     webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-    // Determine which dealers to notify
+    // Determine which users to notify
     let query = supabase.from("push_subscriptions").select(
       "endpoint, p256dh_key, auth_key, user_id"
     );
 
+    // Resolve dealer_ids to user_ids if needed (legacy support)
     if (target_dealer_ids && target_dealer_ids.length > 0) {
-      // Get user_ids for the targeted dealer_ids
       const { data: dealers } = await supabase
         .from("dealers")
         .select("user_id")
         .in("id", target_dealer_ids);
 
       if (dealers && dealers.length > 0) {
-        const userIds = dealers.map((d: { user_id: string }) => d.user_id);
-        query = query.in("user_id", userIds);
+        const dealerUserIds = dealers.map((d: { user_id: string }) => d.user_id).filter(Boolean);
+        target_user_ids = [...target_user_ids, ...dealerUserIds];
       }
+    }
+
+    if (target_user_ids && target_user_ids.length > 0) {
+        query = query.in("user_id", target_user_ids);
     }
 
     const { data: subscriptions, error: fetchError } = await query;
@@ -92,7 +109,7 @@ Deno.serve(async (req: Request) => {
       };
 
       try {
-        await webpush.sendNotification(pushSub, payload);
+        await webpush.sendNotification(pushSub, pushPayload);
         sent++;
       } catch (pushErr: any) {
         failed++;

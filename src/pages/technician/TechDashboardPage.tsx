@@ -41,6 +41,23 @@ const TechDashboardPage: React.FC = () => {
     const [technician, setTechnician] = useState<Technician | null>(null);
     const [tickets, setTickets] = useState<AssignedTicket[]>([]);
 
+    const playNotificationSound = () => {
+        try {
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            setTimeout(() => { oscillator.stop(); }, 300);
+        } catch (e) {
+            console.error('Audio play failed', e);
+        }
+    };
+
     useEffect(() => {
         if (!user) return;
         const fetchTech = async () => {
@@ -96,7 +113,10 @@ const TechDashboardPage: React.FC = () => {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'ticket_technician_log', filter: `technician_id=eq.${technician.id}` },
-                () => { fetchData(); } // Re-fetch on log updates
+                (payload) => { 
+                    fetchData(); 
+                    if (payload.eventType === 'INSERT') playNotificationSound();
+                }
             )
             .subscribe();
 

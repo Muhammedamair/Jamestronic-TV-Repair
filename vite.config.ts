@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
           theme_color: '#0A0E1A',
           background_color: '#0A0E1A',
           display: 'standalone',
+          display_override: ['window-controls-overlay', 'standalone', 'fullscreen', 'minimal-ui'],
           scope: '/',
           start_url: '/',
           icons: [

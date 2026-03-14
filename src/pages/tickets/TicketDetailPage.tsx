@@ -373,6 +373,19 @@ const TicketDetailPage: React.FC = () => {
                                             technician_id: techId,
                                             tech_status: 'ASSIGNED',
                                         });
+
+                                        // Trigger Push Notification to Technician
+                                        const assignedTech = technicians.find(t => t.id === techId);
+                                        if (assignedTech?.user_id) {
+                                            supabase.functions.invoke('send-push-notification', {
+                                                body: {
+                                                    title: "🔧 New Ticket Assigned",
+                                                    body: `You have been assigned to Ticket #${ticket.ticket_number || id.slice(0, 8)}. Tap to view details.`,
+                                                    url: "/tech",
+                                                    target_user_ids: [assignedTech.user_id]
+                                                }
+                                            }).catch(console.error);
+                                        }
                                     }
                                     setTicket(prev => prev ? { ...prev, assigned_technician_id: techId || null } : prev);
                                 }}
