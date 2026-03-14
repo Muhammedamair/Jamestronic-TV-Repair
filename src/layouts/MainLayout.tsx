@@ -21,8 +21,8 @@ const navItems = [
     { label: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { label: 'Tickets', icon: <TicketIcon />, path: '/tickets' },
     { label: 'Customers', icon: <PeopleIcon />, path: '/customers' },
-    { label: 'Dealers Network', icon: <StoreIcon />, path: '/dealers' },
-    { label: 'Technicians', icon: <TechIcon />, path: '/technicians' },
+    { label: 'Dealer Network', icon: <StoreIcon />, path: '/dealers' },
+    { label: 'Tech Network', icon: <TechIcon />, path: '/technicians' },
     { label: 'Procurement', icon: <BuildIcon />, path: '/parts' },
     { label: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
 ];
