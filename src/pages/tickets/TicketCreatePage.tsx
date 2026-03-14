@@ -146,22 +146,31 @@ const TicketCreatePage: React.FC = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
                 <Box sx={{
-                    p: 1.2, borderRadius: 2,
+                    p: 1.5, borderRadius: 3,
                     background: isInstallation
-                        ? 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,217,255,0.1))'
-                        : 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,217,255,0.1))',
+                        ? 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(0,217,255,0.12))'
+                        : 'linear-gradient(135deg, rgba(108,99,255,0.25), rgba(0,217,255,0.12))',
+                    boxShadow: isInstallation
+                        ? '0 4px 20px rgba(16,185,129,0.2)'
+                        : '0 4px 20px rgba(108,99,255,0.2)',
                 }}>
                     {isInstallation
-                        ? <InstallIcon sx={{ color: '#10B981', fontSize: 24 }} />
-                        : <PhoneIcon sx={{ color: '#6C63FF', fontSize: 24 }} />}
+                        ? <InstallIcon sx={{ color: '#10B981', fontSize: 26 }} />
+                        : <PhoneIcon sx={{ color: '#8B85FF', fontSize: 26 }} />}
                 </Box>
                 <Box>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={800} sx={{
+                        background: 'linear-gradient(135deg, #fff 0%, #cbd5e1 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        letterSpacing: '-0.5px'
+                    }}>
                         {isInstallation ? 'New Installation Ticket' : 'New Repair Ticket'}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.3 }}>
                         {isInstallation ? 'Book TV wall-mount / stand installation' : 'Quick create during call — fill details fast'}
                     </Typography>
                 </Box>
@@ -185,9 +194,14 @@ const TicketCreatePage: React.FC = () => {
             </Box>
 
             {/* Service Type Toggle */}
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{
+                mb: 3,
+                background: 'rgba(26, 34, 53, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(148, 163, 184, 0.1)',
+            }}>
                 <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                    <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         Service Type:
                     </Typography>
                     <ToggleButtonGroup
@@ -203,10 +217,13 @@ const TicketCreatePage: React.FC = () => {
                                 flex: 1,
                                 gap: 1,
                                 fontWeight: 700,
+                                borderColor: 'rgba(148,163,184,0.15)',
+                                transition: 'all 0.25s ease',
                                 '&.Mui-selected': {
                                     background: 'linear-gradient(135deg, rgba(108,99,255,0.25), rgba(108,99,255,0.1))',
-                                    color: '#6C63FF',
+                                    color: '#8B85FF',
                                     borderColor: '#6C63FF',
+                                    boxShadow: '0 4px 15px rgba(108,99,255,0.2)',
                                 },
                             }}
                         >
@@ -218,10 +235,13 @@ const TicketCreatePage: React.FC = () => {
                                 flex: 1,
                                 gap: 1,
                                 fontWeight: 700,
+                                borderColor: 'rgba(148,163,184,0.15)',
+                                transition: 'all 0.25s ease',
                                 '&.Mui-selected': {
                                     background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.1))',
                                     color: '#10B981',
                                     borderColor: '#10B981',
+                                    boxShadow: '0 4px 15px rgba(16,185,129,0.2)',
                                 },
                             }}
                         >
@@ -238,11 +258,17 @@ const TicketCreatePage: React.FC = () => {
                 <Grid container spacing={3}>
                     {/* Customer Info */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Card>
+                        <Card sx={{
+                            background: 'rgba(26, 34, 53, 0.7)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(148, 163, 184, 0.1)',
+                            transition: 'border-color 0.3s',
+                            '&:hover': { borderColor: 'rgba(108,99,255,0.25)' },
+                        }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
-                                    <PersonIcon sx={{ color: '#6C63FF' }} />
-                                    <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                                    <PersonIcon sx={{ color: '#8B85FF' }} />
+                                    <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#E2E8F0', textTransform: 'uppercase', letterSpacing: '0.02em', fontSize: '0.85rem' }}>
                                         Customer Details
                                     </Typography>
                                 </Box>
@@ -350,11 +376,17 @@ const TicketCreatePage: React.FC = () => {
 
                     {/* TV & Issue */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Card>
+                        <Card sx={{
+                            background: 'rgba(26, 34, 53, 0.7)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(148, 163, 184, 0.1)',
+                            transition: 'border-color 0.3s',
+                            '&:hover': { borderColor: isInstallation ? 'rgba(16,185,129,0.25)' : 'rgba(0,217,255,0.25)' },
+                        }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
                                     <Tv sx={{ color: isInstallation ? '#10B981' : '#00D9FF' }} />
-                                    <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                                    <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#E2E8F0', textTransform: 'uppercase', letterSpacing: '0.02em', fontSize: '0.85rem' }}>
                                         {isInstallation ? 'TV & Installation Details' : 'TV & Issue Details'}
                                     </Typography>
                                 </Box>
@@ -478,7 +510,13 @@ const TicketCreatePage: React.FC = () => {
                             <Button
                                 variant="outlined"
                                 onClick={() => navigate('/tickets')}
-                                sx={{ borderColor: 'rgba(148,163,184,0.3)', color: '#94A3B8' }}
+                                sx={{
+                                    borderColor: 'rgba(148,163,184,0.2)',
+                                    color: '#94A3B8',
+                                    fontWeight: 600,
+                                    px: 3,
+                                    '&:hover': { borderColor: 'rgba(148,163,184,0.4)', background: 'rgba(148,163,184,0.05)' },
+                                }}
                             >
                                 Cancel
                             </Button>
@@ -488,7 +526,26 @@ const TicketCreatePage: React.FC = () => {
                                 size="large"
                                 disabled={submitting}
                                 startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                                sx={{ minWidth: 200 }}
+                                sx={{
+                                    minWidth: 220,
+                                    fontWeight: 700,
+                                    background: isInstallation
+                                        ? 'linear-gradient(135deg, #10B981, #059669)'
+                                        : 'linear-gradient(135deg, #6C63FF, #8B85FF)',
+                                    boxShadow: isInstallation
+                                        ? '0 6px 20px rgba(16,185,129,0.35)'
+                                        : '0 6px 20px rgba(108,99,255,0.35)',
+                                    transition: 'all 0.3s',
+                                    '&:hover': {
+                                        background: isInstallation
+                                            ? 'linear-gradient(135deg, #059669, #047857)'
+                                            : 'linear-gradient(135deg, #5A52E0, #7A74FF)',
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: isInstallation
+                                            ? '0 8px 28px rgba(16,185,129,0.45)'
+                                            : '0 8px 28px rgba(108,99,255,0.45)',
+                                    }
+                                }}
                             >
                                 {submitting ? 'Creating...' : (isInstallation ? 'Create Installation Ticket' : 'Create Repair Ticket')}
                             </Button>
