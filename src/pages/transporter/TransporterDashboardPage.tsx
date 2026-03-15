@@ -604,9 +604,40 @@ const TransporterDashboardPage: React.FC = () => {
                                     )}
                                     {job.status === 'IN_TRANSIT' && (
                                         <Button fullWidth variant="contained"
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 updateJobStatus(job.id, 'DELIVERED', { completed_at: new Date().toISOString() });
                                                 stopLiveTracking();
+
+                                                // Notify the Technician that their requested part has arrived
+                                                try {
+                                                    if (job.part_request_id) {
+                                                        // Update part_request status to RECEIVED
+                                                        await supabase.from('part_requests').update({ status: 'RECEIVED' }).eq('id', job.part_request_id);
+
+                                                        // Find the ticket linked to this part request
+                                                        const { data: pr } = await supabase.from('part_requests').select('ticket_id, part_name').eq('id', job.part_request_id).single();
+                                                        if (pr?.ticket_id) {
+                                                            // Find the assigned technician on this ticket
+                                                            const { data: ticket } = await supabase.from('tickets').select('assigned_technician_id, ticket_number').eq('id', pr.ticket_id).single();
+                                                            if (ticket?.assigned_technician_id) {
+                                                                const { data: tech } = await supabase.from('technicians').select('user_id, name').eq('id', ticket.assigned_technician_id).single();
+                                                                if (tech?.user_id) {
+                                                                    await supabase.functions.invoke('send-push-notification', {
+                                                                        body: {
+                                                                            title: '📦 Your Part Has Arrived!',
+                                                                            body: `${pr.part_name || 'Your requested part'} for Ticket #${ticket.ticket_number || ''} is now at the service centre. Collect it and complete the repair!`,
+                                                                            url: '/tech',
+                                                                            target_user_ids: [tech.user_id]
+                                                                        }
+                                                                    });
+                                                                    console.log(`✅ Push sent to Tech ${tech.name} for part delivery`);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Failed to notify technician about part delivery:', err);
+                                                }
                                             }}
                                             sx={{
                                                 height: 48, borderRadius: 3, fontWeight: 800, fontSize: '0.9rem',
