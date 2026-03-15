@@ -270,6 +270,24 @@ const PartRequestsPage: React.FC = () => {
                 pickup_otp: pickupOtp,
             });
             if (error) throw error;
+
+            // Send push notification to the transporter
+            const selectedTransporter = transporters.find(t => t.id === selectedTransporterId);
+            if (selectedTransporter?.user_id) {
+                supabase.functions.invoke('send-push-notification', {
+                    body: {
+                        title: '🚚 New Delivery Assigned!',
+                        body: `Pickup from ${acceptedBid?.dealer?.name || 'dealer'}. Open to accept.`,
+                        url: '/transport',
+                        target_user_ids: [selectedTransporter.user_id],
+                    }
+                }).then(res => {
+                    console.log('Transporter push response:', res.data);
+                }).catch(err => {
+                    console.error('Transporter push error:', err);
+                });
+            }
+
             setTransportDialogOpen(false);
             alert(`✅ Transporter assigned!\n\n🔐 Pickup OTP: ${pickupOtp}\n\nShare this OTP with the dealer. The transporter must enter this code to verify pickup.`);
         } catch (err: any) {
