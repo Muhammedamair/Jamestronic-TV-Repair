@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Card, CardContent, Grid, Chip, CircularProgress,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton, Button
+    IconButton, Button, Collapse, Divider, Avatar
 } from '@mui/material';
 import {
-    Engineering, CheckCircle, Build, Warning, Visibility
+    Engineering, CheckCircle, Build, Warning, Visibility,
+    ExpandMore, ExpandLess, Phone, Hardware, AccessTime
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -42,6 +42,12 @@ const TechDashboardPage: React.FC = () => {
     const [technician, setTechnician] = useState<Technician | null>(null);
     const [tickets, setTickets] = useState<AssignedTicket[]>([]);
     const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
+    const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
+
+    const toggleExpand = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setExpandedTicketId(prev => prev === id ? null : id);
+    };
 
     const playNotificationSound = () => {
         try {
@@ -258,75 +264,179 @@ const TechDashboardPage: React.FC = () => {
                 </Grid>
             </Grid>
 
-            {/* Active Tickets Table */}
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                Active Tickets ({activeTickets.length})
+            {/* Active Tickets Cards */}
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Build sx={{ color: '#00D9FF' }} /> Active Tickets ({activeTickets.length})
             </Typography>
-            <TableContainer component={Paper} sx={{ bgcolor: '#1A2235', backgroundImage: 'none', borderRadius: 3, overflow: 'hidden' }}>
-                <Table>
-                    <TableHead sx={{ bgcolor: 'rgba(255,255,255,0.02)' }}>
-                        <TableRow>
-                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Ticket</TableCell>
-                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>TV</TableCell>
-                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Issue</TableCell>
-                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Priority</TableCell>
-                            <TableCell sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Work Status</TableCell>
-                            <TableCell align="right" sx={{ color: '#94A3B8', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Action</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {activeTickets.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={6} align="center" sx={{ py: 6, color: '#64748B', borderBottom: 'none' }}>
-                                    🎉 No active tickets! You're all caught up.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            activeTickets.map(ticket => (
-                                <TableRow key={ticket.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' }, cursor: 'pointer' }}
-                                    onClick={() => navigate(`/tech/${ticket.id}`)}
-                                >
-                                    <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <Typography variant="body2" fontWeight={600} color="#00D9FF">{ticket.ticket_number}</Typography>
-                                    </TableCell>
-                                    <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <Typography variant="body2">{ticket.tv_brand}</Typography>
-                                        <Typography variant="caption" color="text.secondary">{ticket.tv_model || ''} {ticket.tv_size || ''}</Typography>
-                                    </TableCell>
-                                    <TableCell sx={{ color: '#E2E8F0', borderBottom: '1px solid rgba(255,255,255,0.05)', maxWidth: 200 }}>
-                                        <Typography variant="body2" noWrap>{ticket.issue_description}</Typography>
-                                    </TableCell>
-                                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <Chip label={ticket.priority} size="small" sx={{
-                                            fontWeight: 600,
-                                            bgcolor: ticket.priority === 'URGENT' ? 'rgba(239,68,68,0.15)' :
-                                                ticket.priority === 'HIGH' ? 'rgba(249,115,22,0.15)' : 'rgba(148,163,184,0.1)',
-                                            color: ticket.priority === 'URGENT' ? '#EF4444' :
-                                                ticket.priority === 'HIGH' ? '#F97316' : '#94A3B8',
-                                        }} />
-                                    </TableCell>
-                                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+
+            {activeTickets.length === 0 ? (
+                <Box sx={{ p: 4, mt: 2, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 3, border: '1px dashed rgba(255,255,255,0.1)' }}>
+                    <CheckCircle sx={{ fontSize: 48, color: '#10B981', mb: 1, opacity: 0.8 }} />
+                    <Typography variant="h6" color="text.primary" fontWeight={600}>All caught up!</Typography>
+                    <Typography variant="body2" color="text.secondary">No active tickets assigned to you right now.</Typography>
+                </Box>
+            ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {activeTickets.map(ticket => {
+                        const isExpanded = expandedTicketId === ticket.id;
+                        const statusColor = TECH_STATUS_COLORS[ticket.tech_status || 'ASSIGNED'];
+                        const priorityColor = ticket.priority === 'URGENT' ? '#EF4444' : ticket.priority === 'HIGH' ? '#F97316' : '#94A3B8';
+
+                        return (
+                            <Card 
+                                key={ticket.id} 
+                                onClick={() => navigate(`/tech/${ticket.id}`)}
+                                sx={{ 
+                                    bgcolor: '#1E293B', 
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    borderLeft: `4px solid ${statusColor}`,
+                                    borderRadius: 3,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+                                    '&:hover': {
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -2px rgba(0,0,0,0.1)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderLeft: `4px solid ${statusColor}`,
+                                    }
+                                }}
+                            >
+                                <CardContent sx={{ p: '24px !important' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                        <Box>
+                                            <Typography variant="caption" fontWeight={700} color="#00D9FF" sx={{ mb: 0.5, display: 'block', letterSpacing: 0.5 }}>
+                                                {ticket.ticket_number}
+                                            </Typography>
+                                            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2, color: '#F8FAFC' }}>
+                                                {ticket.tv_brand} {ticket.tv_model || ''} {ticket.tv_size || ''}
+                                            </Typography>
+                                        </Box>
+                                        <Chip 
+                                            label={ticket.priority} 
+                                            size="small" 
+                                            sx={{ 
+                                                bgcolor: `${priorityColor}15`, 
+                                                color: priorityColor, 
+                                                fontWeight: 700,
+                                                fontSize: '0.7rem',
+                                                borderRadius: 1
+                                            }} 
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                                         <Chip
                                             label={TECH_STATUS_LABELS[ticket.tech_status || 'ASSIGNED']}
                                             size="small"
                                             sx={{
+                                                bgcolor: `${statusColor}15`,
+                                                color: statusColor,
                                                 fontWeight: 600,
-                                                bgcolor: `${TECH_STATUS_COLORS[ticket.tech_status || 'ASSIGNED']}18`,
-                                                color: TECH_STATUS_COLORS[ticket.tech_status || 'ASSIGNED'],
+                                                borderColor: `${statusColor}40`,
+                                                border: '1px solid',
+                                                borderRadius: 1.5
                                             }}
                                         />
-                                    </TableCell>
-                                    <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <IconButton size="small" sx={{ color: '#00D9FF' }}>
-                                            <Visibility fontSize="small" />
+                                        <Chip
+                                            icon={<AccessTime sx={{ fontSize: '14px !important', color: 'inherit' }} />}
+                                            label={`Created ${new Date(ticket.created_at).toLocaleDateString()}`}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ 
+                                                color: '#94A3B8', 
+                                                borderColor: 'rgba(255,255,255,0.1)',
+                                                borderRadius: 1.5 
+                                            }}
+                                        />
+                                    </Box>
+
+                                    <Typography 
+                                        variant="body2" 
+                                        color="#CBD5E1" 
+                                        sx={{ 
+                                            display: '-webkit-box', 
+                                            WebkitLineClamp: isExpanded ? 'unset' : 2, 
+                                            WebkitBoxOrient: 'vertical', 
+                                            overflow: 'hidden',
+                                            lineHeight: 1.6
+                                        }}
+                                    >
+                                        <span style={{ fontWeight: 600, color: '#94A3B8' }}>Issue: </span>
+                                        {ticket.issue_description}
+                                    </Typography>
+
+                                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                        <Box sx={{ mt: 3, pt: 3, borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                                            <Grid container spacing={2}>
+                                                <Grid size={{ xs: 12, sm: 6 }}>
+                                                    <Typography variant="caption" color="#64748B" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                                                        <Engineering fontSize="inherit" /> CUSTOMER DETAILS
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={600} color="#F8FAFC">{ticket.customer?.name}</Typography>
+                                                    <Typography variant="body2" color="#94A3B8" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                                        <Phone fontSize="inherit" sx={{ opacity: 0.7 }} /> {ticket.customer?.mobile}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid size={{ xs: 12, sm: 6 }}>
+                                                    <Typography variant="caption" color="#64748B" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                                                        <Hardware fontSize="inherit" /> WARRANTY
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={600} color={ticket.warranty_expiry_date && new Date(ticket.warranty_expiry_date) > new Date() ? '#10B981' : '#94A3B8'}>
+                                                        {ticket.warranty_expiry_date 
+                                                            ? (new Date(ticket.warranty_expiry_date) > new Date() ? 'In Warranty' : 'Expired') 
+                                                            : 'No Warranty'}
+                                                    </Typography>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    </Collapse>
+
+                                    <Box sx={{ display: 'flex', gap: 1.5, mt: 3 }}>
+                                        <Button
+                                            variant="contained"
+                                            fullWidth
+                                            disableElevation
+                                            sx={{ 
+                                                bgcolor: 'rgba(0, 217, 255, 0.1)', 
+                                                color: '#00D9FF',
+                                                border: '1px solid rgba(0, 217, 255, 0.2)',
+                                                borderRadius: 2,
+                                                py: 1.2,
+                                                textTransform: 'none',
+                                                fontWeight: 600,
+                                                fontSize: '0.95rem',
+                                                '&:hover': {
+                                                    bgcolor: 'rgba(0, 217, 255, 0.2)',
+                                                    borderColor: 'rgba(0, 217, 255, 0.3)',
+                                                }
+                                            }}
+                                        >
+                                            View Workbench
+                                        </Button>
+                                        <IconButton 
+                                            onClick={(e) => toggleExpand(ticket.id, e)}
+                                            sx={{ 
+                                                border: '1px solid rgba(255,255,255,0.1)', 
+                                                borderRadius: 2,
+                                                color: '#94A3B8',
+                                                width: 48,
+                                                height: 48,
+                                                '&:hover': {
+                                                    bgcolor: 'rgba(255,255,255,0.05)',
+                                                    color: '#F8FAFC'
+                                                }
+                                            }}
+                                        >
+                                            {isExpanded ? <ExpandLess /> : <ExpandMore />}
                                         </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </Box>
+            )}
         </Box>
     );
 };
