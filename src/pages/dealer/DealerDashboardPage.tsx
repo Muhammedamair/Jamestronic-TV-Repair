@@ -163,6 +163,18 @@ const DealerDashboardPage: React.FC = () => {
         setSubmittingBid(false);
     };
 
+    // Sync PWA App Icon Badge for Dealer (Open Requests)
+    useEffect(() => {
+        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+            const openCount = requests.filter(r => r.status === 'OPEN').length;
+            if (openCount > 0) {
+                (navigator as any).setAppBadge(openCount).catch(console.error);
+            } else {
+                (navigator as any).clearAppBadge().catch(console.error);
+            }
+        }
+    }, [requests]);
+
     const ImageThumbnail = ({ urls, index }: { urls: string[], index: number }) => (
         <Card 
             sx={{ width: 60, height: 60, cursor: 'pointer', flexShrink: 0, borderRadius: 2, border: '1px solid rgba(255,255,255,0.1)' }}
@@ -187,17 +199,7 @@ const DealerDashboardPage: React.FC = () => {
         );
     }
 
-    // Sync PWA App Icon Badge for Dealer (Open Requests)
-    useEffect(() => {
-        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
-            const openCount = requests.filter(r => r.status === 'OPEN').length;
-            if (openCount > 0) {
-                (navigator as any).setAppBadge(openCount).catch(console.error);
-            } else {
-                (navigator as any).clearAppBadge().catch(console.error);
-            }
-        }
-    }, [requests]);
+
 
     const openRequests = requests.filter(r => r.status === 'OPEN');
     const myApprovedRequests = requests.filter(r => 
