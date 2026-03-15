@@ -70,12 +70,12 @@ const DealerDashboardPage: React.FC = () => {
 
         fetchRequests();
 
-        // Fetch transport jobs where pickup is from this dealer
+        // Fetch transport jobs linked to this dealer's accepted bids
+        // RLS policy ensures dealer only sees their own jobs
         const fetchTransportJobs = async () => {
             const { data: tjData } = await supabase
                 .from('transport_jobs')
                 .select('*')
-                .eq('pickup_contact_name', dealerProfile.name)
                 .in('status', ['ASSIGNED', 'ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'])
                 .order('created_at', { ascending: false });
             if (tjData) setTransportJobs(tjData as TransportJob[]);
