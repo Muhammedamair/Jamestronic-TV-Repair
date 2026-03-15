@@ -60,8 +60,8 @@ const TechTicketDetailPage: React.FC = () => {
             const { data: techData } = await supabase.from('technicians').select('id').eq('user_id', user.id).single();
             if (!techData) { setLoading(false); return; }
 
-            // Get ticket
-            const { data: ticketData } = await supabase.from('tickets').select('*').eq('id', id).single();
+            // Get ticket WITH customer data (needed for WhatsApp notifications)
+            const { data: ticketData } = await supabase.from('tickets').select('*, customer:customers(name, mobile)').eq('id', id).single();
             setTicket(ticketData);
 
             // Get tech log

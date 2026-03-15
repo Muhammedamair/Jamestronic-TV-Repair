@@ -84,8 +84,8 @@ const TicketDetailPage: React.FC = () => {
             setLoading(false);
         });
 
-        // Real-time subscription for notes
-        const channel = supabase.channel(`ticket_notes_${id}`)
+        // Real-time subscription for notes AND ticket status changes
+        const channel = supabase.channel(`ticket_detail_${id}`)
             .on('postgres_changes', { 
                 event: '*', 
                 schema: 'public', 
@@ -107,6 +107,16 @@ const TicketDetailPage: React.FC = () => {
                     const updatedNote = payload.new as TicketNote;
                     setNotes(prev => prev.map(n => n.id === updatedNote.id ? updatedNote : n));
                 }
+            })
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'tickets',
+                filter: `id=eq.${id}`
+            }, (payload) => {
+                // Auto-refresh ticket status when Technician/Transporter updates it
+                const updated = payload.new as any;
+                setTicket(prev => prev ? { ...prev, ...updated } : prev);
             })
             .subscribe();
 
