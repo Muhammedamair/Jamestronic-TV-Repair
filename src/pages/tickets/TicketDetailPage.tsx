@@ -21,28 +21,8 @@ import {
     TicketStatus, Technician,
 } from '../../types/database';
 import { formatDateTime, formatRelative, formatCurrency } from '../../utils/formatters';
-import { sendInteraktMessage } from '../../utils/interakt';
+import { triggerStatusWhatsApp, getAvailableNextStatuses } from '../../utils/statusUpdates';
 import { generatePDF } from '../../utils/pdfGenerator';
-
-// Map each ticket status to its Interakt WhatsApp template name
-const STATUS_TEMPLATE_MAP: Record<TicketStatus, string | null> = {
-    CREATED: 'service_booking_confirmation',  // Already sent on ticket creation
-    DIAGNOSED: 'service_diagnosed',
-    PICKUP_SCHEDULED: 'service_pickup_scheduled_body',
-    PICKED_UP: 'service_picked_up',
-    IN_REPAIR: 'service_in_repair',
-    QUOTATION_SENT: 'service_quotation_sent',
-    APPROVED: 'service_approved',
-    REPAIRED: 'service_repaired_',
-    DELIVERY_SCHEDULED: 'service_delivery_scheduled',
-    DELIVERED: 'service_delivered',
-    CLOSED: 'service_review_request',
-    // Installation-specific
-    CONFIRMED: 'installation_confirmed',
-    EN_ROUTE: 'installation_en_route',
-    INSTALLED: 'installation_completed',
-    PAYMENT_COLLECTED: null,
-};
 
 const TicketDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -169,55 +149,16 @@ const TicketDetailPage: React.FC = () => {
         if (data) {
             setTicket(data as Ticket);
 
-            // Send WhatsApp notification to customer
-            const templateName = STATUS_TEMPLATE_MAP[s];
-            const customerPhone = (data as any).customer?.mobile;
-            if (templateName && customerPhone) {
-                const tvBrand = (data as Ticket).tv_brand || 'TV';
-                const tvSize = (data as Ticket).tv_size || '';
-
-                // Build bodyValues based on the template
-                let bodyValues: string[] | undefined;
-
-                if (s === 'CREATED') {
-                    // service_booking_confirmation has no variables
-                    bodyValues = undefined;
-                } else if (s === 'QUOTATION_SENT') {
-                    // service_quotation_sent has 3 variables: brand, size, price
-                    const latestQuotTotal = quotations.length > 0
-                        ? String(quotations[0].total)
-                        : String((data as Ticket).estimated_cost || '0');
-                    bodyValues = [tvBrand, tvSize, latestQuotTotal];
-                } else if (s === 'CONFIRMED' && (data as Ticket).service_type === 'INSTALLATION') {
-                    // installation_confirmed has 3 variables: brand, size, time_slot
-                    bodyValues = [tvBrand, tvSize, (data as Ticket).time_slot || 'ASAP'];
-                } else {
-                    // All other templates have 2 variables: brand, size
-                    bodyValues = [tvBrand, tvSize];
-                }
-
-                console.log(`📋 [STATUS] Sending WhatsApp notification: ${templateName} to ${customerPhone}`);
-                sendInteraktMessage({
-                    phoneNumber: customerPhone,
-                    templateName,
-                    bodyValues,
-                }).then(result => {
-                    console.log(`✅ [STATUS] WhatsApp notification sent for ${s}:`, result);
-                }).catch(err => {
-                    console.error(`❌ [STATUS] WhatsApp notification failed for ${s}:`, err);
-                });
-            }
+            // Send WhatsApp notification to customer (Unified Flow)
+            const latestQuotTotal = quotations.length > 0
+                ? quotations[0].total
+                : undefined;
+            await triggerStatusWhatsApp(data as Ticket, s, latestQuotTotal);
         }
     };
 
     const nextStatuses = (): TicketStatus[] => {
-        if (!ticket) return [];
-        const order = ticket.service_type === 'INSTALLATION' ? INSTALLATION_STATUS_ORDER : TICKET_STATUS_ORDER;
-        const idx = order.indexOf(ticket.status);
-        const r: TicketStatus[] = [];
-        if (idx < order.length - 1) r.push(order[idx + 1]);
-        if (ticket.status !== 'CLOSED') r.push('CLOSED');
-        return [...new Set(r)];
+        return getAvailableNextStatuses(ticket);
     };
 
     const addNote = async () => {

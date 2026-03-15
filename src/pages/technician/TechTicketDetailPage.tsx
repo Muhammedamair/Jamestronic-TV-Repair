@@ -12,6 +12,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Ticket, TicketNote, TechStatus, TICKET_STATUS_LABELS } from '../../types/database';
+import { triggerStatusWhatsApp } from '../../utils/statusUpdates';
 
 const TECH_STATUS_LABELS: Record<TechStatus, string> = {
     ASSIGNED: 'Assigned to you',
@@ -124,11 +125,13 @@ const TechTicketDetailPage: React.FC = () => {
 
         await supabase.from('ticket_technician_log').update(updates).eq('id', techLogId);
 
-        // Also update the main ticket status for Admin visibility
+        // Also update the main ticket status for Admin visibility AND trigger Customer WhatsApp notification
         if (newStatus === 'IN_PROGRESS') {
             await supabase.from('tickets').update({ status: 'IN_REPAIR' }).eq('id', id);
+            if (ticket) await triggerStatusWhatsApp(ticket, 'IN_REPAIR');
         } else if (newStatus === 'COMPLETED') {
             await supabase.from('tickets').update({ status: 'REPAIRED' }).eq('id', id);
+            if (ticket) await triggerStatusWhatsApp(ticket, 'REPAIRED');
         }
 
         setTechStatus(newStatus);
