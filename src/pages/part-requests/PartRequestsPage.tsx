@@ -72,7 +72,7 @@ const PartRequestsPage: React.FC = () => {
     const fetchRequests = async () => {
         const { data } = await supabase
             .from('part_requests')
-            .select('*, bids:part_bids(*, dealer:dealers(*))')
+            .select('*, bids:part_bids(*, dealer:dealers(*)), transport_jobs(*)')
             .order('created_at', { ascending: false });
         
         if (data) setRequests(data as PartRequest[]);
@@ -629,6 +629,8 @@ const PartRequestsPage: React.FC = () => {
                                                 <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981' }}>
                                                     {formatCurrency(acceptedBid.price)}
                                                 </Typography>
+                                                {/* Show Book Transport ONLY if no transport job exists for this request */}
+                                                {!(req as any).transport_jobs?.length && (
                                                 <Button
                                                     variant="contained"
                                                     size="small"
@@ -642,6 +644,20 @@ const PartRequestsPage: React.FC = () => {
                                                 >
                                                     Book Transport
                                                 </Button>
+                                                )}
+                                                {(req as any).transport_jobs?.length > 0 && (
+                                                    <Chip
+                                                        icon={<LocalShipping sx={{ fontSize: '16px !important' }} />}
+                                                        label={`Transport ${(req as any).transport_jobs[0].status === 'DELIVERED' ? 'Delivered ✅' : 'Booked'}`}
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: (req as any).transport_jobs[0].status === 'DELIVERED' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                                                            color: (req as any).transport_jobs[0].status === 'DELIVERED' ? '#10B981' : '#F59E0B',
+                                                            fontWeight: 600,
+                                                            borderRadius: 1.5
+                                                        }}
+                                                    />
+                                                )}
                                             </Box>
                                         )}
 
