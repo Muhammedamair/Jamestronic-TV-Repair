@@ -270,6 +270,17 @@ const TransporterDashboardPage: React.FC = () => {
     const inTransitCount = jobs.filter(j => j.status === 'IN_TRANSIT').length;
     const trackedJob = trackingJobId ? jobs.find(j => j.id === trackingJobId) : null;
 
+    // Sync PWA App Icon Badge for Transporter (Active Jobs)
+    useEffect(() => {
+        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+            if (activeJobs.length > 0) {
+                (navigator as any).setAppBadge(activeJobs.length).catch(console.error);
+            } else {
+                (navigator as any).clearAppBadge().catch(console.error);
+            }
+        }
+    }, [activeJobs.length]);
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 15 }}>

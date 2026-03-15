@@ -36,6 +36,16 @@ self.addEventListener('push', (event: any) => {
         ]
     };
 
+    // Increment App Badge
+    if ('setAppBadge' in navigator) {
+        event.waitUntil(
+            // We don't have direct access to the current badge count synchronously in SW,
+            // but we can try to guess it or just set it to a generic dot (null) if count unknown.
+            // For now, we will set it to 1, and the React app will sync the true count when opened.
+            (navigator as any).setAppBadge(1).catch(console.error)
+        );
+    }
+
     event.waitUntil(
         self.registration.showNotification(title, options)
     );
@@ -44,6 +54,11 @@ self.addEventListener('push', (event: any) => {
 // Notification click handler
 self.addEventListener('notificationclick', (event: any) => {
     event.notification.close();
+
+    // Clear App Badge when interacted with
+    if ('clearAppBadge' in navigator) {
+        event.waitUntil((navigator as any).clearAppBadge().catch(console.error));
+    }
 
     if (event.action === 'dismiss') return;
 

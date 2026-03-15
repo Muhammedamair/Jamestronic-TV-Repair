@@ -152,6 +152,18 @@ const TechDashboardPage: React.FC = () => {
     const partRequired = tickets.filter(t => t.tech_status === 'PART_REQUIRED');
     const activeTickets = tickets.filter(t => t.tech_status !== 'COMPLETED' && t.tech_status !== 'CANT_REPAIR');
 
+    // Sync PWA App Icon Badge
+    useEffect(() => {
+        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+            const badgeCount = assigned.length + inProgress.length + partRequired.length;
+            if (badgeCount > 0) {
+                (navigator as any).setAppBadge(badgeCount).catch(console.error);
+            } else {
+                (navigator as any).clearAppBadge().catch(console.error);
+            }
+        }
+    }, [assigned.length, inProgress.length, partRequired.length]);
+
     return (
         <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
             <Box sx={{ mb: 3 }}>
