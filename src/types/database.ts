@@ -327,6 +327,10 @@ export interface TransportJob {
     started_at?: string | null;
     completed_at?: string | null;
 
+    pickup_otp?: string | null;
+    otp_verified?: boolean;
+    proximity_notified?: boolean;
+
     notes?: string | null;
     created_at: string;
     updated_at: string;

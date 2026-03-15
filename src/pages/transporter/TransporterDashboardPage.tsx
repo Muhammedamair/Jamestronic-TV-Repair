@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box, Typography, Card, CardContent, CircularProgress, Chip, Button,
-    Grid, Avatar, Dialog, DialogTitle, DialogContent,
+    Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
 } from '@mui/material';
 import {
     LocalShipping, CheckCircle, DirectionsOutlined, MyLocation,
-    Place, Phone, Assignment, Navigation,
+    Place, Phone, Assignment, Navigation, Lock, VerifiedUser,
 } from '@mui/icons-material';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,33 +13,53 @@ import { TransportJob, TRANSPORT_JOB_STATUS_LABELS, TRANSPORT_JOB_STATUS_COLORS 
 import { formatRelative } from '../../utils/formatters';
 import LiveTrackingMap from '../../components/LiveTrackingMap';
 
+// Calculate distance between two lat/lng points in meters (Haversine)
+const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371000; // Earth radius in meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const TransporterDashboardPage: React.FC = () => {
     const { user } = useAuth();
     const [jobs, setJobs] = useState<TransportJob[]>([]);
     const [loading, setLoading] = useState(true);
     const [transporterId, setTransporterId] = useState<string | null>(null);
-    const [selectedJob, setSelectedJob] = useState<TransportJob | null>(null);
+    const [vehicleType, setVehicleType] = useState<string>('Bike');
     const [watchId, setWatchId] = useState<number | null>(null);
+    const [trackingJobId, setTrackingJobId] = useState<string | null>(null);
+
+    // OTP dialog
+    const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+    const [otpJobId, setOtpJobId] = useState<string | null>(null);
+    const [otpInput, setOtpInput] = useState('');
+    const [otpError, setOtpError] = useState('');
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+    // Proximity tracking
+    const proximityNotifiedRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         const fetchData = async () => {
             if (!user) return;
-            // Get transporter profile
             const { data: tData } = await supabase
                 .from('transporters')
-                .select('id')
+                .select('id, vehicle_type')
                 .eq('user_id', user.id)
                 .single();
 
             if (tData) {
                 setTransporterId(tData.id);
-                // Get jobs
+                setVehicleType(tData.vehicle_type || 'Bike');
                 const { data: jobsData } = await supabase
                     .from('transport_jobs')
                     .select('*')
                     .eq('transporter_id', tData.id)
                     .order('created_at', { ascending: false });
-
                 if (jobsData) setJobs(jobsData);
             }
             setLoading(false);
@@ -65,7 +85,6 @@ const TransporterDashboardPage: React.FC = () => {
                 }
             })
             .subscribe();
-
         return () => { supabase.removeChannel(channel); };
     }, [transporterId]);
 
@@ -74,29 +93,38 @@ const TransporterDashboardPage: React.FC = () => {
             .from('transport_jobs')
             .update({ status: newStatus, ...extraFields })
             .eq('id', jobId);
-
         if (!error) {
             setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus as any, ...extraFields } : j));
         }
     };
 
     const startLiveTracking = (jobId: string) => {
-        if (!navigator.geolocation) {
-            alert('Geolocation not supported');
-            return;
-        }
-
+        if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+        setTrackingJobId(jobId);
         const id = navigator.geolocation.watchPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
                 await supabase
                     .from('transport_jobs')
-                    .update({
-                        live_lat: latitude,
-                        live_lng: longitude,
-                        live_updated_at: new Date().toISOString(),
-                    })
+                    .update({ live_lat: latitude, live_lng: longitude, live_updated_at: new Date().toISOString() })
                     .eq('id', jobId);
+
+                // Check proximity to pickup (500m alert)
+                const job = jobs.find(j => j.id === jobId);
+                if (job && job.pickup_lat && job.pickup_lng && !job.proximity_notified && !proximityNotifiedRef.current.has(jobId)) {
+                    const dist = haversineDistance(latitude, longitude, job.pickup_lat, job.pickup_lng);
+                    if (dist <= 500) {
+                        proximityNotifiedRef.current.add(jobId);
+                        await supabase.from('transport_jobs').update({ proximity_notified: true }).eq('id', jobId);
+                        // Browser notification
+                        if (Notification.permission === 'granted') {
+                            new Notification('📍 You are near the pickup!', {
+                                body: `You are within ${Math.round(dist)}m of the dealer. Prepare for pickup.`,
+                                icon: '/icons/icon-192x192.png',
+                            });
+                        }
+                    }
+                }
             },
             (err) => console.error('Geolocation error:', err),
             { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
@@ -105,10 +133,8 @@ const TransporterDashboardPage: React.FC = () => {
     };
 
     const stopLiveTracking = () => {
-        if (watchId !== null) {
-            navigator.geolocation.clearWatch(watchId);
-            setWatchId(null);
-        }
+        if (watchId !== null) { navigator.geolocation.clearWatch(watchId); setWatchId(null); }
+        setTrackingJobId(null);
     };
 
     const openInGoogleMaps = (lat?: number | null, lng?: number | null, address?: string) => {
@@ -119,8 +145,47 @@ const TransporterDashboardPage: React.FC = () => {
         }
     };
 
+    // OTP Verification
+    const handleOtpVerify = async () => {
+        if (!otpJobId) return;
+        setVerifyingOtp(true);
+        setOtpError('');
+
+        // Fetch fresh job to get OTP
+        const { data: freshJob } = await supabase
+            .from('transport_jobs')
+            .select('pickup_otp')
+            .eq('id', otpJobId)
+            .single();
+
+        if (!freshJob?.pickup_otp) {
+            setOtpError('No OTP found for this job. Contact admin.');
+            setVerifyingOtp(false);
+            return;
+        }
+
+        if (otpInput.trim() !== freshJob.pickup_otp) {
+            setOtpError('❌ Incorrect OTP. Ask the dealer for the correct code.');
+            setVerifyingOtp(false);
+            return;
+        }
+
+        // OTP matches — mark as picked up
+        await updateJobStatus(otpJobId, 'PICKED_UP', {
+            picked_up_at: new Date().toISOString(),
+            otp_verified: true,
+        });
+        setOtpDialogOpen(false);
+        setOtpInput('');
+        setOtpJobId(null);
+        setVerifyingOtp(false);
+    };
+
     const activeJobs = jobs.filter(j => !['DELIVERED', 'CANCELLED'].includes(j.status));
     const completedJobs = jobs.filter(j => j.status === 'DELIVERED');
+
+    // Find the currently tracked job for inline map
+    const trackedJob = trackingJobId ? jobs.find(j => j.id === trackingJobId) : null;
 
     if (loading) {
         return (
@@ -163,6 +228,31 @@ const TransporterDashboardPage: React.FC = () => {
                 </Grid>
             </Grid>
 
+            {/* Live Map (if tracking) */}
+            {trackedJob && (
+                <Card sx={{ mb: 2, border: '1px solid rgba(59,130,246,0.25)' }}>
+                    <CardContent sx={{ p: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <MyLocation sx={{ color: '#3B82F6', fontSize: 20 }} />
+                                <Typography variant="subtitle2" fontWeight={700}>Live Tracking</Typography>
+                            </Box>
+                            <Chip label="LIVE" size="small" sx={{ bgcolor: 'rgba(239,68,68,0.15)', color: '#EF4444', fontWeight: 700, animation: 'pulse 2s infinite' }} />
+                        </Box>
+                        <LiveTrackingMap
+                            pickupLat={trackedJob.pickup_lat}
+                            pickupLng={trackedJob.pickup_lng}
+                            dropLat={trackedJob.drop_lat}
+                            dropLng={trackedJob.drop_lng}
+                            liveLat={trackedJob.live_lat}
+                            liveLng={trackedJob.live_lng}
+                            vehicleType={vehicleType}
+                            height={280}
+                        />
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Job Cards */}
             {activeJobs.length > 0 && (
                 <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#E2E8F0', mb: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -178,15 +268,21 @@ const TransporterDashboardPage: React.FC = () => {
                 }}>
                     <CardContent sx={{ p: 2.5 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Chip
-                                label={TRANSPORT_JOB_STATUS_LABELS[job.status]}
-                                size="small"
-                                sx={{
-                                    bgcolor: `${TRANSPORT_JOB_STATUS_COLORS[job.status]}15`,
-                                    color: TRANSPORT_JOB_STATUS_COLORS[job.status],
-                                    fontWeight: 700, border: `1px solid ${TRANSPORT_JOB_STATUS_COLORS[job.status]}30`,
-                                }}
-                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Chip
+                                    label={TRANSPORT_JOB_STATUS_LABELS[job.status]}
+                                    size="small"
+                                    sx={{
+                                        bgcolor: `${TRANSPORT_JOB_STATUS_COLORS[job.status]}15`,
+                                        color: TRANSPORT_JOB_STATUS_COLORS[job.status],
+                                        fontWeight: 700, border: `1px solid ${TRANSPORT_JOB_STATUS_COLORS[job.status]}30`,
+                                    }}
+                                />
+                                {job.otp_verified && (
+                                    <Chip icon={<VerifiedUser sx={{ fontSize: 14 }} />} label="OTP Verified" size="small"
+                                        sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600, border: '1px solid rgba(16,185,129,0.2)', '& .MuiChip-icon': { color: '#10B981' } }} />
+                                )}
+                            </Box>
                             <Typography variant="caption" color="text.secondary">{formatRelative(job.assigned_at)}</Typography>
                         </Box>
 
@@ -237,18 +333,25 @@ const TransporterDashboardPage: React.FC = () => {
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             {job.status === 'ASSIGNED' && (
                                 <Button fullWidth variant="contained" size="small"
-                                    onClick={() => updateJobStatus(job.id, 'ACCEPTED', { accepted_at: new Date().toISOString() })}
+                                    onClick={() => {
+                                        updateJobStatus(job.id, 'ACCEPTED', { accepted_at: new Date().toISOString() });
+                                        startLiveTracking(job.id); // Start tracking early for proximity alerts
+                                    }}
                                     sx={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', fontWeight: 700, textTransform: 'none' }}>
                                     Accept Job
                                 </Button>
                             )}
                             {job.status === 'ACCEPTED' && (
                                 <Button fullWidth variant="contained" size="small"
+                                    startIcon={<Lock sx={{ fontSize: 16 }} />}
                                     onClick={() => {
-                                        updateJobStatus(job.id, 'PICKED_UP', { picked_up_at: new Date().toISOString() });
+                                        setOtpJobId(job.id);
+                                        setOtpInput('');
+                                        setOtpError('');
+                                        setOtpDialogOpen(true);
                                     }}
                                     sx={{ background: 'linear-gradient(135deg, #00D9FF, #0891B2)', fontWeight: 700, textTransform: 'none' }}>
-                                    Mark Picked Up
+                                    Enter OTP & Pickup
                                 </Button>
                             )}
                             {job.status === 'PICKED_UP' && (
@@ -303,12 +406,61 @@ const TransporterDashboardPage: React.FC = () => {
                                         {job.pickup_address} → {job.drop_address}
                                     </Typography>
                                 </Box>
+                                {job.otp_verified && (
+                                    <Chip icon={<VerifiedUser sx={{ fontSize: 12 }} />} label="Verified" size="small"
+                                        sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10B981', fontSize: '0.6rem', height: 20, '& .MuiChip-icon': { color: '#10B981' } }} />
+                                )}
                                 <Typography variant="caption" color="text.secondary">{formatRelative(job.completed_at || job.created_at)}</Typography>
                             </CardContent>
                         </Card>
                     ))}
                 </>
             )}
+
+            {/* OTP Verification Dialog */}
+            <Dialog open={otpDialogOpen} onClose={() => setOtpDialogOpen(false)}
+                PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3, width: '100%', maxWidth: 380 } }}>
+                <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
+                    <Lock sx={{ fontSize: 48, color: '#F59E0B', mb: 1 }} />
+                    <Typography variant="h6" fontWeight={800}>Verify Pickup OTP</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Ask the dealer for the 6-digit OTP code
+                    </Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        autoFocus
+                        value={otpInput}
+                        onChange={e => { setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6)); setOtpError(''); }}
+                        placeholder="Enter 6-digit OTP"
+                        inputProps={{
+                            maxLength: 6,
+                            style: { textAlign: 'center', fontSize: '2rem', letterSpacing: '0.5em', fontWeight: 800 },
+                            inputMode: 'numeric',
+                        }}
+                        error={!!otpError}
+                        helperText={otpError}
+                        sx={{ mt: 2, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                </DialogContent>
+                <DialogActions sx={{ p: 2, pt: 0, flexDirection: 'column', gap: 1 }}>
+                    <Button
+                        fullWidth variant="contained" disabled={otpInput.length !== 6 || verifyingOtp}
+                        onClick={handleOtpVerify}
+                        startIcon={verifyingOtp ? <CircularProgress size={18} color="inherit" /> : <VerifiedUser />}
+                        sx={{
+                            background: 'linear-gradient(135deg, #10B981, #059669)',
+                            fontWeight: 700, textTransform: 'none', borderRadius: 2, py: 1.2,
+                        }}
+                    >
+                        {verifyingOtp ? 'Verifying...' : 'Verify & Pickup'}
+                    </Button>
+                    <Button fullWidth onClick={() => setOtpDialogOpen(false)} sx={{ color: 'text.secondary', textTransform: 'none' }}>
+                        Cancel
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

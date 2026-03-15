@@ -252,6 +252,9 @@ const PartRequestsPage: React.FC = () => {
         if (!selectedTransporterId || !transportPartRequestId) return;
         setAssigningTransporter(true);
         try {
+            // Generate 6-digit OTP for pickup verification
+            const pickupOtp = String(Math.floor(100000 + Math.random() * 900000));
+
             const acceptedBid = requests.find(r => r.id === transportPartRequestId)
                 ?.bids?.find(b => b.is_accepted);
             const { error } = await supabase.from('transport_jobs').insert({
@@ -262,10 +265,11 @@ const PartRequestsPage: React.FC = () => {
                 pickup_contact_mobile: acceptedBid?.dealer?.mobile || '',
                 drop_address: DARK_STORE_ADDRESS,
                 item_description: requests.find(r => r.id === transportPartRequestId)?.part_name || 'Part pickup',
+                pickup_otp: pickupOtp,
             });
             if (error) throw error;
             setTransportDialogOpen(false);
-            alert('✅ Transporter assigned! They will receive a notification.');
+            alert(`✅ Transporter assigned!\n\n🔐 Pickup OTP: ${pickupOtp}\n\nShare this OTP with the dealer. The transporter must enter this code to verify pickup.`);
         } catch (err: any) {
             alert('Error: ' + err.message);
         }

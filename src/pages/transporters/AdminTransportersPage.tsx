@@ -8,7 +8,7 @@ import {
 import {
     Add, Edit, ExpandMore, ExpandLess, LocalShipping, CheckCircle,
     TwoWheeler, DirectionsCar, AccessTime, TrendingUp, Assignment,
-    Visibility, Route, MyLocation, Speed,
+    Visibility, Route, MyLocation, Speed, Lock, VerifiedUser,
 } from '@mui/icons-material';
 import { supabase } from '../../supabaseClient';
 import { createClient } from '@supabase/supabase-js';
@@ -295,8 +295,18 @@ const AdminTransportersPage: React.FC = () => {
                                     color: TRANSPORT_JOB_STATUS_COLORS[trackingJob.status],
                                     fontWeight: 700, border: `1px solid ${TRANSPORT_JOB_STATUS_COLORS[trackingJob.status]}30`,
                                 }} />
+                                {trackingJob.otp_verified && (
+                                    <Chip icon={<VerifiedUser sx={{ fontSize: 14 }} />} label="OTP Verified" size="small"
+                                        sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600, '& .MuiChip-icon': { color: '#10B981' } }} />
+                                )}
                             </Box>
-                            <Button size="small" onClick={() => setTrackingJobId(null)} sx={{ color: '#94A3B8' }}>Close</Button>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                {trackingJob.pickup_otp && !trackingJob.otp_verified && (
+                                    <Chip icon={<Lock sx={{ fontSize: 14 }} />} label={`OTP: ${trackingJob.pickup_otp}`} size="small"
+                                        sx={{ bgcolor: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 700, border: '1px solid rgba(245,158,11,0.2)', '& .MuiChip-icon': { color: '#F59E0B' } }} />
+                                )}
+                                <Button size="small" onClick={() => setTrackingJobId(null)} sx={{ color: '#94A3B8' }}>Close</Button>
+                            </Box>
                         </Box>
                         <LiveTrackingMap
                             pickupLat={trackingJob.pickup_lat}
@@ -305,6 +315,7 @@ const AdminTransportersPage: React.FC = () => {
                             dropLng={trackingJob.drop_lng}
                             liveLat={trackingJob.live_lat}
                             liveLng={trackingJob.live_lng}
+                            vehicleType={transporters.find(t => t.id === trackingJob.transporter_id)?.vehicle_type}
                             height={350}
                         />
                     </CardContent>
@@ -490,6 +501,7 @@ const AdminTransportersPage: React.FC = () => {
                                                             <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Pickup</TableCell>
                                                             <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Drop</TableCell>
                                                             <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Item</TableCell>
+                                                            <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>OTP</TableCell>
                                                             <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Status</TableCell>
                                                             <TableCell sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Assigned</TableCell>
                                                             <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}></TableCell>
@@ -510,6 +522,23 @@ const AdminTransportersPage: React.FC = () => {
                                                                 </TableCell>
                                                                 <TableCell sx={{ color: '#94A3B8', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                                                     <Typography variant="caption">{job.item_description || '—'}</Typography>
+                                                                </TableCell>
+                                                                <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                    {job.pickup_otp ? (
+                                                                        <Chip
+                                                                            icon={job.otp_verified ? <VerifiedUser sx={{ fontSize: 12 }} /> : <Lock sx={{ fontSize: 12 }} />}
+                                                                            label={job.otp_verified ? 'Verified' : job.pickup_otp}
+                                                                            size="small"
+                                                                            sx={{
+                                                                                height: 22, fontSize: '0.65rem', fontWeight: 700,
+                                                                                bgcolor: job.otp_verified ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                                                                                color: job.otp_verified ? '#10B981' : '#F59E0B',
+                                                                                '& .MuiChip-icon': { color: job.otp_verified ? '#10B981' : '#F59E0B' },
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <Typography variant="caption" color="text.secondary">—</Typography>
+                                                                    )}
                                                                 </TableCell>
                                                                 <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                                                     <Chip
