@@ -84,9 +84,15 @@ const PartRequestsPage: React.FC = () => {
         if (data) setAllDealers(data as Dealer[]);
     };
 
+    const fetchTransporters = async () => {
+        const { data } = await supabase.from('transporters').select('*').eq('status', 'ACTIVE').order('name');
+        if (data) setTransporters(data as Transporter[]);
+    };
+
     useEffect(() => {
         fetchRequests();
         fetchDealers();
+        fetchTransporters();
 
         const channel = supabase.channel('admin-part-requests')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'part_requests' }, () => {
@@ -242,10 +248,6 @@ const PartRequestsPage: React.FC = () => {
         setTransportPartRequestId(partRequestId || null);
         setSelectedTransporterId('');
         setTransportDialogOpen(true);
-        // Fetch available transporters
-        supabase.from('transporters').select('*').eq('status', 'ACTIVE').then(({ data }) => {
-            if (data) setTransporters(data);
-        });
     };
 
     const handleAssignTransporter = async () => {
