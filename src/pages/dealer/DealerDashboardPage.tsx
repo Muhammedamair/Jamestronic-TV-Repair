@@ -4,12 +4,12 @@ import {
     CircularProgress, TextField, Dialog, DialogTitle, DialogContent, DialogActions,
     InputAdornment, Avatar, IconButton, CardMedia, Backdrop, Tabs, Tab
 } from '@mui/material';
-import { PhotoCamera, Delete, NotificationsActive } from '@mui/icons-material';
+import { PhotoCamera, Delete, NotificationsActive, LocalShipping, Lock, VerifiedUser } from '@mui/icons-material';
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { supabase } from '../../supabaseClient';
-import { PartRequest, PartBid, Dealer } from '../../types/database';
+import { PartRequest, PartBid, Dealer, TransportJob, TRANSPORT_JOB_STATUS_LABELS, TRANSPORT_JOB_STATUS_COLORS } from '../../types/database';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDateTime } from '../../utils/formatters';
 import { subscribeToPush, isPushSubscribed, syncPushSubscription } from '../../utils/pushSubscription';
@@ -20,6 +20,7 @@ const DealerDashboardPage: React.FC = () => {
     const [requests, setRequests] = useState<PartRequest[]>([]);
     const [dealerProfile, setDealerProfile] = useState<Dealer | null>(null);
     const [activeTab, setActiveTab] = useState(0);
+    const [transportJobs, setTransportJobs] = useState<TransportJob[]>([]);
 
     // Image Viewer state
     const [viewImages, setViewImages] = useState<{ urls: string[], index: number } | null>(null);
@@ -69,12 +70,27 @@ const DealerDashboardPage: React.FC = () => {
 
         fetchRequests();
 
+        // Fetch transport jobs where pickup is from this dealer
+        const fetchTransportJobs = async () => {
+            const { data: tjData } = await supabase
+                .from('transport_jobs')
+                .select('*')
+                .eq('pickup_contact_name', dealerProfile.name)
+                .in('status', ['ASSIGNED', 'ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'])
+                .order('created_at', { ascending: false });
+            if (tjData) setTransportJobs(tjData as TransportJob[]);
+        };
+        fetchTransportJobs();
+
         const channel = supabase.channel(`dealer-${dealerProfile.id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'part_requests' }, () => {
                 fetchRequests();
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'part_bids' }, () => {
                 fetchRequests();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'transport_jobs' }, () => {
+                fetchTransportJobs();
             })
             .subscribe();
 
@@ -272,6 +288,81 @@ const DealerDashboardPage: React.FC = () => {
                     </Box>
                 </Box>
             </Box>
+
+            {/* 🔐 Upcoming Pickups with OTP */}
+            {transportJobs.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                        <LocalShipping sx={{ color: '#F59E0B', fontSize: 20 }} />
+                        <Typography variant="subtitle1" fontWeight={700}>Upcoming Pickups</Typography>
+                        <Chip label={transportJobs.length} size="small" sx={{ bgcolor: 'rgba(245,158,11,0.15)', color: '#F59E0B', fontWeight: 700, height: 22 }} />
+                    </Box>
+                    {transportJobs.map(job => (
+                        <Card key={job.id} sx={{
+                            mb: 1.5,
+                            background: job.otp_verified
+                                ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.03) 100%)'
+                                : 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(245,158,11,0.03) 100%)',
+                            border: job.otp_verified
+                                ? '1px solid rgba(16,185,129,0.2)'
+                                : '1px solid rgba(245,158,11,0.2)',
+                        }}>
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                    <Box>
+                                        <Chip
+                                            label={TRANSPORT_JOB_STATUS_LABELS[job.status]}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: `${TRANSPORT_JOB_STATUS_COLORS[job.status]}15`,
+                                                color: TRANSPORT_JOB_STATUS_COLORS[job.status],
+                                                fontWeight: 700, fontSize: '0.7rem',
+                                                border: `1px solid ${TRANSPORT_JOB_STATUS_COLORS[job.status]}30`,
+                                            }}
+                                        />
+                                        <Typography variant="caption" sx={{ color: '#64748B', ml: 1 }}>
+                                            📦 {job.item_description || 'Package pickup'}
+                                        </Typography>
+                                    </Box>
+                                    {job.otp_verified && (
+                                        <Chip icon={<VerifiedUser sx={{ fontSize: 14 }} />} label="Verified" size="small"
+                                            sx={{ bgcolor: 'rgba(16,185,129,0.15)', color: '#10B981', fontWeight: 700, '& .MuiChip-icon': { color: '#10B981' } }} />
+                                    )}
+                                </Box>
+
+                                {/* OTP Display - the main thing the dealer needs */}
+                                {job.pickup_otp && !job.otp_verified && (
+                                    <Box sx={{
+                                        p: 2, borderRadius: 2, textAlign: 'center', mb: 1.5,
+                                        background: 'rgba(245,158,11,0.08)',
+                                        border: '2px dashed rgba(245,158,11,0.3)',
+                                    }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                                            <Lock sx={{ fontSize: 18, color: '#F59E0B' }} />
+                                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
+                                                PICKUP VERIFICATION CODE
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="h3" sx={{
+                                            fontWeight: 900, letterSpacing: '0.3em', color: '#F59E0B',
+                                            fontFamily: 'monospace',
+                                        }}>
+                                            {job.pickup_otp}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mt: 0.5 }}>
+                                            Share this code with the transporter when they arrive
+                                        </Typography>
+                                    </Box>
+                                )}
+
+                                <Typography variant="caption" sx={{ color: '#64748B' }}>
+                                    Drop: {job.drop_address}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </Box>
+            )}
 
             {/* Section Header Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'rgba(255,255,255,0.1)', mb: 3 }}>
