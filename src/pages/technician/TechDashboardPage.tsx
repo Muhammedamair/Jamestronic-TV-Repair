@@ -146,23 +146,26 @@ const TechDashboardPage: React.FC = () => {
         </Box>
     );
 
+    // Sync PWA App Icon Badge
+    useEffect(() => {
+        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+            const activeCount = tickets.filter(t => 
+                ['ASSIGNED', 'IN_PROGRESS', 'PART_REQUIRED'].includes(t.tech_status || '')
+            ).length;
+            
+            if (activeCount > 0) {
+                (navigator as any).setAppBadge(activeCount).catch(console.error);
+            } else {
+                (navigator as any).clearAppBadge().catch(console.error);
+            }
+        }
+    }, [tickets]);
+
     const assigned = tickets.filter(t => t.tech_status === 'ASSIGNED');
     const inProgress = tickets.filter(t => t.tech_status === 'IN_PROGRESS');
     const completed = tickets.filter(t => t.tech_status === 'COMPLETED');
     const partRequired = tickets.filter(t => t.tech_status === 'PART_REQUIRED');
     const activeTickets = tickets.filter(t => t.tech_status !== 'COMPLETED' && t.tech_status !== 'CANT_REPAIR');
-
-    // Sync PWA App Icon Badge
-    useEffect(() => {
-        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
-            const badgeCount = assigned.length + inProgress.length + partRequired.length;
-            if (badgeCount > 0) {
-                (navigator as any).setAppBadge(badgeCount).catch(console.error);
-            } else {
-                (navigator as any).clearAppBadge().catch(console.error);
-            }
-        }
-    }, [assigned.length, inProgress.length, partRequired.length]);
 
     return (
         <Box sx={{ maxWidth: 1000, mx: 'auto' }}>

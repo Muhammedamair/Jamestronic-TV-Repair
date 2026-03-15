@@ -187,23 +187,24 @@ const DealerDashboardPage: React.FC = () => {
         );
     }
 
+    // Sync PWA App Icon Badge for Dealer (Open Requests)
+    useEffect(() => {
+        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+            const openCount = requests.filter(r => r.status === 'OPEN').length;
+            if (openCount > 0) {
+                (navigator as any).setAppBadge(openCount).catch(console.error);
+            } else {
+                (navigator as any).clearAppBadge().catch(console.error);
+            }
+        }
+    }, [requests]);
+
     const openRequests = requests.filter(r => r.status === 'OPEN');
     const myApprovedRequests = requests.filter(r => 
         r.status === 'APPROVED' && r.bids?.some(b => b.dealer_id === dealerProfile.id && b.is_accepted)
     );
     const historyRequests = requests.filter(r => !openRequests.includes(r) && !myApprovedRequests.includes(r));
     const totalBids = requests.reduce((sum, r) => sum + (r.bids?.filter(b => b.dealer_id === dealerProfile.id).length || 0), 0);
-
-    // Sync PWA App Icon Badge for Dealer (Open Requests)
-    useEffect(() => {
-        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
-            if (openRequests.length > 0) {
-                (navigator as any).setAppBadge(openRequests.length).catch(console.error);
-            } else {
-                (navigator as any).clearAppBadge().catch(console.error);
-            }
-        }
-    }, [openRequests.length]);
 
     let displayedRequests = requests;
     if (activeTab === 0) displayedRequests = openRequests;
