@@ -760,11 +760,12 @@ const PartRequestsPage: React.FC = () => {
                             label="Select Transporter"
                             value={selectedTransporterId}
                             onChange={e => setSelectedTransporterId(e.target.value)}
+                            SelectProps={{ native: true }}
                             sx={{ mb: 1.5 }}
                         >
-                            <MenuItem value="" disabled>Choose a transporter...</MenuItem>
+                            <option value="" disabled style={{ color: '#94A3B8', backgroundColor: '#1E293B' }}>Choose a transporter...</option>
                             {transporters.map(t => (
-                                <MenuItem key={t.id} value={t.id}>{t.name} ({t.vehicle_type}{t.vehicle_number ? ` • ${t.vehicle_number}` : ''})</MenuItem>
+                                <option key={t.id} value={t.id} style={{ color: '#E2E8F0', backgroundColor: '#1E293B' }}>{t.name} ({t.vehicle_type}{t.vehicle_number ? ` • ${t.vehicle_number}` : ''})</option>
                             ))}
                         </TextField>
                         <Button
