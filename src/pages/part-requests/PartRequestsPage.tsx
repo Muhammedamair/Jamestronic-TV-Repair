@@ -5,7 +5,7 @@ import {
     TextField, CircularProgress, Chip, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Paper,
     IconButton, CardMedia, Switch, FormControlLabel, Checkbox, FormGroup,
-    Avatar, LinearProgress, Tooltip,
+    Avatar, LinearProgress, Tooltip, MenuItem,
 } from '@mui/material';
 import {
     Add, PhotoCamera, Delete, LocalShipping, DirectionsCar, TwoWheeler, Map,
@@ -733,16 +733,16 @@ const PartRequestsPage: React.FC = () => {
                 <DialogContent>
                     <Box sx={{ mb: 2, p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                            <Box>
+                            <Box sx={{ flex: 1, pr: 2 }}>
                                 <Typography variant="caption" sx={{ color: '#64748B', display: 'block' }}>PICKUP (Dealer)</Typography>
-                                <Typography variant="body2" sx={{ color: '#E2E8F0', fontWeight: 600 }}>{transportDealerAddress}</Typography>
+                                <Typography variant="body2" sx={{ color: '#E2E8F0', fontWeight: 600, wordBreak: 'break-word' }}>{transportDealerAddress}</Typography>
                             </Box>
                             <Button size="small" onClick={() => { navigator.clipboard.writeText(transportDealerAddress); }} sx={{ minWidth: 'auto', color: '#6C63FF', textTransform: 'none', fontSize: '0.7rem' }}>Copy</Button>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <Box>
+                            <Box sx={{ flex: 1, pr: 2 }}>
                                 <Typography variant="caption" sx={{ color: '#64748B', display: 'block' }}>DROP (Dark Store)</Typography>
-                                <Typography variant="body2" sx={{ color: '#E2E8F0', fontWeight: 600 }}>{DARK_STORE_ADDRESS}</Typography>
+                                <Typography variant="body2" sx={{ color: '#E2E8F0', fontWeight: 600, wordBreak: 'break-word' }}>{DARK_STORE_ADDRESS}</Typography>
                             </Box>
                             <Button size="small" onClick={() => { navigator.clipboard.writeText(DARK_STORE_ADDRESS); }} sx={{ minWidth: 'auto', color: '#6C63FF', textTransform: 'none', fontSize: '0.7rem' }}>Copy</Button>
                         </Box>
@@ -758,12 +758,11 @@ const PartRequestsPage: React.FC = () => {
                             label="Select Transporter"
                             value={selectedTransporterId}
                             onChange={e => setSelectedTransporterId(e.target.value)}
-                            SelectProps={{ native: true }}
                             sx={{ mb: 1.5 }}
                         >
-                            <option value="">Choose a transporter...</option>
+                            <MenuItem value="" disabled>Choose a transporter...</MenuItem>
                             {transporters.map(t => (
-                                <option key={t.id} value={t.id}>{t.name} ({t.vehicle_type}{t.vehicle_number ? ` • ${t.vehicle_number}` : ''})</option>
+                                <MenuItem key={t.id} value={t.id}>{t.name} ({t.vehicle_type}{t.vehicle_number ? ` • ${t.vehicle_number}` : ''})</MenuItem>
                             ))}
                         </TextField>
                         <Button
