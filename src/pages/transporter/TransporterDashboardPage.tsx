@@ -175,6 +175,18 @@ const TransporterDashboardPage: React.FC = () => {
         return () => { supabase.removeChannel(channel); };
     }, [transporterId]);
 
+    // Sync PWA App Icon Badge for Transporter
+    useEffect(() => {
+        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+            const activeCount = jobs.filter(j => !['DELIVERED', 'CANCELLED'].includes(j.status)).length;
+            if (activeCount > 0) {
+                (navigator as any).setAppBadge(activeCount).catch(console.error);
+            } else {
+                (navigator as any).clearAppBadge().catch(console.error);
+            }
+        }
+    }, [jobs]);
+
     const updateJobStatus = async (jobId: string, newStatus: string, extraFields: Record<string, any> = {}) => {
         const { error } = await supabase
             .from('transport_jobs')
@@ -269,17 +281,6 @@ const TransporterDashboardPage: React.FC = () => {
     const completedJobs = jobs.filter(j => j.status === 'DELIVERED');
     const inTransitCount = jobs.filter(j => j.status === 'IN_TRANSIT').length;
     const trackedJob = trackingJobId ? jobs.find(j => j.id === trackingJobId) : null;
-
-    // Sync PWA App Icon Badge for Transporter (Active Jobs)
-    useEffect(() => {
-        if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
-            if (activeJobs.length > 0) {
-                (navigator as any).setAppBadge(activeJobs.length).catch(console.error);
-            } else {
-                (navigator as any).clearAppBadge().catch(console.error);
-            }
-        }
-    }, [activeJobs.length]);
 
     if (loading) {
         return (
