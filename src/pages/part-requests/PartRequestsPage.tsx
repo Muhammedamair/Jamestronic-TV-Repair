@@ -308,7 +308,9 @@ const PartRequestsPage: React.FC = () => {
             }
 
             setTransportDialogOpen(false);
-            alert(`✅ Transporter assigned!\n\n🔐 Pickup OTP: ${pickupOtp}\n\nShare this OTP with the dealer. The transporter must enter this code to verify pickup.`);
+            setTimeout(() => {
+                alert(`✅ Transporter assigned!\n\n🔐 Pickup OTP: ${pickupOtp}\n\nShare this OTP with the dealer. The transporter must enter this code to verify pickup.`);
+            }, 100);
         } catch (err: any) {
             alert('Error: ' + err.message);
         }

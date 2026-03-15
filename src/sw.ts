@@ -8,22 +8,30 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Push notification event handler
 self.addEventListener('push', (event: any) => {
-    const data = event.data?.json() ?? {};
-    const title = data.title || '🔔 New Part Request!';
+    let data: any = {};
+    try {
+        data = event.data?.json() ?? {};
+    } catch (e) {
+        console.error('Error parsing push data', e);
+    }
+    const title = data.title || 'JamesTronic Notification';
+    const parsedUrl = data.url || '/';
+    
     const options = {
-        body: data.body || 'A new part request has been broadcast. Tap to view.',
+        body: data.body || 'You have a new notification.',
         icon: '/pwa-192x192.png',
         badge: '/pwa-192x192.png',
         vibrate: [200, 100, 200, 100, 200, 100, 400],
-        tag: 'part-request-' + (data.request_id || Date.now()),
+        tag: 'notification-' + (data.request_id || data.ticket_id || Date.now()),
         renotify: true,
         requireInteraction: true,
         data: {
-            url: data.url || '/dealer',
-            request_id: data.request_id
+            url: parsedUrl,
+            request_id: data.request_id,
+            ticket_id: data.ticket_id
         },
         actions: [
-            { action: 'view', title: 'View Request' },
+            { action: 'view', title: 'Open' },
             { action: 'dismiss', title: 'Dismiss' }
         ]
     };
@@ -39,13 +47,14 @@ self.addEventListener('notificationclick', (event: any) => {
 
     if (event.action === 'dismiss') return;
 
-    const urlToOpen = event.notification.data?.url || '/dealer';
+    const urlToOpen = event.notification.data?.url || '/';
 
     event.waitUntil(
         (self as any).clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients: any[]) => {
-            // Try to focus an existing window
+            // Try to focus an existing window matching the base route (e.g. /dealer, /transport)
+            const targetBase = urlToOpen.split('?')[0];
             for (const client of windowClients) {
-                if (client.url.includes('/dealer') && 'focus' in client) {
+                if (client.url.includes(targetBase) && 'focus' in client) {
                     client.navigate(urlToOpen);
                     return client.focus();
                 }
