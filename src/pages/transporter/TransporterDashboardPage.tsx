@@ -14,7 +14,7 @@ import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { TransportJob, Transporter, TRANSPORT_JOB_STATUS_LABELS, TRANSPORT_JOB_STATUS_COLORS } from '../../types/database';
 import { formatRelative } from '../../utils/formatters';
-import LiveTrackingMap from '../../components/LiveTrackingMap';
+
 import { subscribeToPush, isPushSubscribed, syncPushSubscription } from '../../utils/pushSubscription';
 
 // Calculate distance between two lat/lng points in meters (Haversine)
@@ -365,36 +365,29 @@ const TransporterDashboardPage: React.FC = () => {
                 </CardContent>
             </Card>
 
-            {/* Compact Live Map */}
-            {trackedJob && (
-                <Card sx={{
-                    mb: 2, borderRadius: 3, overflow: 'hidden',
-                    border: '1px solid rgba(59,130,246,0.25)',
+            {/* GPS Active Indicator (no map - transporter uses Google Maps for navigation) */}
+            {trackingJobId && (
+                <Box sx={{
+                    mb: 2, px: 2, py: 1.2, borderRadius: 3,
+                    background: 'rgba(59,130,246,0.08)',
+                    border: '1px solid rgba(59,130,246,0.2)',
+                    display: 'flex', alignItems: 'center', gap: 1.5,
                 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pt: 1.5, pb: 0.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <MyLocation sx={{ color: '#3B82F6', fontSize: 16 }} />
-                            <Typography variant="caption" fontWeight={700} sx={{ color: '#E2E8F0' }}>Live Tracking</Typography>
-                        </Box>
-                        <Chip label="LIVE" size="small" sx={{
-                            bgcolor: 'rgba(239,68,68,0.15)', color: '#EF4444',
-                            fontWeight: 700, fontSize: '0.6rem', height: 20,
-                            animation: 'pulse 2s infinite',
-                        }} />
+                    <MyLocation sx={{ color: '#3B82F6', fontSize: 18, animation: 'pulse 2s infinite' }} />
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#E2E8F0', fontSize: '0.8rem' }}>
+                            GPS Tracking Active
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.6rem' }}>
+                            Your location is being shared with admin
+                        </Typography>
                     </Box>
-                    <Box sx={{ px: 1.5, pb: 1.5 }}>
-                        <LiveTrackingMap
-                            pickupLat={trackedJob.pickup_lat}
-                            pickupLng={trackedJob.pickup_lng}
-                            dropLat={trackedJob.drop_lat}
-                            dropLng={trackedJob.drop_lng}
-                            liveLat={trackedJob.live_lat}
-                            liveLng={trackedJob.live_lng}
-                            vehicleType={vehicleType}
-                            height={180}
-                        />
-                    </Box>
-                </Card>
+                    <Chip label="LIVE" size="small" sx={{
+                        bgcolor: 'rgba(239,68,68,0.15)', color: '#EF4444',
+                        fontWeight: 700, fontSize: '0.55rem', height: 20,
+                        animation: 'pulse 2s infinite',
+                    }} />
+                </Box>
             )}
 
             {/* Active Jobs */}

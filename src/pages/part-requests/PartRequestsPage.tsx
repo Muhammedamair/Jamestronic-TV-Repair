@@ -272,20 +272,39 @@ const PartRequestsPage: React.FC = () => {
             if (error) throw error;
 
             // Send push notification to the transporter
-            const selectedTransporter = transporters.find(t => t.id === selectedTransporterId);
-            if (selectedTransporter?.user_id) {
-                supabase.functions.invoke('send-push-notification', {
-                    body: {
-                        title: '🚚 New Delivery Assigned!',
-                        body: `Pickup from ${acceptedBid?.dealer?.name || 'dealer'}. Open to accept.`,
-                        url: '/transport',
-                        target_user_ids: [selectedTransporter.user_id],
+            try {
+                // Get user_id from local array or fetch from DB
+                let transporterUserId = transporters.find(t => t.id === selectedTransporterId)?.user_id;
+                
+                if (!transporterUserId) {
+                    // Fallback: query DB directly for user_id
+                    const { data: tData } = await supabase
+                        .from('transporters')
+                        .select('user_id')
+                        .eq('id', selectedTransporterId)
+                        .single();
+                    transporterUserId = tData?.user_id;
+                    console.log('Fetched transporter user_id from DB:', transporterUserId);
+                }
+
+                if (transporterUserId) {
+                    const pushResult = await supabase.functions.invoke('send-push-notification', {
+                        body: {
+                            title: '🚚 New Delivery Assigned!',
+                            body: `Pickup from ${acceptedBid?.dealer?.name || 'dealer'}. Open to accept.`,
+                            url: '/transport',
+                            target_user_ids: [transporterUserId],
+                        }
+                    });
+                    console.log('✅ Transporter push notification result:', pushResult.data);
+                    if (pushResult.error) {
+                        console.error('Push function error:', pushResult.error);
                     }
-                }).then(res => {
-                    console.log('Transporter push response:', res.data);
-                }).catch(err => {
-                    console.error('Transporter push error:', err);
-                });
+                } else {
+                    console.warn('⚠️ Transporter has no linked user_id. Cannot send push notification.');
+                }
+            } catch (pushErr) {
+                console.error('Push notification failed:', pushErr);
             }
 
             setTransportDialogOpen(false);
