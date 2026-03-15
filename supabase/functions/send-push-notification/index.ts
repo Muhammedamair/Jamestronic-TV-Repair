@@ -69,12 +69,14 @@ Deno.serve(async (req: Request) => {
       "endpoint, p256dh_key, auth_key, user_id"
     );
 
+    let finalUserIds = target_user_ids ? [...target_user_ids] : [];
+
     // Resolve admin IDs if needed
     if (target_admin) {
       const { data: admins } = await supabase.from("profiles").select("id").eq("role", "ADMIN");
       if (admins && admins.length > 0) {
         const adminIds = admins.map(a => a.id).filter(Boolean);
-        target_user_ids = [...target_user_ids, ...adminIds];
+        finalUserIds = [...finalUserIds, ...adminIds];
       }
     }
 
@@ -87,20 +89,32 @@ Deno.serve(async (req: Request) => {
 
       if (dealers && dealers.length > 0) {
         const dealerUserIds = dealers.map((d: { user_id: string }) => d.user_id).filter(Boolean);
-        target_user_ids = [...target_user_ids, ...dealerUserIds];
+        finalUserIds = [...finalUserIds, ...dealerUserIds];
       }
     }
 
-    if (target_user_ids && target_user_ids.length > 0) {
-        query = query.in("user_id", target_user_ids);
-    }
+    // Always deduplicate
+    finalUserIds = [...new Set(finalUserIds)];
 
-    const { data: subscriptions, error: fetchError } = await query;
+    let fetchError = null;
+    let subscriptions = [];
+    
+    if (finalUserIds.length > 0) {
+      const result = await query.in("user_id", finalUserIds);
+      fetchError = result.error;
+      subscriptions = result.data || [];
+    } else {
+      // If no target users specified at all, we might want to broadcast to everyone
+      // BUT for safety, in this app we only broadcast if explicitly intended
+      const result = await query;
+      fetchError = result.error;
+      subscriptions = result.data || [];
+    }
 
     if (fetchError || !subscriptions || subscriptions.length === 0) {
       return new Response(
         JSON.stringify({
-          message: "No push subscriptions found for target dealers.",
+          message: "No push subscriptions found for target users.",
           sent: 0,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },

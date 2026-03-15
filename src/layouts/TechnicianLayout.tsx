@@ -22,16 +22,16 @@ const TechnicianLayout: React.FC = () => {
             >
                 <Toolbar sx={{ px: { xs: 2, sm: 3 }, py: 0.5 }}>
                     <Avatar
+                        src="/logo.png"
+                        alt="JamesTronic Logo"
                         sx={{
-                            bgcolor: 'rgba(0, 217, 255, 0.15)',
-                            color: '#00D9FF',
                             mr: 1.5,
                             width: 36,
                             height: 36,
+                            bgcolor: 'transparent',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                         }}
-                    >
-                        <Engineering fontSize="small" />
-                    </Avatar>
+                    />
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography
                             variant="subtitle1"

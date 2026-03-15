@@ -42,13 +42,16 @@ const MainLayout: React.FC = () => {
     const drawerContent = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5, minHeight: 64 }}>
-                <Avatar sx={{
-                    width: 40, height: 40,
-                    background: 'linear-gradient(135deg, #6C63FF, #00D9FF)',
-                    fontSize: '1.1rem', fontWeight: 700,
-                }}>
-                    <BuildIcon sx={{ fontSize: 22 }} />
-                </Avatar>
+                <Avatar 
+                    src="/logo.png" 
+                    alt="JamesTronic Logo"
+                    sx={{
+                        width: 40, height: 40,
+                        bgcolor: 'transparent',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        border: '1px solid rgba(255,255,255,0.1)'
+                    }} 
+                />
                 {drawerOpen && (
                     <Box sx={{ overflow: 'hidden' }}>
                         <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ color: '#F1F5F9', fontSize: '0.9rem' }}>

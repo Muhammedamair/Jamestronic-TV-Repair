@@ -22,16 +22,16 @@ const TransporterLayout: React.FC = () => {
             >
                 <Toolbar sx={{ px: { xs: 2, sm: 3 }, py: 0.5 }}>
                     <Avatar
+                        src="/logo.png"
+                        alt="JamesTronic Logo"
                         sx={{
-                            bgcolor: 'rgba(245, 158, 11, 0.15)',
-                            color: '#F59E0B',
                             mr: 1.5,
                             width: 36,
                             height: 36,
+                            bgcolor: 'transparent',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                         }}
-                    >
-                        <LocalShipping fontSize="small" />
-                    </Avatar>
+                    />
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography
                             variant="subtitle1"
