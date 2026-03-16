@@ -67,8 +67,9 @@ const CustomerBookingPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<{ ticketNumber: string } | null>(null);
 
-    // Brand picker dialog
+    // Pickers
     const [showBrandPicker, setShowBrandPicker] = useState(false);
+    const [showSizePicker, setShowSizePicker] = useState(false);
 
     // Form Data
     const [form, setForm] = useState({
@@ -344,6 +345,53 @@ const CustomerBookingPage: React.FC = () => {
                 </DialogContent>
             </Dialog>
 
+            {/* ═══ TV SIZE PICKER DIALOG — Premium Bottom Sheet ═══ */}
+            <Dialog
+                open={showSizePicker}
+                onClose={() => setShowSizePicker(false)}
+                fullWidth maxWidth="xs"
+                PaperProps={{
+                    sx: {
+                        position: 'fixed', bottom: 0, m: 0, borderRadius: '24px 24px 0 0',
+                        background: '#FFF', maxHeight: '60dvh', width: '100%', overflowY: 'auto'
+                    }
+                }}
+            >
+                <DialogContent sx={{ p: 2.5, pt: 2 }}>
+                    <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 2 }} />
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827', mb: 3, px: 0.5 }}>
+                        Select TV Size
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+                        {TV_SIZES.map(size => {
+                            const isSelected = form.tvSize === size;
+                            return (
+                                <Box
+                                    key={size}
+                                    onClick={() => { updateField('tvSize', size); setShowSizePicker(false); }}
+                                    sx={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        py: 2, borderRadius: 3, cursor: 'pointer',
+                                        transition: 'all 0.1s ease-out',
+                                        border: isSelected ? `2px solid #5B4CF2` : '1.5px solid #F3F4F6',
+                                        background: isSelected ? '#F3F0FF' : '#FAFAFA',
+                                        '&:active': { transform: 'scale(0.95)' }
+                                    }}
+                                >
+                                    <Typography sx={{
+                                        fontWeight: isSelected ? 800 : 600,
+                                        fontSize: '1rem',
+                                        color: isSelected ? '#5B4CF2' : '#374151',
+                                    }}>
+                                        {size}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
             <Container maxWidth="sm" sx={{ py: 4, px: { xs: 2.5, sm: 3 } }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
@@ -472,16 +520,20 @@ const CustomerBookingPage: React.FC = () => {
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Size (Opt)</Typography>
-                                    <TextField 
-                                        select fullWidth 
-                                        value={form.tvSize} 
-                                        onChange={e => updateField('tvSize', e.target.value)} 
-                                        sx={lightTextFieldStyle}
-                                        SelectProps={{ native: true }}
+                                    <Box
+                                        onClick={() => setShowSizePicker(true)}
+                                        sx={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            py: 1.8, px: 2, borderRadius: 2.5, cursor: 'pointer', height: '56px',
+                                            background: '#F9FAFB', border: form.tvSize ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                                            transition: 'all 0.2s', '&:active': { background: '#F3F4F6' }
+                                        }}
                                     >
-                                        <option value="">Select size</option>
-                                        {TV_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
-                                    </TextField>
+                                        <Typography sx={{ color: form.tvSize ? '#111827' : '#9CA3AF', fontWeight: form.tvSize ? 700 : 400, fontSize: '1rem' }}>
+                                            {form.tvSize || 'size'}
+                                        </Typography>
+                                        <Typography sx={{ color: '#9CA3AF', fontSize: '0.9rem' }}>▾</Typography>
+                                    </Box>
                                 </Box>
                             </Box>
 
