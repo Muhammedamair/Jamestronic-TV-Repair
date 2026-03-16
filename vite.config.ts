@@ -28,6 +28,8 @@ export default defineConfig(({ mode }) => ({
             { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
             { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
           ],
+          // @ts-ignore
+          gcm_sender_id: '103953800507',
         },
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
