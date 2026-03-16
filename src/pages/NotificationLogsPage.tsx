@@ -118,8 +118,9 @@ const NotificationLogsPage: React.FC = () => {
     const getStatusChip = (status: string, errorMsg?: string) => {
         switch (status) {
             case 'SENT':
+                return <Chip icon={<CheckCircleIcon fontSize="small"/>} label="Sent ✓" color="success" size="small" variant="outlined" />;
             case 'PARTIAL_SUCCESS':
-                return <Chip icon={<CheckCircleIcon fontSize="small"/>} label="Delivered" color="success" size="small" variant="outlined" />;
+                return <Chip icon={<CheckCircleIcon fontSize="small"/>} label="Partial ✓" color="warning" size="small" variant="outlined" />;
             case 'FAILED':
                 return (
                     <Tooltip title={errorMsg || 'Delivery Failed'}>
