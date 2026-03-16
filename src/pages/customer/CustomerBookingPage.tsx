@@ -11,30 +11,38 @@ import {
     Tv as TvIcon,
     LocationOn as LocationIcon,
     Edit as EditIcon,
+    Build as RepairIcon,
+    SettingsInputAntenna as InstallIcon,
+    Eject as UninstallIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { Autocomplete } from '@react-google-maps/api';
 
-// Brand config with unique brand colors for 3D-styled cards
+// Brand config — all popular TV brands in India (especially Hyderabad market)
 const TV_BRANDS = [
-    { name: 'Samsung', color: '#1428A0', bg: 'linear-gradient(135deg, #E8EEFF 0%, #D0DBFF 100%)', letter: 'S' },
-    { name: 'LG', color: '#A50034', bg: 'linear-gradient(135deg, #FFE8EE 0%, #FFD0DC 100%)', letter: 'LG' },
-    { name: 'Sony', color: '#000000', bg: 'linear-gradient(135deg, #F0F0F0 0%, #E0E0E0 100%)', letter: 'S' },
-    { name: 'Mi/Xiaomi', color: '#FF6900', bg: 'linear-gradient(135deg, #FFF0E6 0%, #FFE0CC 100%)', letter: 'Mi' },
-    { name: 'OnePlus', color: '#EB0029', bg: 'linear-gradient(135deg, #FFE6EA 0%, #FFD0D6 100%)', letter: '1+' },
-    { name: 'TCL', color: '#004990', bg: 'linear-gradient(135deg, #E6F0FF 0%, #CCE0FF 100%)', letter: 'T' },
-    { name: 'Vu', color: '#FF3E00', bg: 'linear-gradient(135deg, #FFE8E0 0%, #FFD4C8 100%)', letter: 'Vu' },
-    { name: 'Hisense', color: '#00AE4D', bg: 'linear-gradient(135deg, #E6FFF0 0%, #CCFFE0 100%)', letter: 'H' },
-    { name: 'Panasonic', color: '#003087', bg: 'linear-gradient(135deg, #E6EEFF 0%, #CCD8FF 100%)', letter: 'P' },
-    { name: 'Other', color: '#6B7280', bg: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)', letter: '?' },
+    { name: 'Samsung', color: '#1428A0', bg: '#E8EEFF', accent: '#D0DBFF' },
+    { name: 'LG', color: '#A50034', bg: '#FFF0F3', accent: '#FFD6E0' },
+    { name: 'Sony', color: '#000000', bg: '#F0F0F0', accent: '#E0E0E0' },
+    { name: 'Mi/Xiaomi', color: '#FF6900', bg: '#FFF4EC', accent: '#FFE0CC' },
+    { name: 'OnePlus', color: '#EB0029', bg: '#FFF0F0', accent: '#FFD4D4' },
+    { name: 'TCL', color: '#004990', bg: '#EDF4FF', accent: '#CCE0FF' },
+    { name: 'Vu', color: '#FF3E00', bg: '#FFF3EE', accent: '#FFD8C8' },
+    { name: 'Hisense', color: '#00AE4D', bg: '#EEFFF5', accent: '#CCFFE0' },
+    { name: 'Panasonic', color: '#003087', bg: '#EDF0FF', accent: '#CCD8FF' },
+    { name: 'Toshiba', color: '#E60012', bg: '#FFF0F0', accent: '#FFD4D4' },
+    { name: 'Realme', color: '#F5C518', bg: '#FFFBEB', accent: '#FFF0B3' },
+    { name: 'Thomson', color: '#00875A', bg: '#EEFFF7', accent: '#B8F0D8' },
+    { name: 'Motorola', color: '#5C92FA', bg: '#EEF4FF', accent: '#C8DBFF' },
+    { name: 'Aiwa', color: '#D32F2F', bg: '#FFF0EE', accent: '#FFD4CF' },
+    { name: 'Other', color: '#6B7280', bg: '#F9FAFB', accent: '#E5E7EB' },
 ];
 
-// Service type config with 3D icon images
+// Service type config with MUI icons
 const SERVICE_TYPES = [
-    { value: 'repair', label: 'TV Repair', image: '/services/tv_checkup.png', color: '#5B4CF2', bg: '#F3F0FF' },
-    { value: 'installation', label: 'TV Installation', image: '/services/tv_installation.png', color: '#10B981', bg: '#ECFDF5' },
-    { value: 'uninstallation', label: 'TV Uninstallation', image: '/services/tv_uninstallation.png', color: '#F59E0B', bg: '#FFFBEB' },
+    { value: 'repair', label: 'TV Repair', icon: RepairIcon, color: '#5B4CF2', bg: 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' },
+    { value: 'installation', label: 'TV Installation', icon: InstallIcon, color: '#10B981', bg: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' },
+    { value: 'uninstallation', label: 'TV Uninstallation', icon: UninstallIcon, color: '#F59E0B', bg: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' },
 ];
 
 const CustomerBookingPage: React.FC = () => {
@@ -253,7 +261,7 @@ const CustomerBookingPage: React.FC = () => {
                 </Typography>
             </Box>
 
-            {/* ═══ BRAND PICKER DIALOG — 3D Brand Cards ═══ */}
+            {/* ═══ BRAND PICKER DIALOG — Premium Brand Cards ═══ */}
             <Dialog
                 open={showBrandPicker}
                 onClose={() => setShowBrandPicker(false)}
@@ -261,16 +269,19 @@ const CustomerBookingPage: React.FC = () => {
                 PaperProps={{
                     sx: {
                         position: 'fixed', bottom: 0, m: 0, borderRadius: '24px 24px 0 0',
-                        background: '#FFF', maxHeight: '65dvh', width: '100%'
+                        background: '#FFF', maxHeight: '75dvh', width: '100%', overflowY: 'auto'
                     }
                 }}
             >
-                <DialogContent sx={{ p: 3, pt: 2 }}>
+                <DialogContent sx={{ p: 2.5, pt: 2 }}>
                     <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 2 }} />
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 3 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827', mb: 0.5, px: 0.5 }}>
                         Select TV Brand
                     </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+                    <Typography sx={{ color: '#9CA3AF', fontSize: '0.78rem', mb: 2.5, px: 0.5 }}>
+                        Popular brands in Hyderabad
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
                         {TV_BRANDS.map(brand => {
                             const isSelected = form.tvBrand === brand.name;
                             return (
@@ -278,48 +289,44 @@ const CustomerBookingPage: React.FC = () => {
                                     key={brand.name}
                                     onClick={() => { updateField('tvBrand', brand.name); setShowBrandPicker(false); }}
                                     sx={{
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                                        py: 2, px: 1, borderRadius: 4, cursor: 'pointer',
-                                        transition: 'all 0.2s ease-out',
-                                        border: isSelected ? `2.5px solid ${brand.color}` : '1.5px solid #F3F4F6',
-                                        background: '#FFF',
-                                        boxShadow: isSelected ? `0 6px 20px ${brand.color}22` : '0 2px 8px rgba(0,0,0,0.04)',
-                                        '&:active': { transform: 'scale(0.95)' },
-                                        '&:hover': { transform: 'translateY(-2px)', boxShadow: `0 8px 24px ${brand.color}18` }
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                        pt: 2, pb: 1.5, px: 0.5, borderRadius: 3.5, cursor: 'pointer',
+                                        transition: 'all 0.15s ease-out',
+                                        border: isSelected ? `2.5px solid ${brand.color}` : '1.5px solid transparent',
+                                        background: isSelected ? brand.bg : '#FAFAFA',
+                                        boxShadow: isSelected
+                                            ? `0 4px 16px ${brand.color}25`
+                                            : '0 1px 4px rgba(0,0,0,0.04)',
+                                        '&:active': { transform: 'scale(0.96)' },
                                     }}
                                 >
-                                    {/* 3D Brand Icon */}
+                                    {/* Brand wordmark */}
                                     <Box sx={{
-                                        width: 52, height: 52, borderRadius: 3,
+                                        width: 56, height: 40, borderRadius: 2,
                                         background: brand.bg,
+                                        border: `1px solid ${brand.accent}`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        boxShadow: `0 4px 12px ${brand.color}20, inset 0 -2px 4px rgba(0,0,0,0.06)`,
-                                        position: 'relative',
-                                        '&::after': {
-                                            content: '""', position: 'absolute', inset: 0,
-                                            borderRadius: 'inherit',
-                                            background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 50%)',
-                                        }
+                                        mb: 1,
                                     }}>
                                         <Typography sx={{
-                                            fontWeight: 900, fontSize: brand.letter.length > 1 ? '0.95rem' : '1.3rem',
-                                            color: brand.color, letterSpacing: '-0.5px',
-                                            position: 'relative', zIndex: 1,
-                                            textShadow: `0 1px 2px ${brand.color}30`
+                                            fontWeight: 900,
+                                            fontSize: brand.name.length <= 3 ? '1.1rem' : '0.7rem',
+                                            color: brand.color,
+                                            letterSpacing: brand.name.length <= 3 ? '0.5px' : '-0.3px',
+                                            lineHeight: 1,
+                                            textTransform: brand.name.length <= 3 ? 'uppercase' : 'none',
                                         }}>
-                                            {brand.letter}
+                                            {brand.name.length <= 5 ? brand.name : brand.name.split('/')[0]}
                                         </Typography>
                                     </Box>
                                     <Typography sx={{
-                                        fontWeight: isSelected ? 800 : 600, fontSize: '0.75rem',
-                                        color: isSelected ? brand.color : '#374151',
-                                        textAlign: 'center', lineHeight: 1.2
+                                        fontWeight: isSelected ? 800 : 600,
+                                        fontSize: '0.7rem',
+                                        color: isSelected ? brand.color : '#4B5563',
+                                        textAlign: 'center', lineHeight: 1.2,
                                     }}>
                                         {brand.name}
                                     </Typography>
-                                    {isSelected && (
-                                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: brand.color }} />
-                                    )}
                                 </Box>
                             );
                         })}
@@ -391,35 +398,39 @@ const CustomerBookingPage: React.FC = () => {
                         <>
                             <Box sx={{ mb: 3 }}>
                                 <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Service Type</Typography>
-                                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                                <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
                                     {SERVICE_TYPES.map(option => {
                                         const isActive = form.serviceType === option.value;
+                                        const IconComp = option.icon;
                                         return (
                                             <Box
                                                 key={option.value}
                                                 onClick={() => updateField('serviceType', option.value)}
                                                 sx={{
-                                                    display: 'flex', alignItems: 'center', gap: 1.5,
-                                                    px: 2, py: 1.5, borderRadius: 3, cursor: 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    border: isActive ? `2px solid ${option.color}` : '1.5px solid #E5E7EB',
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                                                    minWidth: 100, py: 2, px: 1.5, borderRadius: 3.5, cursor: 'pointer',
+                                                    transition: 'all 0.2s', flexShrink: 0,
+                                                    border: isActive ? `2.5px solid ${option.color}` : '1.5px solid #E5E7EB',
                                                     background: isActive ? option.bg : '#FFF',
-                                                    boxShadow: isActive ? `0 4px 12px ${option.color}18` : 'none',
-                                                    '&:active': { transform: 'scale(0.97)' }
+                                                    boxShadow: isActive ? `0 4px 14px ${option.color}20` : 'none',
+                                                    '&:active': { transform: 'scale(0.96)' }
                                                 }}
                                             >
-                                                {/* 3D service icon */}
                                                 <Box sx={{
-                                                    width: 36, height: 36, borderRadius: 2,
+                                                    width: 44, height: 44, borderRadius: '50%',
+                                                    background: isActive ? option.bg : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    flexShrink: 0, overflow: 'hidden',
-                                                    boxShadow: isActive ? `0 3px 8px ${option.color}20` : '0 2px 6px rgba(0,0,0,0.06)',
+                                                    boxShadow: isActive
+                                                        ? `0 3px 10px ${option.color}25, inset 0 -1px 3px rgba(0,0,0,0.05)`
+                                                        : 'inset 0 -1px 3px rgba(0,0,0,0.05)',
                                                 }}>
-                                                    <img src={option.image} alt={option.label}
-                                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: isActive ? 'none' : 'grayscale(0.3)' }}
-                                                    />
+                                                    <IconComp sx={{ fontSize: 22, color: isActive ? option.color : '#9CA3AF' }} />
                                                 </Box>
-                                                <Typography sx={{ fontWeight: isActive ? 800 : 600, fontSize: '0.8rem', color: isActive ? option.color : '#374151' }}>
+                                                <Typography sx={{
+                                                    fontWeight: isActive ? 800 : 600, fontSize: '0.72rem',
+                                                    color: isActive ? option.color : '#6B7280',
+                                                    textAlign: 'center', lineHeight: 1.2
+                                                }}>
                                                     {option.label}
                                                 </Typography>
                                             </Box>
