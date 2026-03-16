@@ -141,7 +141,7 @@ const CustomerLandingPage: React.FC = () => {
                         <Button
                             variant="outlined"
                             startIcon={<PhoneCallIcon />}
-                            href="tel:+919885422901"
+                            href="tel:+919052222901"
                             sx={{
                                 color: '#10B981', borderColor: 'rgba(16,185,129,0.5)',
                                 textTransform: 'none', fontWeight: 600, borderRadius: 2,
@@ -152,7 +152,7 @@ const CustomerLandingPage: React.FC = () => {
                             Call Us
                         </Button>
                         <IconButton
-                            href="tel:+919885422901"
+                            href="tel:+919052222901"
                             sx={{
                                 color: '#10B981', background: 'rgba(16,185,129,0.1)',
                                 display: { xs: 'flex', sm: 'none' }

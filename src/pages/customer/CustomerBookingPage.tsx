@@ -17,10 +17,9 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import { Autocomplete } from '@react-google-maps/api';
 
 const TV_BRANDS = ['Samsung', 'LG', 'Sony', 'Mi/Xiaomi', 'OnePlus', 'TCL', 'Vu', 'Hisense', 'Panasonic', 'Other'];
-const LIBRARIES: ("places")[] = ['places'];
 
 const CustomerBookingPage: React.FC = () => {
     const navigate = useNavigate();
@@ -48,11 +47,6 @@ const CustomerBookingPage: React.FC = () => {
     });
 
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-
-    const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-        libraries: LIBRARIES,
-    });
 
     const handlePlaceChanged = () => {
         const place = autocompleteRef.current?.getPlace();
@@ -316,7 +310,7 @@ const CustomerBookingPage: React.FC = () => {
                             <TextField
                                 fullWidth
                                 label="Mobile Number"
-                                placeholder="9885422901"
+                                placeholder="9052222901"
                                 value={form.mobile}
                                 onChange={e => updateField('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
                                 type="tel"
@@ -431,7 +425,6 @@ const CustomerBookingPage: React.FC = () => {
                                 — or type your address —
                             </Typography>
 
-                            {isLoaded ? (
                                 <Autocomplete
                                     onLoad={(auto) => { autocompleteRef.current = auto; }}
                                     onPlaceChanged={handlePlaceChanged}
@@ -451,18 +444,6 @@ const CustomerBookingPage: React.FC = () => {
                                         sx={textFieldStyle}
                                     />
                                 </Autocomplete>
-                            ) : (
-                                <TextField
-                                    fullWidth
-                                    label="Pickup Address *"
-                                    placeholder="Enter your full address"
-                                    value={form.address}
-                                    onChange={e => updateField('address', e.target.value)}
-                                    multiline
-                                    rows={2}
-                                    sx={textFieldStyle}
-                                />
-                            )}
 
                             {form.lat > 0 && (
                                 <Chip
