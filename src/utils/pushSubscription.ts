@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient';
 
 // VAPID public key for Web Push subscription
-const VAPID_PUBLIC_KEY = 'BAP80TcVZAF13F7adlJXs-fjrxq_2zdvNOUmrq1ZZB1uxfXt5ntiEMKdzVFiWtynFxWBIpmS62R37QPtLV7-sWs';
+const VAPID_PUBLIC_KEY = 'BL0BQ7PV2jtF72g3zyLBMuv-ZWAFynOljbB1mvXJ0MVMUAJQF2zROZYe71lAFKEFTv2uM1KEfOYQV5Dqob52hC8';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
