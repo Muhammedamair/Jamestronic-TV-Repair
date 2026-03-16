@@ -392,7 +392,7 @@ const TicketDetailPage: React.FC = () => {
                                                     url: "/tech",
                                                     target_user_ids: [assignedTech.user_id]
                                                 }
-                                            }).catch(console.error);
+                                            }).then(res => console.log("Push Notification Result:", res.data, res.error)).catch(console.error);
                                         }
                                     }
                                     setTicket(prev => prev ? { ...prev, assigned_technician_id: techId || null } : prev);
