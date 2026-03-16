@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Box, Typography, Container, Card, CardActionArea,
-    IconButton, CircularProgress, Dialog, DialogContent, Button
+    IconButton, CircularProgress, Dialog, Button, TextField, Divider
 } from '@mui/material';
 import {
     LocationOn as LocationIcon,
@@ -13,6 +13,14 @@ import {
     MyLocation as MyLocationIcon,
     Close as CloseIcon,
     GpsFixed as GpsIcon,
+    AddLocationAlt as AddLocationIcon,
+    Home as HomeIcon,
+    Work as WorkIcon,
+    Place as PlaceIcon,
+    ArrowBack as BackIcon,
+    Delete as DeleteIcon,
+    MoreVert as MoreIcon,
+    NavigationOutlined as NavIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
@@ -26,35 +34,79 @@ const SERVICES = [
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-// Reverse-geocode coordinates to a human-readable address using Google Geocoding API
-async function reverseGeocode(lat: number, lng: number): Promise<{ area: string; city: string }> {
+interface SavedAddress {
+    id: string;
+    label: string;       // "Home", "Work", or custom
+    area: string;
+    fullAddress: string;
+    lat?: number;
+    lng?: number;
+}
+
+// Reverse-geocode coordinates
+async function reverseGeocode(lat: number, lng: number): Promise<{ area: string; city: string; fullAddress: string }> {
     try {
         const res = await fetch(
             `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}`
         );
         const data = await res.json();
         if (data.status === 'OK' && data.results?.length) {
-            // Try to extract a meaningful locality
             const components = data.results[0].address_components || [];
+            const fullAddress = data.results[0].formatted_address || '';
             let area = '', city = '', state = '';
             for (const c of components) {
                 if (c.types.includes('sublocality_level_1') || c.types.includes('sublocality')) area = c.long_name;
                 if (c.types.includes('locality')) city = c.long_name;
                 if (c.types.includes('administrative_area_level_1')) state = c.long_name;
             }
-            // Fallback: use the formatted address
             if (!area && !city) {
-                const formatted = data.results[0].formatted_address || '';
-                const parts = formatted.split(',').map((s: string) => s.trim());
-                return { area: parts[0] || 'Your Location', city: parts[1] || '' };
+                const parts = fullAddress.split(',').map((s: string) => s.trim());
+                return { area: parts[0] || 'Your Location', city: parts[1] || '', fullAddress };
             }
-            return { area: area || city, city: area ? `${city}, ${state}` : state };
+            return { area: area || city, city: area ? `${city}, ${state}` : state, fullAddress };
         }
     } catch (e) {
         console.error('Reverse geocode failed:', e);
     }
-    return { area: 'Your Location', city: '' };
+    return { area: 'Your Location', city: '', fullAddress: '' };
 }
+
+// Search places using Google Places Autocomplete via REST
+async function searchPlaces(query: string): Promise<Array<{ area: string; fullAddress: string; placeId: string }>> {
+    if (!query || query.length < 3) return [];
+    try {
+        const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query + ', Hyderabad')}&key=${GOOGLE_MAPS_KEY}`
+        );
+        const data = await res.json();
+        if (data.status === 'OK' && data.results?.length) {
+            return data.results.slice(0, 5).map((r: any) => {
+                const components = r.address_components || [];
+                let area = '';
+                for (const c of components) {
+                    if (c.types.includes('sublocality_level_1') || c.types.includes('sublocality') || c.types.includes('locality')) {
+                        area = c.long_name;
+                        break;
+                    }
+                }
+                return {
+                    area: area || r.formatted_address.split(',')[0],
+                    fullAddress: r.formatted_address,
+                    placeId: r.place_id
+                };
+            });
+        }
+    } catch (e) {
+        console.error('Search places failed:', e);
+    }
+    return [];
+}
+
+const LABEL_ICONS: Record<string, React.ReactNode> = {
+    'Home': <HomeIcon sx={{ fontSize: 22, color: '#5B4CF2' }} />,
+    'Work': <WorkIcon sx={{ fontSize: 22, color: '#F59E0B' }} />,
+    'Other': <PlaceIcon sx={{ fontSize: 22, color: '#10B981' }} />,
+};
 
 const CustomerLandingPage: React.FC = () => {
     const navigate = useNavigate();
@@ -64,7 +116,25 @@ const CustomerLandingPage: React.FC = () => {
     const [showLocationDialog, setShowLocationDialog] = useState(false);
     const [locError, setLocError] = useState<string | null>(null);
 
-    // On mount, check if we previously saved a location
+    // Saved addresses
+    const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+
+    // Add new address flow
+    const [addingAddress, setAddingAddress] = useState(false);
+    const [newLabel, setNewLabel] = useState('Home');
+    const [newAddressText, setNewAddressText] = useState('');
+
+    // Search
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<Array<{ area: string; fullAddress: string; placeId: string }>>([]);
+    const [searching, setSearching] = useState(false);
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Show all saved addresses
+    const [showAll, setShowAll] = useState(false);
+
+    // Load saved data on mount
     useEffect(() => {
         const saved = localStorage.getItem('jt_customer_location');
         if (saved) {
@@ -74,7 +144,24 @@ const CustomerLandingPage: React.FC = () => {
                 setLocationCity(parsed.city || '');
             } catch { /* ignore */ }
         }
+        const addresses = localStorage.getItem('jt_saved_addresses');
+        if (addresses) {
+            try { setSavedAddresses(JSON.parse(addresses)); } catch { /* ignore */ }
+        }
+        const selId = localStorage.getItem('jt_selected_address_id');
+        if (selId) setSelectedAddressId(selId);
     }, []);
+
+    // Persist saved addresses
+    const persistAddresses = (addrs: SavedAddress[], selId?: string | null) => {
+        localStorage.setItem('jt_saved_addresses', JSON.stringify(addrs));
+        setSavedAddresses(addrs);
+        if (selId !== undefined) {
+            if (selId) localStorage.setItem('jt_selected_address_id', selId);
+            else localStorage.removeItem('jt_selected_address_id');
+            setSelectedAddressId(selId);
+        }
+    };
 
     const detectLocation = useCallback(async () => {
         if (!navigator.geolocation) {
@@ -90,104 +177,344 @@ const CustomerLandingPage: React.FC = () => {
                 const result = await reverseGeocode(latitude, longitude);
                 setLocationArea(result.area);
                 setLocationCity(result.city);
-                localStorage.setItem('jt_customer_location', JSON.stringify(result));
+                localStorage.setItem('jt_customer_location', JSON.stringify({ area: result.area, city: result.city }));
+                setSelectedAddressId(null);
+                localStorage.removeItem('jt_selected_address_id');
                 setLocating(false);
                 setShowLocationDialog(false);
             },
             (err) => {
-                console.error('Geolocation error:', err);
-                if (err.code === 1) {
-                    setLocError('Location permission denied. Please enable location access in your browser settings and try again.');
-                } else if (err.code === 2) {
-                    setLocError('Unable to determine your location. Please check your GPS/network connection.');
-                } else {
-                    setLocError('Location request timed out. Please try again.');
-                }
+                if (err.code === 1) setLocError('Location permission denied. Please enable location access in your browser settings.');
+                else if (err.code === 2) setLocError('Unable to determine your location. Please check your GPS/network.');
+                else setLocError('Location request timed out. Please try again.');
                 setLocating(false);
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
     }, []);
 
+    // Select a saved address
+    const selectAddress = (addr: SavedAddress) => {
+        setLocationArea(addr.area);
+        setLocationCity(addr.fullAddress);
+        localStorage.setItem('jt_customer_location', JSON.stringify({ area: addr.area, city: addr.fullAddress }));
+        persistAddresses(savedAddresses, addr.id);
+        setShowLocationDialog(false);
+    };
+
+    // Add new address
+    const handleAddAddress = () => {
+        if (!newAddressText.trim()) return;
+        const newAddr: SavedAddress = {
+            id: Date.now().toString(),
+            label: newLabel,
+            area: newAddressText.split(',')[0]?.trim() || newAddressText,
+            fullAddress: newAddressText.trim(),
+        };
+        const updated = [...savedAddresses, newAddr];
+        persistAddresses(updated, newAddr.id);
+        setLocationArea(newAddr.area);
+        setLocationCity(newAddr.fullAddress);
+        localStorage.setItem('jt_customer_location', JSON.stringify({ area: newAddr.area, city: newAddr.fullAddress }));
+        setAddingAddress(false);
+        setNewAddressText('');
+        setNewLabel('Home');
+        setShowLocationDialog(false);
+    };
+
+    // Delete saved address
+    const deleteAddress = (id: string) => {
+        const updated = savedAddresses.filter(a => a.id !== id);
+        if (selectedAddressId === id) {
+            persistAddresses(updated, null);
+        } else {
+            persistAddresses(updated);
+        }
+    };
+
+    // Search handler with debounce
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        if (query.length < 3) { setSearchResults([]); return; }
+        setSearching(true);
+        searchTimeout.current = setTimeout(async () => {
+            const results = await searchPlaces(query);
+            setSearchResults(results);
+            setSearching(false);
+        }, 400);
+    };
+
+    // Select a search result
+    const selectSearchResult = (result: { area: string; fullAddress: string }) => {
+        setLocationArea(result.area);
+        setLocationCity(result.fullAddress);
+        localStorage.setItem('jt_customer_location', JSON.stringify({ area: result.area, city: result.fullAddress }));
+        setSelectedAddressId(null);
+        localStorage.removeItem('jt_selected_address_id');
+        setSearchQuery('');
+        setSearchResults([]);
+        setShowLocationDialog(false);
+    };
+
     const handleLocationTap = () => {
         setLocError(null);
+        setAddingAddress(false);
+        setSearchQuery('');
+        setSearchResults([]);
+        setShowAll(false);
         setShowLocationDialog(true);
     };
 
     const displayArea = locationArea || 'Select Location';
     const displayCity = locationCity || 'Tap to set your area';
 
+    const visibleAddresses = showAll ? savedAddresses : savedAddresses.slice(0, 3);
+
+    // ─── ADD ADDRESS SUB-VIEW ───
+    const renderAddAddress = () => (
+        <Box sx={{ p: 3, pt: 2 }}>
+            <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 2 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                <IconButton onClick={() => setAddingAddress(false)} size="small" sx={{ color: '#111827' }}>
+                    <BackIcon />
+                </IconButton>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827' }}>
+                    Add New Address
+                </Typography>
+            </Box>
+
+            {/* Label Chips */}
+            <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 600, mb: 1.5 }}>LABEL</Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+                {['Home', 'Work', 'Other'].map(lbl => (
+                    <Box
+                        key={lbl} onClick={() => setNewLabel(lbl)}
+                        sx={{
+                            display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.2,
+                            borderRadius: 3, cursor: 'pointer', transition: 'all 0.2s',
+                            border: newLabel === lbl ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                            background: newLabel === lbl ? '#F3F0FF' : '#FFF',
+                        }}
+                    >
+                        {LABEL_ICONS[lbl]}
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: newLabel === lbl ? '#5B4CF2' : '#374151' }}>{lbl}</Typography>
+                    </Box>
+                ))}
+            </Box>
+
+            {/* Address Input */}
+            <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 600, mb: 1 }}>FULL ADDRESS</Typography>
+            <TextField
+                fullWidth multiline rows={3} value={newAddressText}
+                onChange={(e) => setNewAddressText(e.target.value)}
+                placeholder="e.g. Flat 301, Ruby Manzil, Main Road, Friends Colony, Hyderabad"
+                sx={{
+                    mb: 3,
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#F9FAFB', borderRadius: 3, color: '#111827', fontSize: '0.95rem',
+                        '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
+                        '&:hover fieldset': { borderColor: '#D1D5DB' },
+                        '&.Mui-focused fieldset': { borderColor: '#5B4CF2' },
+                    },
+                }}
+            />
+
+            <Button
+                fullWidth onClick={handleAddAddress} variant="contained"
+                disabled={!newAddressText.trim()}
+                sx={{
+                    py: 1.5, borderRadius: 3, background: '#5B4CF2', fontWeight: 800, textTransform: 'none', fontSize: '1rem',
+                    boxShadow: '0 4px 14px rgba(91,76,242,0.3)', '&:hover': { background: '#4F46E5' },
+                    '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' }
+                }}
+            >
+                Save Address
+            </Button>
+        </Box>
+    );
+
+    // ─── MAIN LOCATION PICKER ───
+    const renderLocationPicker = () => (
+        <Box sx={{ p: 3, pt: 2 }}>
+            {/* Drag handle */}
+            <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 2 }} />
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: '#111827' }}>
+                    Select your location
+                </Typography>
+                <IconButton onClick={() => setShowLocationDialog(false)} size="small" sx={{ color: '#6B7280' }}>
+                    <CloseIcon />
+                </IconButton>
+            </Box>
+
+            {/* Search Bar */}
+            <TextField
+                fullWidth value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search an area or address"
+                InputProps={{ endAdornment: searching ? <CircularProgress size={18} sx={{ color: '#5B4CF2' }} /> : <SearchIcon sx={{ color: '#9CA3AF' }} /> }}
+                sx={{
+                    mb: 2.5,
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#F9FAFB', borderRadius: 3, color: '#111827', fontSize: '0.95rem',
+                        '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
+                        '&:hover fieldset': { borderColor: '#D1D5DB' },
+                        '&.Mui-focused fieldset': { borderColor: '#5B4CF2' },
+                    },
+                }}
+            />
+
+            {/* Search Results */}
+            {searchResults.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                    {searchResults.map((result, i) => (
+                        <Box
+                            key={result.placeId || i}
+                            onClick={() => selectSearchResult(result)}
+                            sx={{
+                                display: 'flex', alignItems: 'center', gap: 2, p: 2, cursor: 'pointer',
+                                borderRadius: 3, transition: 'background 0.15s',
+                                '&:hover': { background: '#F3F4F6' }, '&:active': { background: '#E5E7EB' }
+                            }}
+                        >
+                            <PlaceIcon sx={{ color: '#EF4444', fontSize: 24 }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography sx={{ fontWeight: 700, color: '#111827', fontSize: '0.95rem' }}>{result.area}</Typography>
+                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{result.fullAddress}</Typography>
+                            </Box>
+                        </Box>
+                    ))}
+                    <Divider sx={{ my: 1 }} />
+                </Box>
+            )}
+
+            {/* Action Buttons Row */}
+            <Box sx={{ display: 'flex', gap: 1.5, mb: 3, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
+                {/* Use Current Location */}
+                <Box
+                    onClick={locating ? undefined : detectLocation}
+                    sx={{
+                        minWidth: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                        p: 2, borderRadius: 3, border: '1.5px solid #E5E7EB', cursor: locating ? 'default' : 'pointer',
+                        background: '#FFF', transition: 'all 0.2s', flexShrink: 0,
+                        '&:hover': { borderColor: '#D1D5DB', background: '#FAFAFA' },
+                        '&:active': { background: '#F3F4F6' }
+                    }}
+                >
+                    {locating
+                        ? <CircularProgress size={24} sx={{ color: '#EF4444' }} />
+                        : <MyLocationIcon sx={{ color: '#EF4444', fontSize: 28 }} />
+                    }
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151', textAlign: 'center', lineHeight: 1.3 }}>
+                        Use Current Location
+                    </Typography>
+                </Box>
+
+                {/* Add New Address */}
+                <Box
+                    onClick={() => setAddingAddress(true)}
+                    sx={{
+                        minWidth: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                        p: 2, borderRadius: 3, border: '1.5px solid #E5E7EB', cursor: 'pointer',
+                        background: '#FFF', transition: 'all 0.2s', flexShrink: 0,
+                        '&:hover': { borderColor: '#D1D5DB', background: '#FAFAFA' },
+                        '&:active': { background: '#F3F4F6' }
+                    }}
+                >
+                    <AddLocationIcon sx={{ color: '#5B4CF2', fontSize: 28 }} />
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151', textAlign: 'center', lineHeight: 1.3 }}>
+                        Add New Address
+                    </Typography>
+                </Box>
+            </Box>
+
+            {locError && (
+                <Box sx={{ background: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: 3, p: 2, mb: 2.5 }}>
+                    <Typography sx={{ color: '#DC2626', fontSize: '0.85rem', fontWeight: 500 }}>{locError}</Typography>
+                </Box>
+            )}
+
+            {/* Saved Addresses */}
+            {savedAddresses.length > 0 && (
+                <Box>
+                    <Typography sx={{ color: '#9CA3AF', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1px', mb: 1.5 }}>
+                        SAVED ADDRESSES
+                    </Typography>
+                    {visibleAddresses.map((addr) => {
+                        const isSelected = selectedAddressId === addr.id;
+                        return (
+                            <Box
+                                key={addr.id}
+                                onClick={() => selectAddress(addr)}
+                                sx={{
+                                    display: 'flex', alignItems: 'center', gap: 2, p: 2, mb: 1,
+                                    borderRadius: 3, cursor: 'pointer', transition: 'all 0.2s',
+                                    border: isSelected ? '1.5px solid #10B981' : '1px solid #F3F4F6',
+                                    background: isSelected ? '#F0FDF4' : '#FFF',
+                                    '&:hover': { background: isSelected ? '#ECFDF5' : '#F9FAFB' },
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 40 }}>
+                                    {LABEL_ICONS[addr.label] || <PlaceIcon sx={{ fontSize: 22, color: '#6B7280' }} />}
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Typography sx={{ fontWeight: 800, color: '#111827', fontSize: '0.95rem' }}>{addr.label}</Typography>
+                                        {isSelected && (
+                                            <Box sx={{ background: '#D1FAE5', px: 1, py: 0.2, borderRadius: 1 }}>
+                                                <Typography sx={{ fontSize: '0.6rem', fontWeight: 800, color: '#065F46', letterSpacing: '0.5px' }}>SELECTED</Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                    <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', mt: 0.3 }}>
+                                        {addr.fullAddress}
+                                    </Typography>
+                                </Box>
+                                <IconButton
+                                    onClick={(e) => { e.stopPropagation(); deleteAddress(addr.id); }}
+                                    size="small" sx={{ color: '#D1D5DB', '&:hover': { color: '#EF4444' } }}
+                                >
+                                    <DeleteIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </Box>
+                        );
+                    })}
+                    {savedAddresses.length > 3 && !showAll && (
+                        <Button
+                            onClick={() => setShowAll(true)} fullWidth
+                            sx={{ color: '#5B4CF2', fontWeight: 700, textTransform: 'none', mt: 1 }}
+                        >
+                            View all ▾
+                        </Button>
+                    )}
+                </Box>
+            )}
+
+            <Typography sx={{ mt: 3, color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center' }}>
+                We use your location to check service availability in your area.
+            </Typography>
+        </Box>
+    );
+
     return (
         <Box sx={{ minHeight: '100dvh', background: '#FFFFFF', pb: 14, overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
             <PWAInstallPrompt />
 
-            {/* ════ LOCATION BOTTOM SHEET DIALOG ════ */}
+            {/* ════ LOCATION BOTTOM SHEET ════ */}
             <Dialog
                 open={showLocationDialog}
-                onClose={() => setShowLocationDialog(false)}
+                onClose={() => { setShowLocationDialog(false); setAddingAddress(false); }}
                 fullWidth maxWidth="xs"
                 PaperProps={{
                     sx: {
                         position: 'fixed', bottom: 0, m: 0, borderRadius: '24px 24px 0 0',
-                        background: '#FFF', maxHeight: '60dvh', width: '100%'
+                        background: '#FFF', maxHeight: '80dvh', width: '100%',
+                        overflowY: 'auto'
                     }
                 }}
             >
-                <DialogContent sx={{ p: 3, pt: 2 }}>
-                    {/* Drag handle */}
-                    <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 3 }} />
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: '#111827' }}>
-                            Set Your Location
-                        </Typography>
-                        <IconButton onClick={() => setShowLocationDialog(false)} size="small" sx={{ color: '#6B7280' }}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-
-                    {/* Use Current Location Button */}
-                    <Button
-                        fullWidth
-                        onClick={detectLocation}
-                        disabled={locating}
-                        startIcon={locating ? <CircularProgress size={20} sx={{ color: '#5B4CF2' }} /> : <MyLocationIcon />}
-                        sx={{
-                            py: 2, background: '#F3F0FF', color: '#5B4CF2', fontWeight: 700, textTransform: 'none',
-                            fontSize: '1rem', borderRadius: 3, mb: 2, border: '1.5px solid #E0D4FC',
-                            '&:hover': { background: '#EDE9FE' },
-                            '&.Mui-disabled': { background: '#F9FAFB', color: '#9CA3AF', borderColor: '#E5E7EB' }
-                        }}
-                    >
-                        {locating ? 'Detecting your location...' : 'Use Current Location'}
-                    </Button>
-
-                    {locError && (
-                        <Box sx={{ background: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: 3, p: 2, mb: 2 }}>
-                            <Typography sx={{ color: '#DC2626', fontSize: '0.85rem', fontWeight: 500 }}>
-                                {locError}
-                            </Typography>
-                        </Box>
-                    )}
-
-                    {/* Current detected location */}
-                    {locationArea && (
-                        <Box sx={{ 
-                            background: '#F0FDF4', border: '1px solid #D1FAE5', borderRadius: 3, p: 2.5, 
-                            display: 'flex', alignItems: 'center', gap: 2 
-                        }}>
-                            <GpsIcon sx={{ color: '#10B981', fontSize: 28 }} />
-                            <Box>
-                                <Typography sx={{ fontWeight: 700, color: '#065F46', fontSize: '1rem' }}>{locationArea}</Typography>
-                                {locationCity && <Typography sx={{ color: '#047857', fontSize: '0.8rem' }}>{locationCity}</Typography>}
-                            </Box>
-                        </Box>
-                    )}
-
-                    <Typography sx={{ mt: 3, color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center' }}>
-                        We use your location to check service availability in your area.
-                    </Typography>
-                </DialogContent>
+                {addingAddress ? renderAddAddress() : renderLocationPicker()}
             </Dialog>
             
             {/* ════ TOP PURPLE BANNER AREA ════ */}
@@ -218,7 +545,10 @@ const CustomerLandingPage: React.FC = () => {
                                     </Typography>
                                     <Typography sx={{ fontSize: '0.9rem', ml: 0.5 }}>▾</Typography>
                                 </Box>
-                                <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
+                                <Typography sx={{ 
+                                    color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500,
+                                    maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                }}>
                                     {displayCity}
                                 </Typography>
                             </Box>
@@ -276,11 +606,7 @@ const CustomerLandingPage: React.FC = () => {
                     Explore all services
                 </Typography>
 
-                <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                    gap: 2.5, px: 1 
-                }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2.5, px: 1 }}>
                     {SERVICES.map((svc) => (
                         <Box key={svc.id}>
                             <CardActionArea 
@@ -292,26 +618,14 @@ const CustomerLandingPage: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{ 
-                                    width: '100%', 
-                                    aspectRatio: '1/1',
-                                    background: '#F9FAFB',
-                                    borderRadius: 4,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    mb: 1.5,
-                                    p: 1.5,
+                                    width: '100%', aspectRatio: '1/1', background: '#F9FAFB', borderRadius: 4,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.5, p: 1.5,
                                     boxShadow: 'inset 0px -4px 12px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.03)',
                                     border: '1px solid #F3F4F6'
                                 }}>
-                                    <img 
-                                        src={svc.image} 
-                                        alt={svc.label} 
-                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.1))' }} 
-                                    />
+                                    <img src={svc.image} alt={svc.label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.1))' }} />
                                 </Box>
-                                <Typography sx={{ 
-                                    color: '#374151', fontSize: '0.8rem', fontWeight: 700, 
-                                    textAlign: 'center', lineHeight: 1.3, letterSpacing: '-0.2px'
-                                }}>
+                                <Typography sx={{ color: '#374151', fontSize: '0.8rem', fontWeight: 700, textAlign: 'center', lineHeight: 1.3, letterSpacing: '-0.2px' }}>
                                     {svc.label}
                                 </Typography>
                             </CardActionArea>
@@ -323,44 +637,29 @@ const CustomerLandingPage: React.FC = () => {
             {/* ════ BRAND PROMISES / TRUST ════ */}
             <Container maxWidth="sm" sx={{ mt: 6 }}>
                 <Box sx={{ px: 1 }}>
-                    <Card sx={{ 
-                        background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', 
-                        border: '1px solid #D1FAE5', borderRadius: 4, mb: 3, boxShadow: 'none' 
-                    }}>
+                    <Card sx={{ background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', border: '1px solid #D1FAE5', borderRadius: 4, mb: 3, boxShadow: 'none' }}>
                         <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
                             <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
                                 <VerifiedIcon fontSize="medium" />
                             </Box>
                             <Box>
-                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5, letterSpacing: '-0.2px' }}>
-                                    Up to 180 days warranty
-                                </Typography>
-                                <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>
-                                    Comprehensive protection on all TV parts & screen repairs.
-                                </Typography>
+                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
+                                <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
                             </Box>
                         </Box>
                     </Card>
 
-                    <Box sx={{ 
-                        display: 'flex', gap: 2, overflowX: 'auto', pb: 2, px: 0.5, mx: -0.5,
-                        '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' 
-                    }}>
+                    <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2, px: 0.5, mx: -0.5, '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                         <Card sx={{ minWidth: 220, flexShrink: 0, p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                                <Box sx={{ background: '#FEF3C7', p: 0.8, borderRadius: 2, color: '#D97706', display: 'flex' }}>
-                                    <StarIcon sx={{ fontSize: 20 }} />
-                                </Box>
+                                <Box sx={{ background: '#FEF3C7', p: 0.8, borderRadius: 2, color: '#D97706', display: 'flex' }}><StarIcon sx={{ fontSize: 20 }} /></Box>
                                 <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>4.8/5 Rating</Typography>
                             </Box>
                             <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>Trusted by over 1.1M customers in Hyderabad.</Typography>
                         </Card>
-                        
                         <Card sx={{ minWidth: 220, flexShrink: 0, p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                                <Box sx={{ background: '#DBEAFE', p: 0.8, borderRadius: 2, color: '#2563EB', display: 'flex' }}>
-                                    <CheckCircleIcon sx={{ fontSize: 20 }} />
-                                </Box>
+                                <Box sx={{ background: '#DBEAFE', p: 0.8, borderRadius: 2, color: '#2563EB', display: 'flex' }}><CheckCircleIcon sx={{ fontSize: 20 }} /></Box>
                                 <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>Verified Techs</Typography>
                             </Box>
                             <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>100% background checked & brand certified experts.</Typography>
@@ -378,10 +677,7 @@ const CustomerLandingPage: React.FC = () => {
                 pt: 1.5, pb: { xs: 3, sm: 2 }, zIndex: 1000
             }}>
                 <Box onClick={() => navigate('/')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#000' }}>
-                    <Box sx={{ 
-                        background: '#000', color: '#FFF', width: 26, height: 26, borderRadius: '6px', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem'
-                    }}>JT</Box>
+                    <Box sx={{ background: '#000', color: '#FFF', width: 26, height: 26, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem' }}>JT</Box>
                     <Typography sx={{ fontSize: '0.65rem', fontWeight: 800 }}>JT</Typography>
                 </Box>
                 <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
