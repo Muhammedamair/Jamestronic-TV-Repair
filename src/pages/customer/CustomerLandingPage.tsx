@@ -53,7 +53,7 @@ const CustomerLandingPage: React.FC = () => {
                             </Box>
                         </Box>
                         <IconButton 
-                            onClick={() => navigate('/staff-login')}
+                            onClick={() => navigate('/my-tickets')}
                             sx={{ background: 'rgba(255,255,255,0.15)', color: '#FFF', '&:hover': { background: 'rgba(255,255,255,0.25)' } }}
                         >
                             <PersonIcon />

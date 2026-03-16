@@ -1,19 +1,16 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Box, Typography, Button, TextField, Container, Card, CardContent,
-    InputAdornment, Chip, MenuItem, Select, FormControl, InputLabel,
-    CircularProgress, Alert, Stepper, Step, StepLabel, StepContent, IconButton,
-    FormLabel, RadioGroup, FormControlLabel, Radio
+    InputAdornment, IconButton, FormControl, InputLabel, Select, MenuItem,
+    RadioGroup, FormControlLabel, Radio, FormLabel, CircularProgress, Chip, Alert
 } from '@mui/material';
 import {
     ArrowBack as BackIcon,
-    ArrowForward as ArrowIcon,
     MyLocation as MyLocationIcon,
     CheckCircle as CheckIcon,
     PhoneAndroid as PhoneIcon,
     Tv as TvIcon,
     LocationOn as LocationIcon,
-    Description as DescIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -103,7 +100,6 @@ const CustomerBookingPage: React.FC = () => {
         setSubmitting(true);
         setError(null);
         try {
-            // 1. Call secure RPC to handle customer and ticket creation atomically
             const { data: ticketNumber, error: rpcErr } = await supabase.rpc('create_customer_booking', {
                 p_name: form.customerName,
                 p_mobile: form.mobile,
@@ -120,7 +116,6 @@ const CustomerBookingPage: React.FC = () => {
             if (rpcErr) throw rpcErr;
             if (!ticketNumber) throw new Error('Failed to generate ticket number');
 
-            // 4. Notify admin via push
             supabase.functions.invoke('send-push-notification', {
                 body: {
                     title: '🎫 New Customer Booking!',
@@ -143,83 +138,43 @@ const CustomerBookingPage: React.FC = () => {
         }
     };
 
-    // Success Screen
+    // ════ SUCCESS SCREEN ════
     if (success) {
         return (
-            <Box sx={{
-                minHeight: '100dvh',
-                background: 'linear-gradient(180deg, #0A0E1A, #111827)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                p: 2
-            }}>
-                <Card sx={{
-                    maxWidth: 440, width: '100%',
-                    background: 'rgba(30,41,59,0.6)',
-                    border: '1px solid rgba(16,185,129,0.2)',
-                    borderRadius: 4, textAlign: 'center'
-                }}>
-                    <CardContent sx={{ p: 4 }}>
-                        <Box sx={{
-                            width: 80, height: 80, borderRadius: '50%',
-                            background: 'rgba(16,185,129,0.15)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            mx: 'auto', mb: 3,
-                            animation: 'pulse 2s infinite',
-                            '@keyframes pulse': {
-                                '0%': { boxShadow: '0 0 0 0 rgba(16,185,129,0.3)' },
-                                '70%': { boxShadow: '0 0 0 20px rgba(16,185,129,0)' },
-                                '100%': { boxShadow: '0 0 0 0 rgba(16,185,129,0)' },
-                            }
+            <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+                <Card sx={{ maxWidth: 440, width: '100%', borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', border: 'none' }}>
+                    <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+                        <Box sx={{ 
+                            width: 80, height: 80, borderRadius: '50%', background: '#D1FAE5', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 
                         }}>
                             <CheckIcon sx={{ fontSize: 44, color: '#10B981' }} />
                         </Box>
-                        <Typography sx={{ color: '#10B981', fontWeight: 800, fontSize: '1.5rem', mb: 1 }}>
+                        <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.6rem', mb: 1, letterSpacing: '-0.3px' }}>
                             Booking Confirmed! 🎉
                         </Typography>
-                        <Typography sx={{ color: '#94A3B8', fontSize: '0.9rem', mb: 3 }}>
-                            Our team will contact you shortly to schedule the pickup.
+                        <Typography sx={{ color: '#6B7280', fontSize: '0.95rem', mb: 4 }}>
+                            Our expert will arrive at your location shortly. Save your ticket number to track progress.
                         </Typography>
 
-                        <Card sx={{
-                            background: 'rgba(15,23,42,0.6)',
-                            border: '1px solid rgba(148,163,184,0.1)',
-                            borderRadius: 2, mb: 3
-                        }}>
-                            <CardContent sx={{ py: 2 }}>
-                                <Typography sx={{ color: '#64748B', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.1em' }}>
-                                    Ticket Number
-                                </Typography>
-                                <Typography sx={{
-                                    color: '#F59E0B', fontWeight: 800, fontSize: '1.4rem',
-                                    fontFamily: 'monospace', letterSpacing: '0.05em'
-                                }}>
-                                    {success.ticketNumber}
-                                </Typography>
-                                <Typography sx={{ color: '#64748B', fontSize: '0.75rem', mt: 0.5 }}>
-                                    Save this number to track your TV repair status
-                                </Typography>
-                            </CardContent>
-                        </Card>
+                        <Box sx={{ background: '#F3F4F6', borderRadius: 3, py: 2.5, mb: 4 }}>
+                            <Typography sx={{ color: '#6B7280', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
+                                Ticket Number
+                            </Typography>
+                            <Typography sx={{ color: '#5B4CF2', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                                {success.ticketNumber}
+                            </Typography>
+                        </Box>
 
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={() => navigate(`/track/${success.ticketNumber}`)}
+                        <Button fullWidth variant="contained" onClick={() => navigate(`/track/${success.ticketNumber}`)}
                             sx={{
-                                py: 1.5, borderRadius: 2.5,
-                                background: 'linear-gradient(135deg, #00D9FF, #6C63FF)',
-                                fontWeight: 700, textTransform: 'none', fontSize: '0.95rem', mb: 1.5,
-                                '&:hover': { background: 'linear-gradient(135deg, #00B4D8, #5B54E6)' }
+                                py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem', 
+                                mb: 2, boxShadow: '0 4px 14px rgba(91,76,242,0.4)', '&:hover': { background: '#4F46E5' }
                             }}
                         >
-                            🔍 Track Your TV Status
+                            Track Your TV Status
                         </Button>
-                        <Button
-                            fullWidth
-                            variant="text"
-                            onClick={() => navigate('/')}
-                            sx={{ color: '#94A3B8', textTransform: 'none' }}
-                        >
+                        <Button fullWidth variant="text" onClick={() => navigate('/')} sx={{ color: '#6B7280', textTransform: 'none', fontWeight: 600 }}>
                             Back to Home
                         </Button>
                     </CardContent>
@@ -229,323 +184,234 @@ const CustomerBookingPage: React.FC = () => {
     }
 
     const STEPS_CONFIG = [
-        { label: 'Your Details', icon: <PhoneIcon /> },
-        { label: 'TV Information', icon: <TvIcon /> },
-        { label: 'Pickup Location', icon: <LocationIcon /> },
+        { label: 'Your Details', desc: "We'll use this to send you updates" },
+        { label: 'TV Information', desc: "Tell us about your TV and the issue" },
+        { label: 'Pickup Location', desc: "Where should we pick up your TV?" },
     ];
 
     return (
-        <Box sx={{
-            minHeight: '100dvh',
-            background: 'linear-gradient(180deg, #0A0E1A, #111827)',
-        }}>
+        <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', pb: 12, fontFamily: '"Inter", sans-serif' }}>
             {/* Header */}
-            <Box sx={{
-                px: 2, py: 1.5,
-                display: 'flex', alignItems: 'center', gap: 1,
-                borderBottom: '1px solid rgba(148,163,184,0.05)',
-            }}>
-                <IconButton onClick={() => navigate('/')} sx={{ color: '#94A3B8' }}>
+            <Box sx={{ px: 2, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#FFF', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 10 }}>
+                <IconButton onClick={() => navigate('/')} sx={{ color: '#111827' }} edge="start">
                     <BackIcon />
                 </IconButton>
-                <Typography sx={{ color: '#F8FAFC', fontWeight: 700, fontSize: '1.1rem' }}>
+                <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.1rem' }}>
                     Book Service
                 </Typography>
             </Box>
 
-            <Container maxWidth="sm" sx={{ py: 3 }}>
+            <Container maxWidth="sm" sx={{ py: 4, px: { xs: 2.5, sm: 3 } }}>
                 {error && (
-                    <Alert severity="error" sx={{
-                        mb: 2, backgroundColor: 'rgba(239,68,68,0.1)',
-                        color: '#F8FAFC', border: '1px solid rgba(239,68,68,0.3)',
-                        '& .MuiAlert-icon': { color: '#EF4444' }
-                    }}>
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
                         {error}
                     </Alert>
                 )}
 
-                {/* Step Indicator */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 4 }}>
-                    {STEPS_CONFIG.map((s, i) => (
-                        <Box key={i} sx={{
-                            display: 'flex', alignItems: 'center', gap: 0.5,
-                        }}>
+                {/* Progress Indicators */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 5 }}>
+                    {[0, 1, 2].map((num) => (
+                        <React.Fragment key={num}>
                             <Box sx={{
                                 width: 32, height: 32, borderRadius: '50%',
-                                background: i <= step
-                                    ? 'linear-gradient(135deg, #6C63FF, #8B85FF)'
-                                    : 'rgba(30,41,59,0.6)',
-                                border: `2px solid ${i <= step ? '#6C63FF' : 'rgba(148,163,184,0.15)'}`,
+                                background: step >= num ? '#5B4CF2' : '#E5E7EB',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: i <= step ? '#FFF' : '#475569',
-                                fontSize: '0.75rem', fontWeight: 700,
-                                transition: 'all 0.3s',
+                                color: step >= num ? '#FFF' : '#9CA3AF', fontWeight: 700, fontSize: '0.85rem'
                             }}>
-                                {i < step ? <CheckIcon sx={{ fontSize: 16 }} /> : i + 1}
+                                {step > num ? <CheckIcon sx={{ fontSize: 18 }} /> : (num + 1)}
                             </Box>
-                            {i < STEPS_CONFIG.length - 1 && (
-                                <Box sx={{
-                                    width: { xs: 40, sm: 60 }, height: 2,
-                                    backgroundColor: i < step ? '#6C63FF' : 'rgba(148,163,184,0.1)',
-                                    borderRadius: 1, transition: 'background-color 0.3s'
-                                }} />
+                            {num < 2 && (
+                                <Box sx={{ width: 40, height: 2, background: step > num ? '#5B4CF2' : '#E5E7EB', mx: 1 }} />
                             )}
-                        </Box>
+                        </React.Fragment>
                     ))}
                 </Box>
 
-                <Typography sx={{ color: '#F8FAFC', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', mb: 0.5 }}>
+                <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.4rem', textAlign: 'center', mb: 0.5, letterSpacing: '-0.3px' }}>
                     {STEPS_CONFIG[step].label}
                 </Typography>
-                <Typography sx={{ color: '#64748B', textAlign: 'center', fontSize: '0.85rem', mb: 3 }}>
-                    {step === 0 ? 'We\'ll use this to send you updates' :
-                     step === 1 ? 'Tell us about your TV and the issue' :
-                     'Where should we pick up your TV?'}
+                <Typography sx={{ color: '#6B7280', textAlign: 'center', fontSize: '0.9rem', mb: 4 }}>
+                    {STEPS_CONFIG[step].desc}
                 </Typography>
 
-                {/* ═══ Step 0: Mobile & Name ═══ */}
-                {step === 0 && (
-                    <Card sx={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(148,163,184,0.1)', borderRadius: 3 }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Mobile Number"
-                                placeholder="9052222901"
-                                value={form.mobile}
-                                onChange={e => updateField('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                type="tel"
-                                InputProps={{
-                                    startAdornment: <InputAdornment position="start"><Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>+91</Typography></InputAdornment>,
-                                }}
-                                sx={{ mb: 2.5, ...textFieldStyle }}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Your Name"
-                                placeholder="e.g. Rahul Kumar"
-                                value={form.customerName}
-                                onChange={e => updateField('customerName', e.target.value)}
-                                sx={{ ...textFieldStyle }}
-                            />
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* ═══ Step 1: TV Info ═══ */}
-                {step === 1 && (
-                    <Card sx={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(148,163,184,0.1)', borderRadius: 3 }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <FormControl fullWidth sx={{ mb: 2.5, ...selectStyle }}>
-                                <InputLabel sx={{ color: '#94A3B8' }}>TV Brand *</InputLabel>
-                                <Select
-                                    value={form.tvBrand}
-                                    label="TV Brand *"
-                                    onChange={e => updateField('tvBrand', e.target.value)}
-                                >
-                                    {TV_BRANDS.map(b => (
-                                        <MenuItem key={b} value={b}>{b}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            {/* Service Type */}
-                            <FormControl sx={{ mb: 2.5 }}>
-                                <FormLabel sx={{ color: '#94A3B8', fontSize: '0.85rem', mb: 1 }}>Service Type</FormLabel>
-                                <RadioGroup
-                                    row
-                                    value={form.serviceType}
-                                    onChange={e => updateField('serviceType', e.target.value)}
-                                >
-                                    <FormControlLabel
-                                        value="repair"
-                                        control={<Radio sx={{ color: '#64748B', '&.Mui-checked': { color: '#6C63FF' } }} />}
-                                        label={<Typography sx={{ color: '#CBD5E1', fontSize: '0.9rem' }}>🔧 TV Repair</Typography>}
-                                    />
-                                    <FormControlLabel
-                                        value="installation"
-                                        control={<Radio sx={{ color: '#64748B', '&.Mui-checked': { color: '#10B981' } }} />}
-                                        label={<Typography sx={{ color: '#CBD5E1', fontSize: '0.9rem' }}>📺 TV Installation</Typography>}
-                                    />
-                                </RadioGroup>
-                            </FormControl>
-
-                            <Box sx={{ display: 'flex', gap: 2, mb: 2.5 }}>
+                <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
+                    
+                    {/* ═══ Step 0: Mobile & Name ═══ */}
+                    {step === 0 && (
+                        <>
+                            <Box sx={{ mb: 3 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Mobile Number</Typography>
                                 <TextField
-                                    fullWidth
-                                    label="TV Model (optional)"
-                                    placeholder="e.g. UA55AU7700"
-                                    value={form.tvModel}
-                                    onChange={e => updateField('tvModel', e.target.value)}
-                                    sx={textFieldStyle}
-                                />
-                                <TextField
-                                    fullWidth
-                                    label="TV Size (optional)"
-                                    placeholder='e.g. 55"'
-                                    value={form.tvSize}
-                                    onChange={e => updateField('tvSize', e.target.value)}
-                                    sx={textFieldStyle}
+                                    fullWidth placeholder="9052222901" value={form.mobile}
+                                    onChange={e => updateField('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                    type="tel"
+                                    InputProps={{ startAdornment: <InputAdornment position="start"><Typography sx={{ color: '#111827', fontWeight: 600 }}>+91</Typography></InputAdornment> }}
+                                    sx={lightTextFieldStyle}
                                 />
                             </Box>
+                            <Box sx={{ mb: 1 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Your Name</Typography>
+                                <TextField
+                                    fullWidth placeholder="e.g. Rahul Kumar" value={form.customerName}
+                                    onChange={e => updateField('customerName', e.target.value)}
+                                    sx={lightTextFieldStyle}
+                                />
+                            </Box>
+                        </>
+                    )}
 
-                            <TextField
-                                fullWidth
-                                label="Describe the Issue *"
-                                placeholder="e.g. Screen is flickering, no display, sound issues..."
-                                value={form.issueDescription}
-                                onChange={e => updateField('issueDescription', e.target.value)}
-                                multiline
-                                rows={3}
-                                sx={textFieldStyle}
-                            />
-                        </CardContent>
-                    </Card>
-                )}
+                    {/* ═══ Step 1: TV Info ═══ */}
+                    {step === 1 && (
+                        <>
+                            <Box sx={{ mb: 3 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Service Type</Typography>
+                                <RadioGroup row value={form.serviceType} onChange={e => updateField('serviceType', e.target.value)}>
+                                    <FormControlLabel value="repair" control={<Radio sx={{ color: '#D1D5DB', '&.Mui-checked': { color: '#5B4CF2' } }} />} label={<Typography sx={{ color: '#111827', fontSize: '0.9rem', fontWeight: 500 }}>TV Repair</Typography>} />
+                                    <FormControlLabel value="installation" control={<Radio sx={{ color: '#D1D5DB', '&.Mui-checked': { color: '#5B4CF2' } }} />} label={<Typography sx={{ color: '#111827', fontSize: '0.9rem', fontWeight: 500 }}>Installation</Typography>} />
+                                    <FormControlLabel value="uninstallation" control={<Radio sx={{ color: '#D1D5DB', '&.Mui-checked': { color: '#5B4CF2' } }} />} label={<Typography sx={{ color: '#111827', fontSize: '0.9rem', fontWeight: 500 }}>Unmount</Typography>} />
+                                </RadioGroup>
+                            </Box>
 
-                {/* ═══ Step 2: Location ═══ */}
-                {step === 2 && (
-                    <Card sx={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(148,163,184,0.1)', borderRadius: 3 }}>
-                        <CardContent sx={{ p: 3 }}>
+                            <Box sx={{ mb: 3 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>TV Brand *</Typography>
+                                <FormControl fullWidth sx={lightSelectStyle}>
+                                    <Select displayEmpty value={form.tvBrand} onChange={e => updateField('tvBrand', e.target.value)}>
+                                        <MenuItem value="" disabled>Select Brand</MenuItem>
+                                        {TV_BRANDS.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Model (Opt)</Typography>
+                                    <TextField fullWidth placeholder="e.g. AU7700" value={form.tvModel} onChange={e => updateField('tvModel', e.target.value)} sx={lightTextFieldStyle} />
+                                </Box>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Size (Opt)</Typography>
+                                    <TextField fullWidth placeholder='e.g. 55"' value={form.tvSize} onChange={e => updateField('tvSize', e.target.value)} sx={lightTextFieldStyle} />
+                                </Box>
+                            </Box>
+
+                            <Box sx={{ mb: 1 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Describe the Issue *</Typography>
+                                <TextField
+                                    fullWidth placeholder="e.g. Screen is flickering, no display, sound issues..."
+                                    value={form.issueDescription} onChange={e => updateField('issueDescription', e.target.value)}
+                                    multiline rows={3} sx={lightTextFieldStyle}
+                                />
+                            </Box>
+                        </>
+                    )}
+
+                    {/* ═══ Step 2: Location ═══ */}
+                    {step === 2 && (
+                        <>
                             <Button
-                                fullWidth
-                                variant="outlined"
-                                startIcon={<MyLocationIcon />}
-                                onClick={handleGetCurrentLocation}
+                                fullWidth variant="outlined" startIcon={<MyLocationIcon />} onClick={handleGetCurrentLocation}
                                 sx={{
-                                    mb: 2.5, py: 1.5, borderRadius: 2,
-                                    color: '#00D9FF', borderColor: 'rgba(0,217,255,0.3)',
-                                    textTransform: 'none', fontWeight: 600,
-                                    '&:hover': { borderColor: '#00D9FF', backgroundColor: 'rgba(0,217,255,0.05)' }
+                                    mb: 3, py: 1.5, borderRadius: 3, color: '#5B4CF2', borderColor: 'rgba(91,76,242,0.3)',
+                                    textTransform: 'none', fontWeight: 700, fontSize: '0.95rem',
+                                    '&:hover': { borderColor: '#5B4CF2', backgroundColor: 'rgba(91,76,242,0.05)' }
                                 }}
                             >
-                                📍 Use My Current Location
+                                Use My Current Location
                             </Button>
 
-                            <Typography sx={{ color: '#475569', textAlign: 'center', fontSize: '0.8rem', mb: 2 }}>
-                                — or type your address —
+                            <Typography sx={{ color: '#9CA3AF', textAlign: 'center', fontSize: '0.85rem', mb: 3, fontWeight: 500 }}>
+                                — OR TYPE MANUALLY —
                             </Typography>
 
+                            <Box sx={{ mb: 1 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Pickup Address *</Typography>
                                 <Autocomplete
-                                    onLoad={(auto) => { autocompleteRef.current = auto; }}
-                                    onPlaceChanged={handlePlaceChanged}
-                                    options={{
-                                        componentRestrictions: { country: 'in' },
-                                        types: ['address'],
-                                    }}
+                                    onLoad={(auto) => { autocompleteRef.current = auto; }} onPlaceChanged={handlePlaceChanged}
+                                    options={{ componentRestrictions: { country: 'in' }, types: ['address'] }}
                                 >
                                     <TextField
-                                        fullWidth
-                                        label="Pickup Address *"
-                                        placeholder="Start typing your address..."
-                                        value={form.address}
-                                        onChange={e => updateField('address', e.target.value)}
-                                        multiline
-                                        rows={2}
-                                        sx={textFieldStyle}
+                                        fullWidth placeholder="Start typing your apartment or street..."
+                                        value={form.address} onChange={e => updateField('address', e.target.value)}
+                                        multiline rows={2} sx={lightTextFieldStyle}
                                     />
                                 </Autocomplete>
+                            </Box>
 
                             {form.lat > 0 && (
-                                <Chip
-                                    icon={<CheckIcon sx={{ fontSize: 14, color: '#10B981 !important' }} />}
-                                    label="GPS location captured"
-                                    size="small"
-                                    sx={{
-                                        mt: 1.5, color: '#10B981',
-                                        backgroundColor: 'rgba(16,185,129,0.1)',
-                                        border: '1px solid rgba(16,185,129,0.2)',
-                                    }}
+                                <Chip icon={<CheckIcon sx={{ fontSize: 16, color: '#10B981 !important' }} />} label="GPS location captured"
+                                    sx={{ mt: 2, color: '#065F46', backgroundColor: '#D1FAE5', fontWeight: 600, borderRadius: 2 }}
                                 />
                             )}
-                        </CardContent>
-                    </Card>
-                )}
+                        </>
+                    )}
+                </Box>
 
-                {/* Navigation Buttons */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                    {step > 0 ? (
-                        <Button
-                            onClick={() => setStep(s => s - 1)}
-                            startIcon={<BackIcon />}
-                            sx={{ color: '#94A3B8', textTransform: 'none', fontWeight: 600 }}
+                <Typography sx={{ color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center', mt: 4, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                    <span style={{ fontSize: '1rem' }}>🔒</span> Your information is secure.
+                </Typography>
+            </Container>
+
+            {/* Sticky Bottom Actions */}
+            <Box sx={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, 
+                background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderTop: '1px solid #E5E7EB',
+                p: 2, display: 'flex', gap: 2, zIndex: 100
+            }}>
+                <Container maxWidth="sm" sx={{ display: 'flex', gap: 2, p: 0 }}>
+                    {step > 0 && (
+                        <Button 
+                            variant="outlined" onClick={() => setStep(s => s - 1)} 
+                            sx={{ flex: 1, py: 1.8, borderRadius: 3, color: '#4B5563', borderColor: '#D1D5DB', fontWeight: 700, textTransform: 'none', '&:hover': { background: '#F3F4F6', borderColor: '#D1D5DB' } }}
                         >
                             Back
                         </Button>
-                    ) : <Box />}
-
+                    )}
+                    
                     {step < 2 ? (
                         <Button
-                            variant="contained"
-                            disabled={!canProceed()}
-                            onClick={() => setStep(s => s + 1)}
-                            endIcon={<ArrowIcon />}
+                            variant="contained" disabled={!canProceed()} onClick={() => setStep(s => s + 1)}
                             sx={{
-                                px: 4, py: 1.3, borderRadius: 2.5,
-                                background: 'linear-gradient(135deg, #6C63FF, #8B85FF)',
-                                fontWeight: 700, textTransform: 'none',
-                                '&:hover': { background: 'linear-gradient(135deg, #5B54E6, #7B75FF)' },
-                                '&.Mui-disabled': { background: 'rgba(30,41,59,0.6)', color: '#475569' }
+                                flex: 2, py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem',
+                                boxShadow: '0 4px 14px rgba(91,76,242,0.3)', '&:hover': { background: '#4F46E5' },
+                                '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' }
                             }}
                         >
                             Continue
                         </Button>
                     ) : (
                         <Button
-                            variant="contained"
-                            disabled={!canProceed() || submitting}
-                            onClick={handleSubmit}
-                            endIcon={submitting ? <CircularProgress size={18} sx={{ color: '#FFF' }} /> : <CheckIcon />}
+                            variant="contained" disabled={!canProceed() || submitting} onClick={handleSubmit}
                             sx={{
-                                px: 4, py: 1.3, borderRadius: 2.5,
-                                background: 'linear-gradient(135deg, #10B981, #059669)',
-                                fontWeight: 700, textTransform: 'none', fontSize: '1rem',
-                                boxShadow: '0 8px 32px rgba(16,185,129,0.3)',
-                                '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' },
-                                '&.Mui-disabled': { background: 'rgba(30,41,59,0.6)', color: '#475569' }
+                                flex: 2, py: 1.8, borderRadius: 3, background: '#10B981', fontWeight: 800, textTransform: 'none', fontSize: '1.05rem',
+                                boxShadow: '0 4px 14px rgba(16,185,129,0.3)', '&:hover': { background: '#059669' },
+                                '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' }
                             }}
                         >
-                            {submitting ? 'Booking...' : 'Confirm Booking'}
+                            {submitting ? <CircularProgress size={24} sx={{ color: '#FFF' }} /> : 'Confirm Booking'}
                         </Button>
                     )}
-                </Box>
-
-                {/* Security Note */}
-                <Typography sx={{
-                    color: '#334155', fontSize: '0.7rem', textAlign: 'center', mt: 4, px: 2
-                }}>
-                    🔒 Your information is secure. We only use it to process your service request.
-                </Typography>
-            </Container>
+                </Container>
+            </Box>
         </Box>
     );
 };
 
-// Shared TextField styling
-const textFieldStyle = {
+// Clean Light Theme Inputs
+const lightTextFieldStyle = {
     '& .MuiOutlinedInput-root': {
-        backgroundColor: 'rgba(15,23,42,0.5)',
-        borderRadius: 2,
-        color: '#F8FAFC',
-        '& fieldset': { borderColor: 'rgba(148,163,184,0.15)' },
-        '&:hover fieldset': { borderColor: 'rgba(108,99,255,0.4)' },
-        '&.Mui-focused fieldset': { borderColor: '#6C63FF' },
+        backgroundColor: '#F9FAFB', borderRadius: 2.5, color: '#111827', fontSize: '1rem',
+        '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
+        '&:hover fieldset': { borderColor: '#D1D5DB' },
+        '&.Mui-focused fieldset': { borderColor: '#5B4CF2' },
     },
-    '& .MuiInputLabel-root': { color: '#94A3B8' },
-    '& .MuiInputLabel-root.Mui-focused': { color: '#6C63FF' },
 };
 
-const selectStyle = {
+const lightSelectStyle = {
     '& .MuiOutlinedInput-root': {
-        backgroundColor: 'rgba(15,23,42,0.5)',
-        borderRadius: 2,
-        color: '#F8FAFC',
-        '& fieldset': { borderColor: 'rgba(148,163,184,0.15)' },
-        '&:hover fieldset': { borderColor: 'rgba(108,99,255,0.4)' },
-        '&.Mui-focused fieldset': { borderColor: '#6C63FF' },
+        backgroundColor: '#F9FAFB', borderRadius: 2.5, color: '#111827', fontSize: '1rem',
+        '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
+        '&:hover fieldset': { borderColor: '#D1D5DB' },
+        '&.Mui-focused fieldset': { borderColor: '#5B4CF2' },
     },
-    '& .MuiInputLabel-root': { color: '#94A3B8' },
-    '& .MuiInputLabel-root.Mui-focused': { color: '#6C63FF' },
-    '& .MuiSelect-icon': { color: '#94A3B8' },
 };
 
 export default CustomerBookingPage;
