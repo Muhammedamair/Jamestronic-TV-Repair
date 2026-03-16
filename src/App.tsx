@@ -24,6 +24,7 @@ import AdminTransportersPage from './pages/transporters/AdminTransportersPage';
 import TransporterDashboardPage from './pages/transporter/TransporterDashboardPage';
 import GoogleMapsProvider from './components/GoogleMapsProvider';
 import AnalyticsPage from './pages/AnalyticsPage';
+import NotificationLogsPage from './pages/NotificationLogsPage';
 import { Box, CircularProgress } from '@mui/material';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ children, allowedRoles }) => {
@@ -77,6 +78,7 @@ const App: React.FC = () => (
               <Route path="technicians" element={<AdminTechniciansPage />} />
               <Route path="transporters" element={<AdminTransportersPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="notifications" element={<NotificationLogsPage />} />
             </Route>
 
             {/* Dealer Routes */}

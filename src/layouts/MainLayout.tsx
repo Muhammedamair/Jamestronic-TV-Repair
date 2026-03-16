@@ -11,9 +11,10 @@ import {
     Menu as MenuIcon, ChevronLeft as ChevronLeftIcon, Settings as SettingsIcon,
     Logout as LogoutIcon, Build as BuildIcon, Store as StoreIcon,
     BarChart as AnalyticsIcon, Engineering as TechIcon,
-    LocalShipping as TransportIcon,
+    LocalShipping as TransportIcon, Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../supabaseClient';
 
 const DRAWER_WIDTH = 260;
 const DRAWER_COLLAPSED = 72;
@@ -26,6 +27,7 @@ const navItems = [
     { label: 'Tech Network', icon: <TechIcon />, path: '/technicians' },
     { label: 'Transporters', icon: <TransportIcon />, path: '/transporters' },
     { label: 'Procurement', icon: <BuildIcon />, path: '/parts' },
+    { label: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
     { label: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
 ];
 
@@ -36,8 +38,68 @@ const MainLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { signOut } = useAuth();
+    const [badgeCounts, setBadgeCounts] = useState({
+        procurement: 0,
+        transporters: 0,
+        techNetwork: 0,
+        tickets: 0
+    });
 
     const drawerWidth = drawerOpen ? DRAWER_WIDTH : DRAWER_COLLAPSED;
+
+    // Fetch initial badge counts and subscribe to changes
+    React.useEffect(() => {
+        const fetchCounts = async () => {
+            // 1. Procurement: PENDING_REVIEW, OPEN, BIDS_RECEIVED
+            const { count: procurementCount } = await supabase
+                .from('part_requests')
+                .select('*', { count: 'exact', head: true })
+                .in('status', ['PENDING_REVIEW', 'OPEN', 'BIDS_RECEIVED']);
+
+            // 2. Transporters: Not DELIVERED/CANCELLED
+            const { count: transportCount } = await supabase
+                .from('transport_jobs')
+                .select('*', { count: 'exact', head: true })
+                .not('status', 'in', '("DELIVERED","CANCELLED")');
+
+            // 3. Tech Network: Not COMPLETED/CANCELLED
+            const { count: techCount } = await supabase
+                .from('ticket_technician_log')
+                .select('*', { count: 'exact', head: true })
+                .not('status', 'in', '("COMPLETED","CANCELLED")');
+
+            // 4. Tickets: Not CLOSED/DELIVERED/CANCELLED
+            const { count: ticketCount } = await supabase
+                .from('tickets')
+                .select('*', { count: 'exact', head: true })
+                .not('status', 'in', '("CLOSED","DELIVERED","CANCELLED")');
+
+            setBadgeCounts({
+                procurement: procurementCount || 0,
+                transporters: transportCount || 0,
+                techNetwork: techCount || 0,
+                tickets: ticketCount || 0
+            });
+        };
+
+        fetchCounts();
+
+        // Optional: polling fallback (every 60s) just in case realtime drops
+        const pollInterval = setInterval(fetchCounts, 60000);
+
+        // Realtime Subscription on all 4 tables
+        const badgesChannel = supabase.channel('sidebar-badges')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'part_requests' }, fetchCounts)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'transport_jobs' }, fetchCounts)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_technician_log' }, fetchCounts)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, fetchCounts)
+            .subscribe();
+
+        return () => {
+            clearInterval(pollInterval);
+            supabase.removeChannel(badgesChannel);
+        };
+    }, []);
 
     const drawerContent = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -126,8 +188,16 @@ const MainLayout: React.FC = () => {
                                         color: 'inherit',
                                     }}>
                                         {item.label === 'Tickets' ? (
-                                            <Badge badgeContent={0} color="error" invisible>{item.icon}</Badge>
-                                        ) : item.icon}
+                                            <Badge badgeContent={badgeCounts.tickets} color="error" max={99}>{item.icon}</Badge>
+                                        ) : item.label === 'Procurement' ? (
+                                            <Badge badgeContent={badgeCounts.procurement} color="error" max={99}>{item.icon}</Badge>
+                                        ) : item.label === 'Transporters' ? (
+                                            <Badge badgeContent={badgeCounts.transporters} color="error" max={99}>{item.icon}</Badge>
+                                        ) : item.label === 'Tech Network' ? (
+                                            <Badge badgeContent={badgeCounts.techNetwork} color="error" max={99}>{item.icon}</Badge>
+                                        ) : (
+                                            item.icon
+                                        )}
                                     </ListItemIcon>
                                     {drawerOpen && <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: isActive ? 600 : 400, fontSize: '0.9rem' }} />}
                                 </ListItemButton>

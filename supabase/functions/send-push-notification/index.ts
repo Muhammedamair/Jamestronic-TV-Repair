@@ -36,7 +36,14 @@ Deno.serve(async (req: Request) => {
 
     const target_admin = payloadData.target_admin || false;
 
-    // Create admin client to read all subscriptions
+    // Audit Log variables
+    const event_type = payloadData.event_type || 'SYSTEM_PUSH';
+    const source_id = payloadData.source_id;
+    const source_table = payloadData.source_table;
+    const target_role = payloadData.target_role || 'UNKNOWN';
+    const target_user_name = payloadData.target_user_name;
+
+    // Create admin client to read all subscriptions and write to logs
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Build notification payload
@@ -112,6 +119,22 @@ Deno.serve(async (req: Request) => {
     }
 
     if (fetchError || !subscriptions || subscriptions.length === 0) {
+      // Log NO_SUBSCRIPTION
+      for (const targetUid of finalUserIds) {
+          await supabase.from('notification_logs').insert({
+              event_type,
+              source_id,
+              source_table,
+              target_role,
+              target_user_id: targetUid,
+              target_user_name,
+              title,
+              body: bodyText,
+              status: 'NO_SUBSCRIPTION',
+              error_message: 'User has not enabled push notifications on this device.'
+          });
+      }
+
       return new Response(
         JSON.stringify({
           message: "No push subscriptions found for target users.",
@@ -151,6 +174,25 @@ Deno.serve(async (req: Request) => {
           );
         }
       }
+    }
+
+    // Log the overall success/failure
+    for (const targetUid of finalUserIds) {
+        await supabase.from('notification_logs').insert({
+            event_type,
+            source_id,
+            source_table,
+            target_role,
+            target_user_id: targetUid,
+            target_user_name,
+            title,
+            body: bodyText,
+            status: failed > 0 ? (sent > 0 ? 'PARTIAL_SUCCESS' : 'FAILED') : 'SENT',
+            sent_count: sent,
+            failed_count: failed,
+            error_message: errors.length > 0 ? errors.join(' | ') : null,
+            delivered_at: sent > 0 ? new Date().toISOString() : null
+        });
     }
 
     return new Response(
