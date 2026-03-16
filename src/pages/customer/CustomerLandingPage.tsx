@@ -14,7 +14,10 @@ import {
     LocalShipping as TruckIcon,
     Search as SearchIcon,
     Shield as ShieldIcon,
-    Speed as SpeedIcon,
+    Phone as PhoneCallIcon, 
+    WhatsApp as WhatsAppIcon,
+    ConfirmationNumber as TicketIcon,
+    Person as PersonIcon,
     Verified as VerifiedIcon,
     SupportAgent as SupportIcon,
 } from '@mui/icons-material';
@@ -33,9 +36,9 @@ const STEPS = [
 ];
 
 const TRUST_STATS = [
-    { value: '500+', label: 'TVs Repaired', icon: <VerifiedIcon /> },
+    { value: '500+', label: 'TVs Repaired', icon: <PersonIcon /> }, // Changed icon to PersonIcon for consistency with new header
     { value: '4.9★', label: 'Google Rating', icon: <StarIcon /> },
-    { value: '24hr', label: 'Avg Turnaround', icon: <SpeedIcon /> },
+    { value: '24hr', label: 'Avg Turnaround', icon: <PhoneCallIcon /> }, // Changed icon to PhoneCallIcon
     { value: '100%', label: 'Service Warranty', icon: <ShieldIcon /> },
 ];
 
@@ -50,6 +53,7 @@ const CustomerLandingPage: React.FC = () => {
     const [trackingNumber, setTrackingNumber] = useState('');
     const [animatedStats, setAnimatedStats] = useState<number[]>([0, 0, 0, 0]);
     const statsRef = useRef<HTMLDivElement>(null);
+    const [scrolled, setScrolled] = useState(false);
 
     // Animate stats on scroll
     useEffect(() => {
@@ -75,6 +79,19 @@ const CustomerLandingPage: React.FC = () => {
         return () => observer.disconnect();
     }, []);
 
+    // Handle scroll for fixed header
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 50) {
+                setScrolled(true);
+            } else {
+                setScrolled(false);
+            }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     const handleBookNow = () => {
         if (mobile.length >= 10) {
             navigate(`/book?mobile=${mobile}&service=${selectedService}`);
@@ -95,52 +112,54 @@ const CustomerLandingPage: React.FC = () => {
             background: 'linear-gradient(180deg, #0A0E1A 0%, #111827 50%, #0F172A 100%)',
             overflowX: 'hidden'
         }}>
-            {/* Navigation Bar */}
+            {/* Header / Nav */}
             <Box sx={{
-                position: 'sticky', top: 0, zIndex: 100,
-                background: 'rgba(10,14,26,0.85)',
-                backdropFilter: 'blur(20px)',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                px: { xs: 2, md: 4 }, py: 1.5,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100,
+                background: scrolled ? 'rgba(10,14,26,0.9)' : 'transparent',
+                backdropFilter: scrolled ? 'blur(10px)' : 'none',
+                borderBottom: scrolled ? '1px solid rgba(148,163,184,0.1)' : '1px solid transparent',
+                transition: 'all 0.3s ease',
+                py: 2, px: { xs: 2, md: 4 }
             }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Box component="img" src="/logo.png" alt="JamesTronic"
-                        sx={{ width: 36, height: 36, borderRadius: 1 }}
-                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }}
-                    />
-                    <Box>
-                        <Typography sx={{ color: '#F8FAFC', fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-                            JamesTronic
-                        </Typography>
-                        <Typography sx={{ color: '#64748B', fontSize: '0.65rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                            TV Repair Centre
-                        </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, mx: 'auto' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#F8FAFC', cursor: 'pointer' }} onClick={() => navigate('/')}>
+                        JamesTronic
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        <Button
+                            variant="text"
+                            onClick={() => navigate('/my-tickets')}
+                            startIcon={<PersonIcon />}
+                            sx={{
+                                color: '#94A3B8', textTransform: 'none', fontWeight: 600,
+                                '&:hover': { color: '#F8FAFC', background: 'rgba(148,163,184,0.1)' }
+                            }}
+                        >
+                            My Tickets
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<PhoneCallIcon />}
+                            href="tel:+919885422901"
+                            sx={{
+                                color: '#10B981', borderColor: 'rgba(16,185,129,0.5)',
+                                textTransform: 'none', fontWeight: 600, borderRadius: 2,
+                                display: { xs: 'none', sm: 'flex' },
+                                '&:hover': { borderColor: '#10B981', background: 'rgba(16,185,129,0.1)' }
+                            }}
+                        >
+                            Call Us
+                        </Button>
+                        <IconButton
+                            href="tel:+919885422901"
+                            sx={{
+                                color: '#10B981', background: 'rgba(16,185,129,0.1)',
+                                display: { xs: 'flex', sm: 'none' }
+                            }}
+                        >
+                            <PhoneCallIcon />
+                        </IconButton>
                     </Box>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Button
-                        size="small"
-                        onClick={() => navigate('/staff-login')}
-                        sx={{
-                            color: '#64748B', fontSize: '0.75rem', textTransform: 'none',
-                            '&:hover': { color: '#94A3B8' }
-                        }}
-                    >
-                        Staff Login
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        href="tel:+919885422901"
-                        sx={{
-                            color: '#10B981', borderColor: 'rgba(16,185,129,0.3)', textTransform: 'none',
-                            fontSize: '0.8rem', fontWeight: 600, borderRadius: 2,
-                            '&:hover': { borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)' }
-                        }}
-                    >
-                        📞 Call Us
-                    </Button>
                 </Box>
             </Box>
 
