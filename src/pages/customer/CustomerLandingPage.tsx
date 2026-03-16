@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Typography, Container, Grid, Card, CardActionArea,
-    InputAdornment, TextField, IconButton
+    Box, Typography, Container, Card, CardActionArea,
+    IconButton, CircularProgress, Dialog, DialogContent, Button
 } from '@mui/material';
 import {
     LocationOn as LocationIcon,
     Search as SearchIcon,
-    ArrowBack as BackIcon,
     CheckCircle as CheckCircleIcon,
     Verified as VerifiedIcon,
     Star as StarIcon,
     Person as PersonIcon,
+    MyLocation as MyLocationIcon,
+    Close as CloseIcon,
+    GpsFixed as GpsIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
@@ -22,12 +24,171 @@ const SERVICES = [
     { id: 'screen_repair', label: 'Screen Repair', image: '/services/tv_screen_repair.png', route: '/book?service=repair' }
 ];
 
+const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+// Reverse-geocode coordinates to a human-readable address using Google Geocoding API
+async function reverseGeocode(lat: number, lng: number): Promise<{ area: string; city: string }> {
+    try {
+        const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_KEY}`
+        );
+        const data = await res.json();
+        if (data.status === 'OK' && data.results?.length) {
+            // Try to extract a meaningful locality
+            const components = data.results[0].address_components || [];
+            let area = '', city = '', state = '';
+            for (const c of components) {
+                if (c.types.includes('sublocality_level_1') || c.types.includes('sublocality')) area = c.long_name;
+                if (c.types.includes('locality')) city = c.long_name;
+                if (c.types.includes('administrative_area_level_1')) state = c.long_name;
+            }
+            // Fallback: use the formatted address
+            if (!area && !city) {
+                const formatted = data.results[0].formatted_address || '';
+                const parts = formatted.split(',').map((s: string) => s.trim());
+                return { area: parts[0] || 'Your Location', city: parts[1] || '' };
+            }
+            return { area: area || city, city: area ? `${city}, ${state}` : state };
+        }
+    } catch (e) {
+        console.error('Reverse geocode failed:', e);
+    }
+    return { area: 'Your Location', city: '' };
+}
+
 const CustomerLandingPage: React.FC = () => {
     const navigate = useNavigate();
+    const [locationArea, setLocationArea] = useState<string>('');
+    const [locationCity, setLocationCity] = useState<string>('');
+    const [locating, setLocating] = useState(false);
+    const [showLocationDialog, setShowLocationDialog] = useState(false);
+    const [locError, setLocError] = useState<string | null>(null);
+
+    // On mount, check if we previously saved a location
+    useEffect(() => {
+        const saved = localStorage.getItem('jt_customer_location');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setLocationArea(parsed.area || '');
+                setLocationCity(parsed.city || '');
+            } catch { /* ignore */ }
+        }
+    }, []);
+
+    const detectLocation = useCallback(async () => {
+        if (!navigator.geolocation) {
+            setLocError('Geolocation is not supported by your browser.');
+            return;
+        }
+        setLocating(true);
+        setLocError(null);
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                const result = await reverseGeocode(latitude, longitude);
+                setLocationArea(result.area);
+                setLocationCity(result.city);
+                localStorage.setItem('jt_customer_location', JSON.stringify(result));
+                setLocating(false);
+                setShowLocationDialog(false);
+            },
+            (err) => {
+                console.error('Geolocation error:', err);
+                if (err.code === 1) {
+                    setLocError('Location permission denied. Please enable location access in your browser settings and try again.');
+                } else if (err.code === 2) {
+                    setLocError('Unable to determine your location. Please check your GPS/network connection.');
+                } else {
+                    setLocError('Location request timed out. Please try again.');
+                }
+                setLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    }, []);
+
+    const handleLocationTap = () => {
+        setLocError(null);
+        setShowLocationDialog(true);
+    };
+
+    const displayArea = locationArea || 'Select Location';
+    const displayCity = locationCity || 'Tap to set your area';
 
     return (
         <Box sx={{ minHeight: '100dvh', background: '#FFFFFF', pb: 14, overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
             <PWAInstallPrompt />
+
+            {/* ════ LOCATION BOTTOM SHEET DIALOG ════ */}
+            <Dialog
+                open={showLocationDialog}
+                onClose={() => setShowLocationDialog(false)}
+                fullWidth maxWidth="xs"
+                PaperProps={{
+                    sx: {
+                        position: 'fixed', bottom: 0, m: 0, borderRadius: '24px 24px 0 0',
+                        background: '#FFF', maxHeight: '60dvh', width: '100%'
+                    }
+                }}
+            >
+                <DialogContent sx={{ p: 3, pt: 2 }}>
+                    {/* Drag handle */}
+                    <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 3 }} />
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: '#111827' }}>
+                            Set Your Location
+                        </Typography>
+                        <IconButton onClick={() => setShowLocationDialog(false)} size="small" sx={{ color: '#6B7280' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+
+                    {/* Use Current Location Button */}
+                    <Button
+                        fullWidth
+                        onClick={detectLocation}
+                        disabled={locating}
+                        startIcon={locating ? <CircularProgress size={20} sx={{ color: '#5B4CF2' }} /> : <MyLocationIcon />}
+                        sx={{
+                            py: 2, background: '#F3F0FF', color: '#5B4CF2', fontWeight: 700, textTransform: 'none',
+                            fontSize: '1rem', borderRadius: 3, mb: 2, border: '1.5px solid #E0D4FC',
+                            '&:hover': { background: '#EDE9FE' },
+                            '&.Mui-disabled': { background: '#F9FAFB', color: '#9CA3AF', borderColor: '#E5E7EB' }
+                        }}
+                    >
+                        {locating ? 'Detecting your location...' : 'Use Current Location'}
+                    </Button>
+
+                    {locError && (
+                        <Box sx={{ background: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: 3, p: 2, mb: 2 }}>
+                            <Typography sx={{ color: '#DC2626', fontSize: '0.85rem', fontWeight: 500 }}>
+                                {locError}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {/* Current detected location */}
+                    {locationArea && (
+                        <Box sx={{ 
+                            background: '#F0FDF4', border: '1px solid #D1FAE5', borderRadius: 3, p: 2.5, 
+                            display: 'flex', alignItems: 'center', gap: 2 
+                        }}>
+                            <GpsIcon sx={{ color: '#10B981', fontSize: 28 }} />
+                            <Box>
+                                <Typography sx={{ fontWeight: 700, color: '#065F46', fontSize: '1rem' }}>{locationArea}</Typography>
+                                {locationCity && <Typography sx={{ color: '#047857', fontSize: '0.8rem' }}>{locationCity}</Typography>}
+                            </Box>
+                        </Box>
+                    )}
+
+                    <Typography sx={{ mt: 3, color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center' }}>
+                        We use your location to check service availability in your area.
+                    </Typography>
+                </DialogContent>
+            </Dialog>
             
             {/* ════ TOP PURPLE BANNER AREA ════ */}
             <Box sx={{ background: '#5B4CF2', pt: { xs: 3, sm: 4 }, pb: { xs: 5, sm: 6 }, px: { xs: 2.5, sm: 4 }, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, position: 'relative', overflow: 'hidden' }}>
@@ -37,18 +198,28 @@ const CustomerLandingPage: React.FC = () => {
                 }} />
                 
                 <Box sx={{ maxWidth: 600, mx: 'auto', position: 'relative', zIndex: 1 }}>
-                    {/* Header Row: Back, Location, Profile */}
+                    {/* Header Row: Location, Profile */}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Box sx={{ background: 'rgba(255,255,255,0.2)', p: 0.8, borderRadius: '50%', display: 'flex' }}>
+                        <Box 
+                            onClick={handleLocationTap}
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', '&:active': { opacity: 0.7 } }}
+                        >
+                            <Box sx={{ 
+                                background: 'rgba(255,255,255,0.2)', p: 0.8, borderRadius: '50%', display: 'flex',
+                                animation: !locationArea ? 'pulse 2s ease-in-out infinite' : 'none',
+                                '@keyframes pulse': { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.12)' } }
+                            }}>
                                 <LocationIcon sx={{ color: '#FFF', fontSize: 26 }} />
                             </Box>
                             <Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#FFF' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.3px' }}>Current Location</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.3px' }}>
+                                        {displayArea}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: '0.9rem', ml: 0.5 }}>▾</Typography>
                                 </Box>
                                 <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
-                                    Hyderabad, Telangana
+                                    {displayCity}
                                 </Typography>
                             </Box>
                         </Box>
@@ -198,7 +369,7 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             </Container>
 
-            {/* ════ BOTTOM NAVIGATION BAR (iOS / Urban Company styling) ════ */}
+            {/* ════ BOTTOM NAVIGATION BAR ════ */}
             <Box sx={{ 
                 position: 'fixed', bottom: 0, left: 0, right: 0, 
                 background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
