@@ -1,8 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Box, Typography, Button, TextField, Container, Card, CardContent,
-    InputAdornment, IconButton, FormControl, InputLabel, Select, MenuItem,
-    RadioGroup, FormControlLabel, Radio, FormLabel, CircularProgress, Chip, Alert
+    InputAdornment, IconButton, CircularProgress, Chip, Alert, Dialog, DialogContent
 } from '@mui/material';
 import {
     ArrowBack as BackIcon,
@@ -11,6 +10,7 @@ import {
     PhoneAndroid as PhoneIcon,
     Tv as TvIcon,
     LocationOn as LocationIcon,
+    Edit as EditIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -29,6 +29,9 @@ const CustomerBookingPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<{ ticketNumber: string } | null>(null);
 
+    // Brand picker dialog
+    const [showBrandPicker, setShowBrandPicker] = useState(false);
+
     // Form Data
     const [form, setForm] = useState({
         mobile: initialMobile,
@@ -44,6 +47,37 @@ const CustomerBookingPage: React.FC = () => {
     });
 
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+    // ═══ AUTO-FILL LOCATION from landing page ═══
+    useEffect(() => {
+        // Read location already set by the user on the landing page
+        const savedLocation = localStorage.getItem('jt_customer_location');
+        const selectedAddrId = localStorage.getItem('jt_selected_address_id');
+        const savedAddresses = localStorage.getItem('jt_saved_addresses');
+
+        if (selectedAddrId && savedAddresses) {
+            // User selected a saved address — use its full address
+            try {
+                const addrs = JSON.parse(savedAddresses);
+                const selected = addrs.find((a: any) => a.id === selectedAddrId);
+                if (selected?.fullAddress) {
+                    setForm(prev => ({ ...prev, address: selected.fullAddress }));
+                    return;
+                }
+            } catch { /* ignore */ }
+        }
+
+        if (savedLocation) {
+            try {
+                const parsed = JSON.parse(savedLocation);
+                // Use the city/fullAddress as the booking address
+                const addr = parsed.city || parsed.area || '';
+                if (addr) {
+                    setForm(prev => ({ ...prev, address: addr }));
+                }
+            } catch { /* ignore */ }
+        }
+    }, []);
 
     const handlePlaceChanged = () => {
         const place = autocompleteRef.current?.getPlace();
@@ -62,7 +96,6 @@ const CustomerBookingPage: React.FC = () => {
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
                 const { latitude, longitude } = pos.coords;
-                // Reverse geocode
                 try {
                     const geocoder = new google.maps.Geocoder();
                     const result = await geocoder.geocode({ location: { lat: latitude, lng: longitude } });
@@ -201,6 +234,52 @@ const CustomerBookingPage: React.FC = () => {
                 </Typography>
             </Box>
 
+            {/* ═══ BRAND PICKER DIALOG (replaces native iOS select) ═══ */}
+            <Dialog
+                open={showBrandPicker}
+                onClose={() => setShowBrandPicker(false)}
+                fullWidth maxWidth="xs"
+                PaperProps={{
+                    sx: {
+                        position: 'fixed', bottom: 0, m: 0, borderRadius: '24px 24px 0 0',
+                        background: '#FFF', maxHeight: '55dvh', width: '100%'
+                    }
+                }}
+            >
+                <DialogContent sx={{ p: 3, pt: 2 }}>
+                    <Box sx={{ width: 40, height: 5, borderRadius: 3, background: '#E5E7EB', mx: 'auto', mb: 2 }} />
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 3 }}>
+                        Select TV Brand
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+                        {TV_BRANDS.map(brand => {
+                            const isSelected = form.tvBrand === brand;
+                            return (
+                                <Box
+                                    key={brand}
+                                    onClick={() => { updateField('tvBrand', brand); setShowBrandPicker(false); }}
+                                    sx={{
+                                        py: 2, px: 1.5, borderRadius: 3, cursor: 'pointer',
+                                        textAlign: 'center', transition: 'all 0.2s',
+                                        border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                                        background: isSelected ? '#F3F0FF' : '#FFF',
+                                        '&:active': { transform: 'scale(0.97)' },
+                                        '&:hover': { borderColor: '#D1D5DB', background: '#FAFAFA' }
+                                    }}
+                                >
+                                    <Typography sx={{
+                                        fontWeight: isSelected ? 800 : 600, fontSize: '0.85rem',
+                                        color: isSelected ? '#5B4CF2' : '#374151'
+                                    }}>
+                                        {brand}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
             <Container maxWidth="sm" sx={{ py: 4, px: { xs: 2.5, sm: 3 } }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
@@ -264,22 +343,52 @@ const CustomerBookingPage: React.FC = () => {
                     {step === 1 && (
                         <>
                             <Box sx={{ mb: 3 }}>
-                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Service Type</Typography>
-                                <RadioGroup row value={form.serviceType} onChange={e => updateField('serviceType', e.target.value)}>
-                                    <FormControlLabel value="repair" control={<Radio sx={{ color: '#D1D5DB', '&.Mui-checked': { color: '#5B4CF2' } }} />} label={<Typography sx={{ color: '#111827', fontSize: '0.9rem', fontWeight: 500 }}>TV Repair</Typography>} />
-                                    <FormControlLabel value="installation" control={<Radio sx={{ color: '#D1D5DB', '&.Mui-checked': { color: '#5B4CF2' } }} />} label={<Typography sx={{ color: '#111827', fontSize: '0.9rem', fontWeight: 500 }}>Installation</Typography>} />
-                                    <FormControlLabel value="uninstallation" control={<Radio sx={{ color: '#D1D5DB', '&.Mui-checked': { color: '#5B4CF2' } }} />} label={<Typography sx={{ color: '#111827', fontSize: '0.9rem', fontWeight: 500 }}>Unmount</Typography>} />
-                                </RadioGroup>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Service Type</Typography>
+                                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                                    {[
+                                        { value: 'repair', label: 'TV Repair', emoji: '🔧' },
+                                        { value: 'installation', label: 'Installation', emoji: '📺' },
+                                        { value: 'uninstallation', label: 'Unmount', emoji: '🔩' },
+                                    ].map(option => {
+                                        const isActive = form.serviceType === option.value;
+                                        return (
+                                            <Box
+                                                key={option.value}
+                                                onClick={() => updateField('serviceType', option.value)}
+                                                sx={{
+                                                    px: 2.5, py: 1.5, borderRadius: 3, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: 1, transition: 'all 0.2s',
+                                                    border: isActive ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                                                    background: isActive ? '#F3F0FF' : '#FFF',
+                                                    '&:active': { transform: 'scale(0.97)' }
+                                                }}
+                                            >
+                                                <Typography sx={{ fontSize: '1.1rem' }}>{option.emoji}</Typography>
+                                                <Typography sx={{ fontWeight: isActive ? 800 : 600, fontSize: '0.85rem', color: isActive ? '#5B4CF2' : '#374151' }}>
+                                                    {option.label}
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
                             </Box>
 
                             <Box sx={{ mb: 3 }}>
                                 <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>TV Brand *</Typography>
-                                <FormControl fullWidth sx={lightSelectStyle}>
-                                    <Select displayEmpty value={form.tvBrand} onChange={e => updateField('tvBrand', e.target.value)}>
-                                        <MenuItem value="" disabled>Select Brand</MenuItem>
-                                        {TV_BRANDS.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
-                                    </Select>
-                                </FormControl>
+                                <Box
+                                    onClick={() => setShowBrandPicker(true)}
+                                    sx={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        py: 1.8, px: 2, borderRadius: 2.5, cursor: 'pointer',
+                                        background: '#F9FAFB', border: form.tvBrand ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                                        transition: 'all 0.2s', '&:active': { background: '#F3F4F6' }
+                                    }}
+                                >
+                                    <Typography sx={{ color: form.tvBrand ? '#111827' : '#9CA3AF', fontWeight: form.tvBrand ? 700 : 400, fontSize: '1rem' }}>
+                                        {form.tvBrand || 'Tap to select brand'}
+                                    </Typography>
+                                    <Typography sx={{ color: '#9CA3AF', fontSize: '0.9rem' }}>▾</Typography>
+                                </Box>
                             </Box>
 
                             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -304,9 +413,29 @@ const CustomerBookingPage: React.FC = () => {
                         </>
                     )}
 
-                    {/* ═══ Step 2: Location ═══ */}
+                    {/* ═══ Step 2: Location (Auto-filled!) ═══ */}
                     {step === 2 && (
                         <>
+                            {/* Show pre-filled location if available */}
+                            {form.address && (
+                                <Box sx={{ 
+                                    background: '#F0FDF4', border: '1.5px solid #D1FAE5', borderRadius: 3, 
+                                    p: 2.5, mb: 3, display: 'flex', alignItems: 'center', gap: 2
+                                }}>
+                                    <Box sx={{ p: 1, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex' }}>
+                                        <LocationIcon sx={{ fontSize: 22 }} />
+                                    </Box>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography sx={{ fontWeight: 700, color: '#065F46', fontSize: '0.8rem', mb: 0.3 }}>
+                                            📍 Auto-filled from your location
+                                        </Typography>
+                                        <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                            {form.address}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            )}
+
                             <Button
                                 fullWidth variant="outlined" startIcon={<MyLocationIcon />} onClick={handleGetCurrentLocation}
                                 sx={{
@@ -315,11 +444,11 @@ const CustomerBookingPage: React.FC = () => {
                                     '&:hover': { borderColor: '#5B4CF2', backgroundColor: 'rgba(91,76,242,0.05)' }
                                 }}
                             >
-                                Use My Current Location
+                                {form.address ? 'Refresh Location via GPS' : 'Use My Current Location'}
                             </Button>
 
                             <Typography sx={{ color: '#9CA3AF', textAlign: 'center', fontSize: '0.85rem', mb: 3, fontWeight: 500 }}>
-                                — OR TYPE MANUALLY —
+                                — OR EDIT / TYPE MANUALLY —
                             </Typography>
 
                             <Box sx={{ mb: 1 }}>
@@ -397,15 +526,6 @@ const CustomerBookingPage: React.FC = () => {
 
 // Clean Light Theme Inputs
 const lightTextFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-        backgroundColor: '#F9FAFB', borderRadius: 2.5, color: '#111827', fontSize: '1rem',
-        '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
-        '&:hover fieldset': { borderColor: '#D1D5DB' },
-        '&.Mui-focused fieldset': { borderColor: '#5B4CF2' },
-    },
-};
-
-const lightSelectStyle = {
     '& .MuiOutlinedInput-root': {
         backgroundColor: '#F9FAFB', borderRadius: 2.5, color: '#111827', fontSize: '1rem',
         '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
