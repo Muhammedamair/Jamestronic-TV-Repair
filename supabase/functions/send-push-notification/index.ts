@@ -80,7 +80,7 @@ Deno.serve(async (req: Request) => {
 
     // Resolve admin IDs if needed
     if (target_admin) {
-      const { data: admins } = await supabase.from("profiles").select("id").eq("role", "ADMIN");
+      const { data: admins } = await supabase.from("user_roles").select("id").eq("role", "ADMIN");
       if (admins && admins.length > 0) {
         const adminIds = admins.map(a => a.id).filter(Boolean);
         finalUserIds = [...finalUserIds, ...adminIds];

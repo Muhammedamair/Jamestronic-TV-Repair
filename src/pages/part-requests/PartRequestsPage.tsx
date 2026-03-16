@@ -177,7 +177,12 @@ const PartRequestsPage: React.FC = () => {
                     request_id: insertedData.id,
                     part_name: formData.part_name,
                     tv_brand: formData.tv_brand,
-                    target_dealer_ids: broadcastAll ? null : selectedDealerIds
+                    target_dealer_ids: broadcastAll ? null : selectedDealerIds,
+                    event_type: 'PART_REQUEST_BROADCAST',
+                    source_id: insertedData.id,
+                    source_table: 'part_requests',
+                    target_role: 'DEALER',
+                    target_user_name: 'All Dealers'
                 }
             }).then(res => {
                 console.log('Push response:', res.data);
@@ -213,7 +218,12 @@ const PartRequestsPage: React.FC = () => {
                     request_id: reviewRequest.id,
                     part_name: reviewRequest.part_name,
                     tv_brand: reviewRequest.tv_brand,
-                    target_dealer_ids: broadcastAll ? null : selectedDealerIds
+                    target_dealer_ids: broadcastAll ? null : selectedDealerIds,
+                    event_type: 'PART_REQUEST_BROADCAST',
+                    source_id: reviewRequest.id,
+                    source_table: 'part_requests',
+                    target_role: 'DEALER',
+                    target_user_name: 'All Dealers'
                 }
             }).catch(console.error);
 
@@ -294,6 +304,11 @@ const PartRequestsPage: React.FC = () => {
                             body: `Pickup from ${acceptedBid?.dealer?.name || 'dealer'}. Open to accept.`,
                             url: '/transport',
                             target_user_ids: [transporterUserId],
+                            event_type: 'TRANSPORT_ASSIGNED',
+                            source_id: transportPartRequestId,
+                            source_table: 'transport_jobs',
+                            target_role: 'TRANSPORTER',
+                            target_user_name: transporters.find(t => t.id === selectedTransporterId)?.name || 'Transporter'
                         }
                     });
                     console.log('✅ Transporter push notification result:', pushResult.data);

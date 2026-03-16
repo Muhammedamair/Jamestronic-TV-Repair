@@ -187,7 +187,12 @@ const TicketDetailPage: React.FC = () => {
                             title: `📝 Note from Admin on Ticket #${ticket.ticket_number}`,
                             body: `Admin: "${noteContent.substring(0, 50)}${noteContent.length > 50 ? '...' : ''}"`,
                             url: `/tech/${id}`,
-                            target_user_ids: [assignedTech.user_id]
+                            target_user_ids: [assignedTech.user_id],
+                            event_type: 'ADMIN_NOTE',
+                            source_id: id,
+                            source_table: 'ticket_notes',
+                            target_role: 'TECHNICIAN',
+                            target_user_name: assignedTech.name || 'Technician'
                         }
                     }).catch(console.error);
                 }
@@ -390,9 +395,14 @@ const TicketDetailPage: React.FC = () => {
                                                     title: "🔧 New Ticket Assigned",
                                                     body: `You have been assigned to Ticket #${ticket.ticket_number || id.slice(0, 8)}. Tap to view details.`,
                                                     url: "/tech",
-                                                    target_user_ids: [assignedTech.user_id]
+                                                    target_user_ids: [assignedTech.user_id],
+                                                    event_type: 'TICKET_ASSIGNED',
+                                                    source_id: id,
+                                                    source_table: 'tickets',
+                                                    target_role: 'TECHNICIAN',
+                                                    target_user_name: assignedTech.name || 'Technician'
                                                 }
-                                            }).then(res => console.log("Push Notification Result:", res.data, res.error)).catch(console.error);
+                                            }).catch(console.error);
                                         }
                                     }
                                     setTicket(prev => prev ? { ...prev, assigned_technician_id: techId || null } : prev);

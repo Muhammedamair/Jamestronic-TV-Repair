@@ -627,7 +627,12 @@ const TransporterDashboardPage: React.FC = () => {
                                                                             title: '📦 Your Part Has Arrived!',
                                                                             body: `${pr.part_name || 'Your requested part'} for Ticket #${ticket.ticket_number || ''} is now at the service centre. Collect it and complete the repair!`,
                                                                             url: '/tech',
-                                                                            target_user_ids: [tech.user_id]
+                                                                            target_user_ids: [tech.user_id],
+                                                                            event_type: 'PART_DELIVERED',
+                                                                            source_id: job.part_request_id,
+                                                                            source_table: 'transport_jobs',
+                                                                            target_role: 'TECHNICIAN',
+                                                                            target_user_name: tech.name || 'Technician'
                                                                         }
                                                                     });
                                                                     console.log(`✅ Push sent to Tech ${tech.name} for part delivery`);
