@@ -28,7 +28,7 @@ import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 const SERVICES = [
     { id: 'checkup', label: 'TV Check-up', image: '/services/tv_checkup.png', route: '/book?service=repair' },
     { id: 'installation', label: 'TV Installation', image: '/services/tv_installation.png', route: '/book?service=installation' },
-    { id: 'uninstallation', label: 'Wall Unmount', image: '/services/tv_uninstallation.png', route: '/book?service=uninstallation' },
+    { id: 'uninstallation', label: 'TV Uninstallation', image: '/services/tv_uninstallation.png', route: '/book?service=uninstallation' },
     { id: 'screen_repair', label: 'Screen Repair', image: '/services/tv_screen_repair.png', route: '/book?service=repair' }
 ];
 
