@@ -60,19 +60,23 @@ const MainLayout: React.FC = () => {
             const { count: transportCount } = await supabase
                 .from('transport_jobs')
                 .select('*', { count: 'exact', head: true })
-                .not('status', 'in', '("DELIVERED","CANCELLED")');
+                .neq('status', 'DELIVERED')
+                .neq('status', 'CANCELLED');
 
             // 3. Tech Network: Not COMPLETED/CANCELLED
             const { count: techCount } = await supabase
                 .from('ticket_technician_log')
                 .select('*', { count: 'exact', head: true })
-                .not('status', 'in', '("COMPLETED","CANCELLED")');
+                .neq('status', 'COMPLETED')
+                .neq('status', 'CANCELLED');
 
             // 4. Tickets: Not CLOSED/DELIVERED/CANCELLED
             const { count: ticketCount } = await supabase
                 .from('tickets')
                 .select('*', { count: 'exact', head: true })
-                .not('status', 'in', '("CLOSED","DELIVERED","CANCELLED")');
+                .neq('status', 'CLOSED')
+                .neq('status', 'DELIVERED')
+                .neq('status', 'CANCELLED');
 
             setBadgeCounts({
                 procurement: procurementCount || 0,
