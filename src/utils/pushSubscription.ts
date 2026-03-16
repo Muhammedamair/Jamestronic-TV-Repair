@@ -24,8 +24,12 @@ export async function subscribeToPush(): Promise<boolean> {
 
         // Request notification permission
         const permission = await Notification.requestPermission();
+        if (permission === 'denied') {
+            alert('Notifications are currently blocked. Please tap the lock icon in the address bar, open Site Settings, and Allow Notifications.');
+            return false;
+        }
         if (permission !== 'granted') {
-            console.warn('Notification permission denied.');
+            alert('Notification permission could not be granted.');
             return false;
         }
 
@@ -36,11 +40,17 @@ export async function subscribeToPush(): Promise<boolean> {
         let subscription = await registration.pushManager.getSubscription();
 
         if (!subscription) {
-            // Subscribe to push
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource
-            });
+            try {
+                // Subscribe to push
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource
+                });
+            } catch (subErr: any) {
+                alert('Push manager subscription failed: ' + subErr.message);
+                console.error('PushManager.subscribe error:', subErr);
+                return false;
+            }
         }
 
         // Extract subscription data
@@ -70,8 +80,10 @@ export async function subscribeToPush(): Promise<boolean> {
         }
 
         console.log('✅ Push notification subscription saved successfully.');
+        alert('Push Notifications enabled successfully!');
         return true;
-    } catch (err) {
+    } catch (err: any) {
+        alert('Push subscription error: ' + (err.message || String(err)));
         console.error('Push subscription error:', err);
         return false;
     }
