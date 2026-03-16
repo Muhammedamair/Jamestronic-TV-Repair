@@ -149,7 +149,7 @@ const TechTicketDetailPage: React.FC = () => {
                 body: {
                     title: `📝 Note from Tech on Ticket #${ticket.ticket_number}`,
                     body: `Tech: "${noteContent.substring(0, 50)}${noteContent.length > 50 ? '...' : ''}"`,
-                    url: `/tickets/${id}`,
+                    url: `/admin/tickets/${id}`,
                     target_admin: true,
                     event_type: 'TECH_NOTE',
                     source_id: id,

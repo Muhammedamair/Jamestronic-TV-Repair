@@ -20,15 +20,15 @@ const DRAWER_WIDTH = 260;
 const DRAWER_COLLAPSED = 72;
 
 const navItems = [
-    { label: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { label: 'Tickets', icon: <TicketIcon />, path: '/tickets' },
-    { label: 'Customers', icon: <PeopleIcon />, path: '/customers' },
-    { label: 'Dealer Network', icon: <StoreIcon />, path: '/dealers' },
-    { label: 'Tech Network', icon: <TechIcon />, path: '/technicians' },
-    { label: 'Transporters', icon: <TransportIcon />, path: '/transporters' },
-    { label: 'Procurement', icon: <BuildIcon />, path: '/parts' },
-    { label: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
-    { label: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+    { label: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
+    { label: 'Tickets', icon: <TicketIcon />, path: '/admin/tickets' },
+    { label: 'Customers', icon: <PeopleIcon />, path: '/admin/customers' },
+    { label: 'Dealer Network', icon: <StoreIcon />, path: '/admin/dealers' },
+    { label: 'Tech Network', icon: <TechIcon />, path: '/admin/technicians' },
+    { label: 'Transporters', icon: <TransportIcon />, path: '/admin/transporters' },
+    { label: 'Procurement', icon: <BuildIcon />, path: '/admin/parts' },
+    { label: 'Notifications', icon: <NotificationsIcon />, path: '/admin/notifications' },
+    { label: 'Analytics', icon: <AnalyticsIcon />, path: '/admin/analytics' },
 ];
 
 const MainLayout: React.FC = () => {
@@ -131,7 +131,7 @@ const MainLayout: React.FC = () => {
             {/* Quick Create Button */}
             <Box sx={{ px: 1.5, py: 1.5 }}>
                 <ListItemButton
-                    onClick={() => { navigate('/tickets/new'); isMobile && setDrawerOpen(false); }}
+                    onClick={() => { navigate('/admin/tickets/new'); isMobile && setDrawerOpen(false); }}
                     sx={{
                         borderRadius: 2.5,
                         background: 'linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)',
@@ -153,7 +153,7 @@ const MainLayout: React.FC = () => {
             <List sx={{ px: 1, flex: 1 }}>
                 {navItems.map(item => {
                     const isActive = location.pathname === item.path ||
-                        (item.path !== '/' && location.pathname.startsWith(item.path));
+                        (item.path !== '/admin' && location.pathname.startsWith(item.path));
                     return (
                         <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
                             <Tooltip title={drawerOpen ? '' : item.label} placement="right">

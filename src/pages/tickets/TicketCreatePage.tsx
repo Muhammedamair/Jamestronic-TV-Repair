@@ -509,7 +509,7 @@ const TicketCreatePage: React.FC = () => {
                         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                             <Button
                                 variant="outlined"
-                                onClick={() => navigate('/tickets')}
+                                onClick={() => navigate('/admin/tickets')}
                                 sx={{
                                     borderColor: 'rgba(148,163,184,0.2)',
                                     color: '#94A3B8',

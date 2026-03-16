@@ -57,7 +57,7 @@ const CustomerDetailPage: React.FC = () => {
                     >
                         Request Review
                     </Button>
-                    <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/tickets/new')} size="small">
+                    <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/tickets/new')} size="small">
                         New Ticket
                     </Button>
                 </Box>

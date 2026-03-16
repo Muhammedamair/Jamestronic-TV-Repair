@@ -176,7 +176,7 @@ const TicketListPage: React.FC = () => {
                 <Button 
                     variant="contained" 
                     startIcon={<AddIcon />}
-                    onClick={() => navigate('/tickets/new')}
+                    onClick={() => navigate('/admin/tickets/new')}
                     sx={{
                         borderRadius: 2, px: 3, py: 1,
                         background: 'linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)',

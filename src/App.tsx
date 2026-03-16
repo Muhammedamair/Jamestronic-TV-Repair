@@ -25,6 +25,9 @@ import TransporterDashboardPage from './pages/transporter/TransporterDashboardPa
 import GoogleMapsProvider from './components/GoogleMapsProvider';
 import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationLogsPage from './pages/NotificationLogsPage';
+import CustomerLandingPage from './pages/customer/CustomerLandingPage';
+import CustomerBookingPage from './pages/customer/CustomerBookingPage';
+import CustomerTrackingPage from './pages/customer/CustomerTrackingPage';
 import { Box, CircularProgress } from '@mui/material';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ children, allowedRoles }) => {
@@ -34,24 +37,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: strin
       <CircularProgress sx={{ color: '#6C63FF' }} />
     </Box>
   );
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/staff-login" replace />;
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     if (role === 'DEALER') return <Navigate to="/dealer" replace />;
     if (role === 'TECHNICIAN') return <Navigate to="/tech" replace />;
     if (role === 'DRIVER') return <Navigate to="/transport" replace />;
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin" replace />;
   }
   return <>{children}</>;
 };
 
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const StaffLoginRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, role, loading } = useAuth();
   if (loading) return null;
   if (user) {
     if (role === 'DEALER') return <Navigate to="/dealer" replace />;
     if (role === 'TECHNICIAN') return <Navigate to="/tech" replace />;
     if (role === 'DRIVER') return <Navigate to="/transport" replace />;
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin" replace />;
   }
   return <>{children}</>;
 };
@@ -63,10 +66,19 @@ const App: React.FC = () => (
       <GoogleMapsProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+            {/* ═══ Public Customer Routes ═══ */}
+            <Route path="/" element={<CustomerLandingPage />} />
+            <Route path="/book" element={<CustomerBookingPage />} />
+            <Route path="/track" element={<CustomerTrackingPage />} />
+            <Route path="/track/:ticketNumber" element={<CustomerTrackingPage />} />
+
+            {/* ═══ Staff Login ═══ */}
+            <Route path="/staff-login" element={<StaffLoginRoute><LoginPage /></StaffLoginRoute>} />
+            {/* Backward compatibility: old /login redirects to /staff-login */}
+            <Route path="/login" element={<Navigate to="/staff-login" replace />} />
             
-            {/* Admin Routes */}
-            <Route path="/" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout /></ProtectedRoute>}>
+            {/* ═══ Admin Routes ═══ */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout /></ProtectedRoute>}>
               <Route index element={<DashboardPage />} />
               <Route path="tickets" element={<TicketListPage />} />
               <Route path="tickets/new" element={<TicketCreatePage />} />
@@ -81,18 +93,18 @@ const App: React.FC = () => (
               <Route path="notifications" element={<NotificationLogsPage />} />
             </Route>
 
-            {/* Dealer Routes */}
+            {/* ═══ Dealer Routes ═══ */}
             <Route path="/dealer" element={<ProtectedRoute allowedRoles={['DEALER']}><DealerLayout /></ProtectedRoute>}>
               <Route index element={<DealerDashboardPage />} />
             </Route>
 
-            {/* Technician Routes */}
+            {/* ═══ Technician Routes ═══ */}
             <Route path="/tech" element={<ProtectedRoute allowedRoles={['TECHNICIAN']}><TechnicianLayout /></ProtectedRoute>}>
               <Route index element={<TechDashboardPage />} />
               <Route path=":id" element={<TechTicketDetailPage />} />
             </Route>
 
-            {/* Transporter Routes */}
+            {/* ═══ Transporter Routes ═══ */}
             <Route path="/transport" element={<ProtectedRoute allowedRoles={['DRIVER']}><TransporterLayout /></ProtectedRoute>}>
               <Route index element={<TransporterDashboardPage />} />
             </Route>

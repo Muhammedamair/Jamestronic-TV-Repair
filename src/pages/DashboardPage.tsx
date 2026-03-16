@@ -168,7 +168,7 @@ const DashboardPage: React.FC = () => {
                     </Typography>
                 </Box>
                 <IconButton
-                    onClick={() => navigate('/tickets/new')}
+                    onClick={() => navigate('/admin/tickets/new')}
                     sx={{
                         background: 'linear-gradient(135deg, #6C63FF, #8B85FF)',
                         color: '#fff',
@@ -321,9 +321,9 @@ const DashboardPage: React.FC = () => {
                                 <Chip
                                     label="View All"
                                     size="small"
-                                    onClick={() => navigate('/tickets')}
+                                    onClick={() => navigate('/admin/tickets')}
                                     deleteIcon={<ArrowForward sx={{ fontSize: 14 }} />}
-                                    onDelete={() => navigate('/tickets')}
+                                    onDelete={() => navigate('/admin/tickets')}
                                     sx={{
                                         backgroundColor: 'rgba(108,99,255,0.1)',
                                         color: '#6C63FF',

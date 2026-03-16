@@ -260,7 +260,7 @@ const TicketDetailPage: React.FC = () => {
     return (
         <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <IconButton onClick={() => navigate('/tickets')} sx={{ color: '#94A3B8' }}><ArrowBack /></IconButton>
+                <IconButton onClick={() => navigate('/admin/tickets')} sx={{ color: '#94A3B8' }}><ArrowBack /></IconButton>
                 <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                         <Typography variant="h5" fontWeight={700}>{ticket.ticket_number}</Typography>
