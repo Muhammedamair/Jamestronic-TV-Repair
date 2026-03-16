@@ -109,64 +109,22 @@ const CustomerBookingPage: React.FC = () => {
         setSubmitting(true);
         setError(null);
         try {
-            // 1. Find or create customer
-            const { data: existingCustomer } = await supabase
-                .from('customers')
-                .select('id')
-                .eq('mobile', form.mobile)
-                .maybeSingle();
+            // 1. Call secure RPC to handle customer and ticket creation atomically
+            const { data: ticketNumber, error: rpcErr } = await supabase.rpc('create_customer_booking', {
+                p_name: form.customerName,
+                p_mobile: form.mobile,
+                p_address: form.address,
+                p_lat: form.lat || null,
+                p_lng: form.lng || null,
+                p_tv_brand: form.tvBrand,
+                p_tv_model: form.tvModel || null,
+                p_tv_size: form.tvSize || null,
+                p_issue_description: form.issueDescription,
+                p_service_type: form.serviceType === 'installation' ? 'INSTALLATION' : 'REPAIR'
+            });
 
-            let customerId = existingCustomer?.id;
-
-            if (!customerId) {
-                const { data: newCustomer, error: custErr } = await supabase
-                    .from('customers')
-                    .insert({
-                        name: form.customerName,
-                        mobile: form.mobile,
-                        address: form.address,
-                    })
-                    .select('id')
-                    .single();
-
-                if (custErr) throw custErr;
-                customerId = newCustomer.id;
-            }
-
-            // 2. Generate ticket number
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
-            
-            // Get next sequence
-            const { count } = await supabase
-                .from('tickets')
-                .select('*', { count: 'exact', head: true })
-                .like('ticket_number', `JT-${dateStr}%`);
-            
-            const seq = String((count || 0) + 1).padStart(3, '0');
-            const ticketNumber = `JT-${dateStr}${seq}`;
-
-            // 3. Create ticket
-            const { error: ticketErr } = await supabase
-                .from('tickets')
-                .insert({
-                    ticket_number: ticketNumber,
-                    customer_id: customerId,
-                    customer_name: form.customerName,
-                    customer_mobile: form.mobile,
-                    customer_address: form.address,
-                    customer_lat: form.lat || null,
-                    customer_lng: form.lng || null,
-                    tv_brand: form.tvBrand,
-                    tv_model: form.tvModel || null,
-                    tv_size: form.tvSize || null,
-                    issue_description: form.issueDescription,
-                    service_type: form.serviceType === 'installation' ? 'INSTALLATION' : 'REPAIR',
-                    status: 'OPEN',
-                    source: 'CUSTOMER_PORTAL',
-                });
-
-            if (ticketErr) throw ticketErr;
+            if (rpcErr) throw rpcErr;
+            if (!ticketNumber) throw new Error('Failed to generate ticket number');
 
             // 4. Notify admin via push
             supabase.functions.invoke('send-push-notification', {

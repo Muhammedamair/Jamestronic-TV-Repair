@@ -63,15 +63,13 @@ const CustomerTrackingPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchInput, setSearchInput] = useState('');
 
+    const [isPolling, setIsPolling] = useState(false);
+
     const fetchTicket = async (ticketNum: string) => {
-        setLoading(true);
-        setError(null);
         try {
-            const { data, error: fetchError } = await supabase
-                .from('tickets')
-                .select('*')
-                .eq('ticket_number', ticketNum)
-                .maybeSingle();
+            const { data, error: fetchError } = await supabase.rpc('get_ticket_tracking', {
+                p_ticket_number: ticketNum
+            });
 
             if (fetchError) throw fetchError;
             if (!data) {
@@ -79,9 +77,12 @@ const CustomerTrackingPage: React.FC = () => {
                 setTicket(null);
             } else {
                 setTicket(data);
+                setError(null);
+                setIsPolling(true); // Start polling once we successfully find it
             }
         } catch (err: any) {
             setError(err.message || 'Failed to load ticket details');
+            setIsPolling(false);
         } finally {
             setLoading(false);
         }
@@ -89,25 +90,24 @@ const CustomerTrackingPage: React.FC = () => {
 
     useEffect(() => {
         if (ticketNumber) {
+            setLoading(true);
             fetchTicket(ticketNumber);
-
-            // Real-time subscription
-            const channel = supabase.channel(`track-${ticketNumber}`)
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'tickets',
-                    filter: `ticket_number=eq.${ticketNumber}`,
-                }, (payload) => {
-                    setTicket(payload.new);
-                })
-                .subscribe();
-
-            return () => { supabase.removeChannel(channel); };
         } else {
             setLoading(false);
+            setIsPolling(false);
         }
     }, [ticketNumber]);
+
+    // Secure Polling mechanism (replaces Realtime to prevent RLS data leaks)
+    useEffect(() => {
+        if (!isPolling || !ticketNumber) return;
+
+        const intervalId = setInterval(() => {
+            fetchTicket(ticketNumber);
+        }, 10000); // Poll every 10 seconds
+
+        return () => clearInterval(intervalId);
+    }, [isPolling, ticketNumber]);
 
     const currentStepIndex = ticket ? getStepIndex(ticket.status) : -1;
     const isCancelled = ticket?.status === 'CANCELLED';
