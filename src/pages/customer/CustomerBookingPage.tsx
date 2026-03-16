@@ -415,13 +415,13 @@ const CustomerBookingPage: React.FC = () => {
                                                 }}
                                             >
                                                 <Box sx={{
-                                                    width: 52, height: 52, borderRadius: '50%',
+                                                    width: 76, height: 76, borderRadius: '50%',
                                                     background: isActive ? option.bg : '#F9FAFB',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     boxShadow: isActive ? `inset 0 0 15px ${option.color}15` : 'inset 0 2px 5px rgba(0,0,0,0.03)',
                                                     border: isActive ? `1px solid ${option.color}30` : '1px solid #E5E7EB',
                                                     overflow: 'hidden',
-                                                    p: 1.2
+                                                    p: 0.5
                                                 }}>
                                                     <img src={option.image} alt={option.label}
                                                         style={{ width: '100%', height: '100%', objectFit: 'contain', filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' : 'grayscale(0.6) opacity(0.7)' }}
