@@ -228,6 +228,27 @@ const TechDashboardPage: React.FC = () => {
                 </Box>
             )}
 
+            {/* Temporary debug button to force clear VAPID cache */}
+            {!pushEnabled && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1, mb: 3 }}>
+                    <Button
+                        size="small"
+                        sx={{ color: '#94A3B8', fontSize: '0.7rem', textTransform: 'none' }}
+                        onClick={async () => {
+                            if ('serviceWorker' in navigator) {
+                                const regs = await navigator.serviceWorker.getRegistrations();
+                                for (let reg of regs) await reg.unregister();
+                            }
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.reload();
+                        }}
+                    >
+                        Fix Stubborn Cache (Tap this first, then Enable)
+                    </Button>
+                </Box>
+            )}
+
             {/* KPI Cards */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid size={{ xs: 6, md: 3 }}>
