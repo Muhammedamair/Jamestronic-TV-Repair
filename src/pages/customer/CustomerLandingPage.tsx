@@ -22,6 +22,7 @@ import {
     SupportAgent as SupportIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 
 const SERVICES = [
     { id: 'repair', label: 'TV Repair', icon: <RepairIcon />, desc: 'Expert diagnosis & repair for all TV brands', color: '#6C63FF' },

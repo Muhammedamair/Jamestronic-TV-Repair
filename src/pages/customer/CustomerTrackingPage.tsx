@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 
 // Map internal statuses to customer-friendly steps
 const STATUS_PIPELINE = [
@@ -375,6 +376,8 @@ const CustomerTrackingPage: React.FC = () => {
                     </>
                 )}
             </Container>
+
+            <PWAInstallPrompt />
         </Box>
     );
 };
