@@ -540,21 +540,32 @@ const CustomerBookingPage: React.FC = () => {
                             <Box sx={{ mb: 1 }}>
                                 <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
                                 {/* Quick select options */}
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
-                                    {COMMON_ISSUES.map(issue => (
-                                        <Chip
-                                            key={issue}
-                                            label={issue}
-                                            onClick={() => updateField('issueDescription', issue)}
-                                            sx={{
-                                                background: form.issueDescription === issue ? '#5B4CF2' : '#F3F4F6',
-                                                color: form.issueDescription === issue ? '#FFF' : '#374151',
-                                                fontWeight: 600, fontSize: '0.75rem',
-                                                border: 'none', transition: 'all 0.1s',
-                                                '&:active': { transform: 'scale(0.96)' }
-                                            }}
-                                        />
-                                    ))}
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2, mb: 2 }}>
+                                    {COMMON_ISSUES.map(issue => {
+                                        const isSelected = form.issueDescription === issue;
+                                        return (
+                                            <Box
+                                                key={issue}
+                                                onClick={() => updateField('issueDescription', issue)}
+                                                sx={{
+                                                    py: 1.2, px: 2, borderRadius: 4, cursor: 'pointer',
+                                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                                                    background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
+                                                    boxShadow: isSelected ? '0 4px 12px rgba(91, 76, 242, 0.15)' : '0 1px 3px rgba(0,0,0,0.02)',
+                                                    '&:active': { transform: 'scale(0.96)' }
+                                                }}
+                                            >
+                                                <Typography sx={{
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    fontSize: '0.85rem',
+                                                    color: isSelected ? '#5B4CF2' : '#4B5563',
+                                                }}>
+                                                    {issue}
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    })}
                                 </Box>
                                 <TextField
                                     fullWidth placeholder="Or type your issue here..."
