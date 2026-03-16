@@ -190,7 +190,7 @@ const CustomerBookingPage: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', pb: 12, fontFamily: '"Inter", sans-serif' }}>
+        <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', pb: 12, overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", sans-serif' }}>
             {/* Header */}
             <Box sx={{ px: 2, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#FFF', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 10 }}>
                 <IconButton onClick={() => navigate('/')} sx={{ color: '#111827' }} edge="start">

@@ -303,7 +303,7 @@ const CustomerTicketsPage: React.FC = () => {
     );
 
     return (
-        <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', fontFamily: '"Inter", sans-serif' }}>
+        <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", sans-serif' }}>
             {/* Header */}
             <Box sx={{
                 px: 2, py: 2, display: 'flex', alignItems: 'center', gap: 1.5,
