@@ -38,6 +38,17 @@ const TV_BRANDS = [
     { name: 'Other', color: '#6B7280', bg: '#F9FAFB', accent: '#E5E7EB' },
 ];
 
+const TV_SIZES = ['32"', '40"', '41"', '42"', '43"', '46"', '49"', '50"', '55"', '65"', '75"', '84"', '108"'];
+
+const COMMON_ISSUES = [
+    'No display / Black screen',
+    'Screen flickering',
+    'No sound but video works',
+    'Power issue / Won\'t turn on',
+    'Vertical / Horizontal lines',
+    'Not sure'
+];
+
 // Service type config with 3D icon images
 const SERVICE_TYPES = [
     { value: 'repair', label: 'TV Repair', image: '/services/tv_checkup.png', color: '#5B4CF2', bg: 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' },
@@ -461,16 +472,42 @@ const CustomerBookingPage: React.FC = () => {
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Size (Opt)</Typography>
-                                    <TextField fullWidth placeholder='e.g. 55"' value={form.tvSize} onChange={e => updateField('tvSize', e.target.value)} sx={lightTextFieldStyle} />
+                                    <TextField 
+                                        select fullWidth 
+                                        value={form.tvSize} 
+                                        onChange={e => updateField('tvSize', e.target.value)} 
+                                        sx={lightTextFieldStyle}
+                                        SelectProps={{ native: true }}
+                                    >
+                                        <option value="">Select size</option>
+                                        {TV_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </TextField>
                                 </Box>
                             </Box>
 
                             <Box sx={{ mb: 1 }}>
-                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Describe the Issue *</Typography>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
+                                {/* Quick select options */}
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
+                                    {COMMON_ISSUES.map(issue => (
+                                        <Chip
+                                            key={issue}
+                                            label={issue}
+                                            onClick={() => updateField('issueDescription', issue)}
+                                            sx={{
+                                                background: form.issueDescription === issue ? '#5B4CF2' : '#F3F4F6',
+                                                color: form.issueDescription === issue ? '#FFF' : '#374151',
+                                                fontWeight: 600, fontSize: '0.75rem',
+                                                border: 'none', transition: 'all 0.1s',
+                                                '&:active': { transform: 'scale(0.96)' }
+                                            }}
+                                        />
+                                    ))}
+                                </Box>
                                 <TextField
-                                    fullWidth placeholder="e.g. Screen is flickering, no display, sound issues..."
+                                    fullWidth placeholder="Or type your issue here..."
                                     value={form.issueDescription} onChange={e => updateField('issueDescription', e.target.value)}
-                                    multiline rows={3} sx={lightTextFieldStyle}
+                                    multiline rows={2} sx={lightTextFieldStyle}
                                 />
                             </Box>
                         </>
