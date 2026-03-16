@@ -71,9 +71,42 @@ async function reverseGeocode(lat: number, lng: number): Promise<{ area: string;
     return { area: 'Your Location', city: '', fullAddress: '' };
 }
 
-// Search places using Google Places Autocomplete via REST
+// Search using Google Places Autocomplete for rich, Swiggy-like results (businesses, POIs, addresses)
 async function searchPlaces(query: string): Promise<Array<{ area: string; fullAddress: string; placeId: string }>> {
-    if (!query || query.length < 3) return [];
+    if (!query || query.length < 2) return [];
+
+    // Prefer JavaScript SDK if Google Maps is loaded (gives rich autocomplete results)
+    if (typeof google !== 'undefined' && google.maps?.places) {
+        return new Promise((resolve) => {
+            const service = new google.maps.places.AutocompleteService();
+            service.getPlacePredictions(
+                {
+                    input: query,
+                    componentRestrictions: { country: 'in' },
+                    // Bias toward Hyderabad
+                    locationBias: {
+                        center: { lat: 17.385, lng: 78.4867 },
+                        radius: 50000,
+                    } as any,
+                },
+                (predictions, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                        resolve(
+                            predictions.slice(0, 5).map((p) => ({
+                                area: p.structured_formatting?.main_text || p.description.split(',')[0],
+                                fullAddress: p.structured_formatting?.secondary_text || p.description,
+                                placeId: p.place_id || '',
+                            }))
+                        );
+                    } else {
+                        resolve([]);
+                    }
+                }
+            );
+        });
+    }
+
+    // Fallback: use Geocoding REST API if Google Maps JS SDK isn't loaded
     try {
         const res = await fetch(
             `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query + ', Hyderabad')}&key=${GOOGLE_MAPS_KEY}`
@@ -97,7 +130,7 @@ async function searchPlaces(query: string): Promise<Array<{ area: string; fullAd
             });
         }
     } catch (e) {
-        console.error('Search places failed:', e);
+        console.error('Search places fallback failed:', e);
     }
     return [];
 }
