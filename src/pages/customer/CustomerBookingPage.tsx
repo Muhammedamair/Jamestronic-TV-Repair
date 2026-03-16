@@ -38,11 +38,11 @@ const TV_BRANDS = [
     { name: 'Other', color: '#6B7280', bg: '#F9FAFB', accent: '#E5E7EB' },
 ];
 
-// Service type config with MUI icons
+// Service type config with 3D icon images
 const SERVICE_TYPES = [
-    { value: 'repair', label: 'TV Repair', icon: RepairIcon, color: '#5B4CF2', bg: 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' },
-    { value: 'installation', label: 'TV Installation', icon: InstallIcon, color: '#10B981', bg: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' },
-    { value: 'uninstallation', label: 'TV Uninstallation', icon: UninstallIcon, color: '#F59E0B', bg: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' },
+    { value: 'repair', label: 'TV Repair', image: '/services/tv_checkup.png', color: '#5B4CF2', bg: 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' },
+    { value: 'installation', label: 'TV Installation', image: '/services/tv_installation.png', color: '#10B981', bg: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' },
+    { value: 'uninstallation', label: 'TV Uninstallation', image: '/services/tv_uninstallation.png', color: '#F59E0B', bg: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' },
 ];
 
 const CustomerBookingPage: React.FC = () => {
@@ -261,7 +261,7 @@ const CustomerBookingPage: React.FC = () => {
                 </Typography>
             </Box>
 
-            {/* ═══ BRAND PICKER DIALOG — Premium Brand Cards ═══ */}
+            {/* ═══ BRAND PICKER DIALOG — Circular Brand Buttons ═══ */}
             <Dialog
                 open={showBrandPicker}
                 onClose={() => setShowBrandPicker(false)}
@@ -278,10 +278,10 @@ const CustomerBookingPage: React.FC = () => {
                     <Typography sx={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827', mb: 0.5, px: 0.5 }}>
                         Select TV Brand
                     </Typography>
-                    <Typography sx={{ color: '#9CA3AF', fontSize: '0.78rem', mb: 2.5, px: 0.5 }}>
+                    <Typography sx={{ color: '#9CA3AF', fontSize: '0.78rem', mb: 3, px: 0.5 }}>
                         Popular brands in Hyderabad
                     </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
                         {TV_BRANDS.map(brand => {
                             const isSelected = form.tvBrand === brand.name;
                             return (
@@ -290,38 +290,37 @@ const CustomerBookingPage: React.FC = () => {
                                     onClick={() => { updateField('tvBrand', brand.name); setShowBrandPicker(false); }}
                                     sx={{
                                         display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                        pt: 2, pb: 1.5, px: 0.5, borderRadius: 3.5, cursor: 'pointer',
+                                        cursor: 'pointer',
                                         transition: 'all 0.15s ease-out',
-                                        border: isSelected ? `2.5px solid ${brand.color}` : '1.5px solid transparent',
-                                        background: isSelected ? brand.bg : '#FAFAFA',
-                                        boxShadow: isSelected
-                                            ? `0 4px 16px ${brand.color}25`
-                                            : '0 1px 4px rgba(0,0,0,0.04)',
-                                        '&:active': { transform: 'scale(0.96)' },
+                                        '&:active': { transform: 'scale(0.94)' }
                                     }}
                                 >
-                                    {/* Brand wordmark */}
+                                    {/* Circular Brand badge */}
                                     <Box sx={{
-                                        width: 56, height: 40, borderRadius: 2,
-                                        background: brand.bg,
-                                        border: `1px solid ${brand.accent}`,
+                                        width: 68, height: 68, borderRadius: '50%',
+                                        background: '#FFF',
+                                        border: isSelected ? `2.5px solid ${brand.color}` : '1.5px solid #F3F4F6',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        mb: 1,
+                                        mb: 1, position: 'relative',
+                                        boxShadow: isSelected
+                                            ? `0 6px 16px ${brand.color}30, inset 0 0 20px ${brand.bg}`
+                                            : '0 4px 12px rgba(0,0,0,0.03)',
                                     }}>
                                         <Typography sx={{
                                             fontWeight: 900,
-                                            fontSize: brand.name.length <= 3 ? '1.1rem' : '0.7rem',
+                                            fontSize: brand.name.length <= 4 ? '1.1rem' : '0.8rem',
                                             color: brand.color,
                                             letterSpacing: brand.name.length <= 3 ? '0.5px' : '-0.3px',
                                             lineHeight: 1,
-                                            textTransform: brand.name.length <= 3 ? 'uppercase' : 'none',
+                                            textTransform: brand.name.length <= 4 ? 'uppercase' : 'none',
+                                            position: 'relative', zIndex: 1
                                         }}>
                                             {brand.name.length <= 5 ? brand.name : brand.name.split('/')[0]}
                                         </Typography>
                                     </Box>
                                     <Typography sx={{
-                                        fontWeight: isSelected ? 800 : 600,
-                                        fontSize: '0.7rem',
+                                        fontWeight: isSelected ? 800 : 500,
+                                        fontSize: '0.75rem',
                                         color: isSelected ? brand.color : '#4B5563',
                                         textAlign: 'center', lineHeight: 1.2,
                                     }}>
@@ -401,33 +400,35 @@ const CustomerBookingPage: React.FC = () => {
                                 <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
                                     {SERVICE_TYPES.map(option => {
                                         const isActive = form.serviceType === option.value;
-                                        const IconComp = option.icon;
                                         return (
                                             <Box
                                                 key={option.value}
                                                 onClick={() => updateField('serviceType', option.value)}
                                                 sx={{
-                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                                                    minWidth: 100, py: 2, px: 1.5, borderRadius: 3.5, cursor: 'pointer',
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5,
+                                                    minWidth: 100, py: 2.5, px: 1, borderRadius: 4, cursor: 'pointer',
                                                     transition: 'all 0.2s', flexShrink: 0,
-                                                    border: isActive ? `2.5px solid ${option.color}` : '1.5px solid #E5E7EB',
-                                                    background: isActive ? option.bg : '#FFF',
-                                                    boxShadow: isActive ? `0 4px 14px ${option.color}20` : 'none',
+                                                    border: isActive ? `2px solid ${option.color}` : '1.5px solid #F3F4F6',
+                                                    background: '#FFF',
+                                                    boxShadow: isActive ? `0 8px 20px ${option.color}25` : '0 2px 8px rgba(0,0,0,0.04)',
                                                     '&:active': { transform: 'scale(0.96)' }
                                                 }}
                                             >
                                                 <Box sx={{
-                                                    width: 44, height: 44, borderRadius: '50%',
-                                                    background: isActive ? option.bg : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)',
+                                                    width: 52, height: 52, borderRadius: '50%',
+                                                    background: isActive ? option.bg : '#F9FAFB',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    boxShadow: isActive
-                                                        ? `0 3px 10px ${option.color}25, inset 0 -1px 3px rgba(0,0,0,0.05)`
-                                                        : 'inset 0 -1px 3px rgba(0,0,0,0.05)',
+                                                    boxShadow: isActive ? `inset 0 0 15px ${option.color}15` : 'inset 0 2px 5px rgba(0,0,0,0.03)',
+                                                    border: isActive ? `1px solid ${option.color}30` : '1px solid #E5E7EB',
+                                                    overflow: 'hidden',
+                                                    p: 1.2
                                                 }}>
-                                                    <IconComp sx={{ fontSize: 22, color: isActive ? option.color : '#9CA3AF' }} />
+                                                    <img src={option.image} alt={option.label}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' : 'grayscale(0.6) opacity(0.7)' }}
+                                                    />
                                                 </Box>
                                                 <Typography sx={{
-                                                    fontWeight: isActive ? 800 : 600, fontSize: '0.72rem',
+                                                    fontWeight: isActive ? 800 : 600, fontSize: '0.75rem',
                                                     color: isActive ? option.color : '#6B7280',
                                                     textAlign: 'center', lineHeight: 1.2
                                                 }}>
