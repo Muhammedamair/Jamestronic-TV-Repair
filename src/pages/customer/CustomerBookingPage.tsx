@@ -14,6 +14,9 @@ import {
     Build as RepairIcon,
     SettingsInputAntenna as InstallIcon,
     Eject as UninstallIcon,
+    CheckCircleOutline as CheckCircleOutlineIcon,
+    FilterFrames as FilterFramesIcon,
+    OpenWith as OpenWithIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -557,7 +560,7 @@ const CustomerBookingPage: React.FC = () => {
                                 </Box>
                             </Box>
 
-                            {form.serviceType !== 'installation' && (
+                            {form.serviceType === 'repair' && (
                                 <Box sx={{ mb: 1 }}>
                                     <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
                                 {/* Quick select options */}
@@ -624,10 +627,11 @@ const CustomerBookingPage: React.FC = () => {
                             {form.serviceType === 'installation' && (
                                 <Box sx={{ mb: 1 }}>
                                     <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Wallmount Bracket *</Typography>
-                                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
                                         {[
-                                            { label: 'I have a bracket', val: 'Customer has bracket', icon: '✅' },
-                                            { label: 'Bring a bracket', val: 'Needs new bracket (Bring one)', icon: '🛒' }
+                                            { label: 'I have a bracket', val: 'Customer has bracket', desc: "We'll install your existing bracket", icon: <CheckCircleOutlineIcon sx={{ fontSize: 28 }} /> },
+                                            { label: 'Bring Non-Movable Bracket', val: 'Needs Fixed Bracket', desc: "Standard flat wall mount", icon: <FilterFramesIcon sx={{ fontSize: 28 }} /> },
+                                            { label: 'Bring Movable Bracket', val: 'Needs Movable Bracket', desc: "Swivel/tilt flexible mount", icon: <OpenWithIcon sx={{ fontSize: 28 }} /> }
                                         ].map(opt => {
                                             const isSelected = form.bracketStatus === opt.val;
                                             return (
@@ -635,24 +639,36 @@ const CustomerBookingPage: React.FC = () => {
                                                     key={opt.val}
                                                     onClick={() => updateField('bracketStatus', opt.val)}
                                                     sx={{
-                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5,
-                                                        py: 3, px: 2, borderRadius: 5, cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', gap: 2,
+                                                        py: 2, px: 2.5, borderRadius: 4, cursor: 'pointer',
                                                         transition: 'all 0.2s',
                                                         border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
                                                         background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
                                                         boxShadow: isSelected ? '0 8px 16px rgba(91, 76, 242, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
-                                                        '&:active': { transform: 'scale(0.96)' }
+                                                        '&:active': { transform: 'scale(0.98)' }
                                                     }}
                                                 >
-                                                    <Typography sx={{ fontSize: '2.5rem' }}>{opt.icon}</Typography>
-                                                    <Typography sx={{
-                                                        fontWeight: isSelected ? 800 : 600,
-                                                        fontSize: '0.9rem',
-                                                        color: isSelected ? '#5B4CF2' : '#4B5563',
-                                                        textAlign: 'center', lineHeight: 1.2
+                                                    <Box sx={{ 
+                                                        width: 48, height: 48, borderRadius: '50%', background: isSelected ? '#5B4CF2' : '#F3F4F6',
+                                                        color: isSelected ? '#FFF' : '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        boxShadow: isSelected ? '0 4px 10px rgba(91,76,242,0.3)' : 'none',
+                                                        transition: 'all 0.3s'
                                                     }}>
-                                                        {opt.label}
-                                                    </Typography>
+                                                        {opt.icon}
+                                                    </Box>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Typography sx={{
+                                                            fontWeight: isSelected ? 800 : 600,
+                                                            fontSize: '1rem',
+                                                            color: isSelected ? '#5B4CF2' : '#111827',
+                                                            mb: 0.3
+                                                        }}>
+                                                            {opt.label}
+                                                        </Typography>
+                                                        <Typography sx={{ color: isSelected ? '#5B4CF2' : '#6B7280', fontSize: '0.8rem', opacity: isSelected ? 0.9 : 1 }}>
+                                                            {opt.desc}
+                                                        </Typography>
+                                                    </Box>
                                                 </Box>
                                             )
                                         })}
