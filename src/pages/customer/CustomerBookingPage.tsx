@@ -185,7 +185,7 @@ const CustomerBookingPage: React.FC = () => {
                 issueDescToSave = `Installation Bracket: ${form.bracketStatus}${form.issueDescription ? `\nInstructions: ${form.issueDescription}` : ''}`;
             }
 
-            const { data: ticketNumber, error: rpcErr } = await supabase.rpc('create_customer_booking', {
+            const response = await supabase.rpc('create_customer_booking', {
                 p_name: form.customerName,
                 p_mobile: form.mobile,
                 p_address: form.address,
@@ -195,11 +195,13 @@ const CustomerBookingPage: React.FC = () => {
                 p_tv_model: form.tvModel || null,
                 p_tv_size: form.tvSize || null,
                 p_issue_description: issueDescToSave || 'No specific description provided.',
-                p_service_type: form.serviceType === 'installation' ? 'INSTALLATION' : 'REPAIR'
+                p_service_type: form.serviceType === 'installation' ? 'INSTALLATION' : (form.serviceType === 'uninstallation' ? 'UNINSTALLATION' : 'REPAIR')
             });
 
-            if (rpcErr) throw rpcErr;
-            if (!ticketNumber) throw new Error('Failed to generate ticket number');
+            if (response.error) throw response.error;
+            if (!response.data) throw new Error('Failed to generate ticket number');
+
+            const ticketNumber = String(response.data);
 
             supabase.functions.invoke('send-push-notification', {
                 body: {
