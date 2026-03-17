@@ -195,7 +195,7 @@ const CustomerBookingPage: React.FC = () => {
                 p_tv_model: form.tvModel || null,
                 p_tv_size: form.tvSize || null,
                 p_issue_description: issueDescToSave || 'No specific description provided.',
-                p_service_type: form.serviceType === 'installation' ? 'INSTALLATION' : (form.serviceType === 'uninstallation' ? 'UNINSTALLATION' : 'REPAIR')
+                p_service_type: form.serviceType === 'installation' ? 'INSTALLATION' : 'REPAIR'
             });
 
             if (response.error) throw response.error;

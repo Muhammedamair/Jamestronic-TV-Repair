@@ -31,6 +31,10 @@ BEGIN
     INSERT INTO public.customers (name, mobile, address)
     VALUES (p_name, p_mobile, p_address)
     RETURNING id INTO v_customer_id;
+  ELSE
+    -- Update existing customer name/address if changed
+    UPDATE public.customers SET name = p_name, address = p_address, updated_at = NOW()
+    WHERE id = v_customer_id;
   END IF;
 
   -- 2. Generate ticket number
@@ -38,15 +42,13 @@ BEGIN
   SELECT count(*) INTO v_count FROM public.tickets WHERE ticket_number LIKE 'JT-' || v_date_str || '%';
   v_ticket_number := 'JT-' || v_date_str || lpad((v_count + 1)::text, 3, '0');
 
-  -- 3. Create ticket
+  -- 3. Create ticket (only columns that exist in the tickets table)
   INSERT INTO public.tickets (
-    ticket_number, customer_id, customer_name, customer_mobile, customer_address,
-    customer_lat, customer_lng, tv_brand, tv_model, tv_size, issue_description,
-    service_type, status, source
+    ticket_number, customer_id, tv_brand, tv_model, tv_size, 
+    issue_description, service_type, status
   ) VALUES (
-    v_ticket_number, v_customer_id, p_name, p_mobile, p_address,
-    p_lat, p_lng, p_tv_brand, p_tv_model, p_tv_size, p_issue_description,
-    p_service_type, 'OPEN', 'CUSTOMER_PORTAL'
+    v_ticket_number, v_customer_id, p_tv_brand, p_tv_model, p_tv_size, 
+    p_issue_description, p_service_type::ticket_service_type, 'CREATED'
   );
 
   RETURN v_ticket_number;
