@@ -20,29 +20,29 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 
-// Map internal statuses to customer-friendly steps
-const STATUS_PIPELINE = [
-    { key: 'OPEN', label: 'Booked', icon: <TicketIcon />, color: '#5B4CF2', desc: 'Your service request has been received' },
-    { key: 'ASSIGNED_PICKUP', label: 'Pickup Scheduled', icon: <TruckIcon />, color: '#F59E0B', desc: 'A transporter is assigned to pick up your TV' },
-    { key: 'IN_TRANSIT_PICKUP', label: 'TV Picked Up', icon: <TruckIcon />, color: '#F59E0B', desc: 'Your TV is on its way to our service centre' },
-    { key: 'DIAGNOSED', label: 'Diagnosing', icon: <SearchIcon />, color: '#0EA5E9', desc: 'Our expert technician is examining your TV' },
-    { key: 'QUOTED', label: 'Quotation Sent', icon: <ScheduleIcon />, color: '#8B5CF6', desc: 'We\'ve sent you a repair estimate via WhatsApp' },
-    { key: 'IN_PROGRESS', label: 'Repairing', icon: <RepairIcon />, color: '#F97316', desc: 'Your TV is being repaired by our certified technician' },
-    { key: 'PARTS_ORDERED', label: 'Part Ordered', icon: <InventoryIcon />, color: '#F97316', desc: 'A replacement part has been ordered for your TV' },
-    { key: 'REPAIR_DONE', label: 'Repair Complete', icon: <VerifiedIcon />, color: '#10B981', desc: 'Your TV has been repaired and tested ✅' },
-    { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', icon: <TruckIcon />, color: '#10B981', desc: 'Your TV is on its way back to you!' },
+// Map internal REPAIR statuses to customer-friendly steps
+const REPAIR_PIPELINE = [
+    { key: 'CREATED', label: 'Booked', icon: <TicketIcon />, color: '#6C63FF', desc: 'Your service request has been received' },
+    { key: 'DIAGNOSED', label: 'Diagnosing', icon: <SearchIcon />, color: '#8B85FF', desc: 'Our expert technician is prioritizing your TV issue' },
+    { key: 'PICKUP_SCHEDULED', label: 'Pickup Scheduled', icon: <ScheduleIcon />, color: '#F59E0B', desc: 'A transporter is assigned to pick up your TV' },
+    { key: 'PICKED_UP', label: 'TV Picked Up', icon: <TruckIcon />, color: '#F59E0B', desc: 'Your TV is on its way to our service centre' },
+    { key: 'IN_REPAIR', label: 'Repairing', icon: <RepairIcon />, color: '#00D9FF', desc: 'Your TV is actively being repaired by our technician' },
+    { key: 'QUOTATION_SENT', label: 'Quotation Sent', icon: <SupportIcon />, color: '#F97316', desc: 'We\'ve sent you a repair estimate via WhatsApp' },
+    { key: 'APPROVED', label: 'Repair Approved', icon: <CheckIcon />, color: '#10B981', desc: 'You have approved the repair cost' },
+    { key: 'REPAIRED', label: 'Repair Complete', icon: <VerifiedIcon />, color: '#10B981', desc: 'Your TV has been successfully repaired and tested ✅' },
+    { key: 'DELIVERY_SCHEDULED', label: 'Out for Delivery', icon: <TruckIcon />, color: '#3B82F6', desc: 'Your TV is on its way back to you!' },
     { key: 'DELIVERED', label: 'Delivered', icon: <CheckIcon />, color: '#10B981', desc: 'Your TV has been delivered. Enjoy! 🎉' },
 ];
 
-const getStepIndex = (status: string): number => {
-    const statusMap: Record<string, number> = {
-        'OPEN': 0, 'ASSIGNED': 1, 'DIAGNOSED': 3, 'PENDING_REVIEW': 3,
-        'QUOTED': 4, 'IN_PROGRESS': 5, 'PARTS_ORDERED': 6, 'REPAIR_DONE': 7,
-        'QUALITY_CHECK': 7, 'READY_FOR_DELIVERY': 7, 'OUT_FOR_DELIVERY': 8,
-        'DELIVERED': 9, 'CLOSED': 9, 'CANCELLED': -1,
-    };
-    return statusMap[status] ?? 0;
-};
+// Map internal INSTALLATION statuses to customer-friendly steps
+const INSTALLATION_PIPELINE = [
+    { key: 'CREATED', label: 'Booked', icon: <TicketIcon />, color: '#6C63FF', desc: 'Your installation request has been received' },
+    { key: 'CONFIRMED', label: 'Confirmed', icon: <CheckIcon />, color: '#10B981', desc: 'Your installation slot is confirmed' },
+    { key: 'EN_ROUTE', label: 'Technician Dispatched', icon: <TruckIcon />, color: '#3B82F6', desc: 'Our technician is on the way to your location' },
+    { key: 'INSTALLED', label: 'TV Installed', icon: <VerifiedIcon />, color: '#00D9FF', desc: 'Your TV has been successfully installed ✅' },
+    { key: 'PAYMENT_COLLECTED', label: 'Payment Collected', icon: <CheckIcon />, color: '#F59E0B', desc: 'Payment has been settled' },
+    { key: 'CLOSED', label: 'Completed', icon: <CheckIcon />, color: '#10B981', desc: 'Installation process is complete. Enjoy! 🎉' },
+];
 
 const CustomerTrackingPage: React.FC = () => {
     const { ticketNumber } = useParams<{ ticketNumber: string }>();
@@ -51,7 +51,6 @@ const CustomerTrackingPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchInput, setSearchInput] = useState('');
-    const [isPolling, setIsPolling] = useState(false);
 
     const fetchTicket = async (ticketNum: string) => {
         try {
@@ -63,11 +62,9 @@ const CustomerTrackingPage: React.FC = () => {
             } else {
                 setTicket(data);
                 setError(null);
-                setIsPolling(true);
             }
         } catch (err: any) {
             setError(err.message || 'Failed to load ticket details');
-            setIsPolling(false);
         } finally {
             setLoading(false);
         }
@@ -79,17 +76,45 @@ const CustomerTrackingPage: React.FC = () => {
             fetchTicket(ticketNumber);
         } else {
             setLoading(false);
-            setIsPolling(false);
         }
     }, [ticketNumber]);
 
+    // Real-time synchronization
     useEffect(() => {
-        if (!isPolling || !ticketNumber) return;
-        const intervalId = setInterval(() => fetchTicket(ticketNumber), 10000);
-        return () => clearInterval(intervalId);
-    }, [isPolling, ticketNumber]);
+        if (!ticketNumber) return;
 
-    const currentStepIndex = ticket ? getStepIndex(ticket.status) : -1;
+        const channel = supabase.channel(`customer_tracking_${ticketNumber}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'tickets',
+                filter: `ticket_number=eq.${ticketNumber}`
+            }, (payload) => {
+                // Instantly update the displayed status from the payload
+                if (payload.new && payload.new.status) {
+                    setTicket((prev: any) => prev ? { ...prev, status: payload.new.status } : prev);
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [ticketNumber]);
+
+    const activePipeline = ticket?.service_type === 'INSTALLATION' ? INSTALLATION_PIPELINE : REPAIR_PIPELINE;
+    
+    // Find the actual index by matching the exact key, merging CLOSED with DELIVERED/Completed
+    let currentStepIndex = -1;
+    if (ticket) {
+        if (ticket.status === 'CLOSED') {
+            currentStepIndex = activePipeline.length - 1; // Last step
+        } else {
+            currentStepIndex = activePipeline.findIndex(p => p.key === ticket.status);
+            // Fallback: If status somehow jumps backwards or isn't in array, we keep it visually active at least
+            if (currentStepIndex === -1 && ticket.status !== 'CANCELLED') currentStepIndex = 0; 
+        }
+    }
     const isCancelled = ticket?.status === 'CANCELLED';
 
     return (
@@ -226,7 +251,7 @@ const CustomerTrackingPage: React.FC = () => {
                                     </Alert>
                                 ) : (
                                     <Box>
-                                        {STATUS_PIPELINE.map((step, i) => {
+                                        {activePipeline.map((step, i) => {
                                             const isCompleted = i < currentStepIndex;
                                             const isCurrent = i === currentStepIndex;
                                             const isFuture = i > currentStepIndex;
@@ -253,12 +278,12 @@ const CustomerTrackingPage: React.FC = () => {
                                                         }}>
                                                             {isCompleted ? <CheckIcon sx={{ fontSize: 20 }} /> : step.icon}
                                                         </Box>
-                                                        {i < STATUS_PIPELINE.length - 1 && (
+                                                        {i < activePipeline.length - 1 && (
                                                             <Box sx={{ width: 2, height: 32, my: 0.5, backgroundColor: isCompleted ? step.color : '#F3F4F6', transition: 'background-color 0.5s' }} />
                                                         )}
                                                     </Box>
 
-                                                    <Box sx={{ pb: i < STATUS_PIPELINE.length - 1 ? 2 : 0, pt: 1 }}>
+                                                    <Box sx={{ pb: i < activePipeline.length - 1 ? 2 : 0, pt: 1 }}>
                                                         <Typography sx={{ color: isCompleted || isCurrent ? '#111827' : '#9CA3AF', fontWeight: isCurrent ? 800 : 700, fontSize: '1rem', transition: 'color 0.3s', letterSpacing: '-0.2px' }}>
                                                             {step.label}
                                                             {isCurrent && (
