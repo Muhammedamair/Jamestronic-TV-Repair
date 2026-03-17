@@ -474,12 +474,20 @@ const CustomerBookingPage: React.FC = () => {
                                                 }}
                                             >
                                                 <Box sx={{
-                                                    width: 90, height: 90,
+                                                    width: 90, height: 90, borderRadius: '50%',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    overflow: 'hidden', background: '#FFF',
+                                                    boxShadow: isActive ? `0 4px 12px ${option.color}40` : '0 2px 8px rgba(0,0,0,0.06)',
+                                                    border: isActive ? '3px solid #FFF' : '2px solid #F9FAFB',
                                                     mb: 0.5
                                                 }}>
                                                     <img src={option.image} alt={option.label}
-                                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' : 'grayscale(0.6) opacity(0.7)' }}
+                                                        style={{ 
+                                                            width: '100%', height: '100%', objectFit: 'cover', 
+                                                            filter: isActive ? 'none' : 'grayscale(0.6)',
+                                                            transform: 'scale(1.16)', // Zoom in slightly to perfectly crop the square boundaries away
+                                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+                                                        }}
                                                     />
                                                 </Box>
                                                 <Typography sx={{
