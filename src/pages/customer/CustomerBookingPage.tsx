@@ -83,6 +83,7 @@ const CustomerBookingPage: React.FC = () => {
         address: '',
         lat: 0,
         lng: 0,
+        bracketStatus: '',
     });
 
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -162,7 +163,11 @@ const CustomerBookingPage: React.FC = () => {
     const canProceed = () => {
         switch (step) {
             case 0: return form.mobile.length >= 10 && form.customerName.trim().length >= 2;
-            case 1: return form.tvBrand && form.issueDescription.trim().length >= 5;
+            case 1: 
+                if (form.serviceType === 'installation') {
+                    return !!form.tvBrand && !!form.tvSize && !!form.bracketStatus;
+                }
+                return !!form.tvBrand && form.issueDescription.trim().length >= 5;
             case 2: return form.address.trim().length >= 5;
             default: return false;
         }
@@ -172,6 +177,11 @@ const CustomerBookingPage: React.FC = () => {
         setSubmitting(true);
         setError(null);
         try {
+            let issueDescToSave = form.issueDescription;
+            if (form.serviceType === 'installation') {
+                issueDescToSave = `Installation Bracket: ${form.bracketStatus}${form.issueDescription ? `\nInstructions: ${form.issueDescription}` : ''}`;
+            }
+
             const { data: ticketNumber, error: rpcErr } = await supabase.rpc('create_customer_booking', {
                 p_name: form.customerName,
                 p_mobile: form.mobile,
@@ -181,7 +191,7 @@ const CustomerBookingPage: React.FC = () => {
                 p_tv_brand: form.tvBrand,
                 p_tv_model: form.tvModel || null,
                 p_tv_size: form.tvSize || null,
-                p_issue_description: form.issueDescription,
+                p_issue_description: issueDescToSave || 'No specific description provided.',
                 p_service_type: form.serviceType === 'installation' ? 'INSTALLATION' : 'REPAIR'
             });
 
@@ -527,7 +537,9 @@ const CustomerBookingPage: React.FC = () => {
                                     <TextField fullWidth placeholder="e.g. AU7700" value={form.tvModel} onChange={e => updateField('tvModel', e.target.value)} sx={lightTextFieldStyle} />
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
-                                    <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Size (Opt)</Typography>
+                                    <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>
+                                        {form.serviceType === 'installation' ? 'Size *' : 'Size (Opt)'}
+                                    </Typography>
                                     <Box
                                         onClick={() => setShowSizePicker(true)}
                                         sx={{
@@ -545,8 +557,9 @@ const CustomerBookingPage: React.FC = () => {
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mb: 1 }}>
-                                <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
+                            {form.serviceType !== 'installation' && (
+                                <Box sx={{ mb: 1 }}>
+                                    <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
                                 {/* Quick select options */}
                                 <Box sx={{ 
                                     display: 'flex', overflowX: 'auto', gap: 2, pb: 2, mb: 1, pt: 1, px: 0.5, mx: -0.5,
@@ -600,12 +613,57 @@ const CustomerBookingPage: React.FC = () => {
                                         );
                                     })}
                                 </Box>
-                                <TextField
-                                    fullWidth placeholder="Or type your issue here..."
-                                    value={form.issueDescription} onChange={e => updateField('issueDescription', e.target.value)}
-                                    multiline rows={2} sx={lightTextFieldStyle}
-                                />
-                            </Box>
+                                    <TextField
+                                        fullWidth placeholder="Or type your issue here..."
+                                        value={form.issueDescription} onChange={e => updateField('issueDescription', e.target.value)}
+                                        multiline rows={2} sx={lightTextFieldStyle}
+                                    />
+                                </Box>
+                            )}
+
+                            {form.serviceType === 'installation' && (
+                                <Box sx={{ mb: 1 }}>
+                                    <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Wallmount Bracket *</Typography>
+                                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
+                                        {[
+                                            { label: 'I have a bracket', val: 'Customer has bracket', icon: '✅' },
+                                            { label: 'Bring a bracket', val: 'Needs new bracket (Bring one)', icon: '🛒' }
+                                        ].map(opt => {
+                                            const isSelected = form.bracketStatus === opt.val;
+                                            return (
+                                                <Box
+                                                    key={opt.val}
+                                                    onClick={() => updateField('bracketStatus', opt.val)}
+                                                    sx={{
+                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5,
+                                                        py: 3, px: 2, borderRadius: 5, cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                        border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
+                                                        background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
+                                                        boxShadow: isSelected ? '0 8px 16px rgba(91, 76, 242, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
+                                                        '&:active': { transform: 'scale(0.96)' }
+                                                    }}
+                                                >
+                                                    <Typography sx={{ fontSize: '2.5rem' }}>{opt.icon}</Typography>
+                                                    <Typography sx={{
+                                                        fontWeight: isSelected ? 800 : 600,
+                                                        fontSize: '0.9rem',
+                                                        color: isSelected ? '#5B4CF2' : '#4B5563',
+                                                        textAlign: 'center', lineHeight: 1.2
+                                                    }}>
+                                                        {opt.label}
+                                                    </Typography>
+                                                </Box>
+                                            )
+                                        })}
+                                    </Box>
+                                    <TextField
+                                        fullWidth placeholder="Any specific requirements? (Optional)"
+                                        value={form.issueDescription} onChange={e => updateField('issueDescription', e.target.value)}
+                                        multiline rows={2} sx={lightTextFieldStyle}
+                                    />
+                                </Box>
+                            )}
                         </>
                     )}
 
