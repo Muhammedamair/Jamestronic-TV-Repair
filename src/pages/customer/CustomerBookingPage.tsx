@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { Autocomplete } from '@react-google-maps/api';
+// Google Maps Autocomplete removed — was crashing React. GPS + manual entry still work.
 
 // Brand config — all popular TV brands in India (especially Hyderabad market)
 const TV_BRANDS = [
@@ -89,7 +89,7 @@ const CustomerBookingPage: React.FC = () => {
         bracketStatus: '',
     });
 
-    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+    // autocompleteRef removed — Autocomplete component was causing crashes
 
     // ═══ AUTO-FILL LOCATION from landing page ═══
     useEffect(() => {
@@ -122,17 +122,7 @@ const CustomerBookingPage: React.FC = () => {
         }
     }, []);
 
-    const handlePlaceChanged = () => {
-        const place = autocompleteRef.current?.getPlace();
-        if (place?.formatted_address) {
-            setForm(prev => ({
-                ...prev,
-                address: place.formatted_address || '',
-                lat: place.geometry?.location?.lat() || 0,
-                lng: place.geometry?.location?.lng() || 0,
-            }));
-        }
-    };
+    // handlePlaceChanged removed — Autocomplete component was causing crashes
 
     const handleGetCurrentLocation = () => {
         if (!navigator.geolocation) return;
@@ -707,16 +697,11 @@ const CustomerBookingPage: React.FC = () => {
 
                             <Box sx={{ mb: 1 }}>
                                 <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1 }}>Pickup Address *</Typography>
-                                <Autocomplete
-                                    onLoad={(auto) => { autocompleteRef.current = auto; }} onPlaceChanged={handlePlaceChanged}
-                                    options={{ componentRestrictions: { country: 'in' }, types: ['address'] }}
-                                >
-                                    <TextField
-                                        fullWidth placeholder="Start typing your apartment or street..."
+                                <TextField
+                                        fullWidth placeholder="Type your full address here..."
                                         value={form.address} onChange={e => updateField('address', e.target.value)}
                                         multiline rows={2} sx={lightTextFieldStyle}
                                     />
-                                </Autocomplete>
                             </Box>
 
                             {form.lat > 0 && (
