@@ -15,9 +15,9 @@ export const STATUS_TEMPLATE_MAP: Record<TicketStatus, string | null> = {
     DELIVERED: 'service_delivered',
     CLOSED: 'service_review_request',
     // Installation-specific
-    CONFIRMED: 'installation_confirmed',
-    EN_ROUTE: 'installation_en_route',
-    INSTALLED: 'installation_completed',
+    CONFIRMED: null, // User does not have 'installation_confirmed' approved yet
+    EN_ROUTE: null, // User does not have 'installation_en_route' approved yet 
+    INSTALLED: null, // User does not have 'installation_completed' approved yet
     PAYMENT_COLLECTED: null,
 };
 
@@ -49,11 +49,8 @@ export const triggerStatusWhatsApp = async (
     } else if (newStatus === 'QUOTATION_SENT') {
         // service_quotation_sent has 3 variables: brand, size, price
         bodyValues = [tvBrand, tvSize, String(quotationTotal || ticket.estimated_cost || '0')];
-    } else if (newStatus === 'CONFIRMED' && ticket.service_type === 'INSTALLATION') {
-        // installation_confirmed has 3 variables: brand, size, time_slot
-        bodyValues = [tvBrand, tvSize, ticket.time_slot || 'ASAP'];
     } else {
-        // All other standard templates have 2 variables: brand, size
+        // All other standard repair templates have 2 variables: brand, size
         bodyValues = [tvBrand, tvSize];
     }
 
