@@ -22,16 +22,9 @@ import TechTicketDetailPage from './pages/technician/TechTicketDetailPage';
 import TransporterLayout from './layouts/TransporterLayout';
 import AdminTransportersPage from './pages/transporters/AdminTransportersPage';
 import TransporterDashboardPage from './pages/transporter/TransporterDashboardPage';
-import GoogleMapsProvider from './components/GoogleMapsProvider';
 import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationLogsPage from './pages/NotificationLogsPage';
-import CustomerLandingPage from './pages/customer/CustomerLandingPage';
-import CustomerBookingPage from './pages/customer/CustomerBookingPage';
-import CustomerTrackingPage from './pages/customer/CustomerTrackingPage';
-import CustomerTicketsPage from './pages/customer/CustomerTicketsPage';
-import CustomerAccountPage from './pages/customer/CustomerAccountPage';
-import CustomerBuyPage from './pages/customer/CustomerBuyPage';
-import { AdminBannersPage } from './pages/admin/AdminBannersPage';
+import AnimatedRoutes from './components/customer/AnimatedRoutes';
 import { Box, CircularProgress } from '@mui/material';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ children, allowedRoles }) => {
@@ -69,18 +62,17 @@ const App: React.FC = () => (
     <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* ═══ Public Customer Routes ═══ */}
-            <Route path="/" element={<CustomerLandingPage />} />
-            <Route path="/book" element={<GoogleMapsProvider><CustomerBookingPage /></GoogleMapsProvider>} />
-            <Route path="/track" element={<CustomerTrackingPage />} />
-            <Route path="/track/:ticketNumber" element={<CustomerTrackingPage />} />
-            <Route path="/my-tickets" element={<CustomerTicketsPage />} />
-            <Route path="/account" element={<CustomerAccountPage />} />
-            <Route path="/buy" element={<CustomerBuyPage />} />
+            {/* ═══ Public Customer Routes — Animated ═══ */}
+            <Route path="/" element={<AnimatedRoutes />} />
+            <Route path="/book" element={<AnimatedRoutes />} />
+            <Route path="/track" element={<AnimatedRoutes />} />
+            <Route path="/track/:ticketNumber" element={<AnimatedRoutes />} />
+            <Route path="/my-tickets" element={<AnimatedRoutes />} />
+            <Route path="/account" element={<AnimatedRoutes />} />
+            <Route path="/buy" element={<AnimatedRoutes />} />
 
             {/* ═══ Staff Login ═══ */}
             <Route path="/staff-login" element={<StaffLoginRoute><LoginPage /></StaffLoginRoute>} />
-            {/* Backward compatibility: old /login redirects to /staff-login */}
             <Route path="/login" element={<Navigate to="/staff-login" replace />} />
             
             {/* ═══ Admin Routes ═══ */}
@@ -89,7 +81,6 @@ const App: React.FC = () => (
               <Route path="tickets" element={<TicketListPage />} />
               <Route path="tickets/new" element={<TicketCreatePage />} />
               <Route path="tickets/:id" element={<TicketDetailPage />} />
-              <Route path="banners" element={<AdminBannersPage />} />
               <Route path="customers" element={<CustomerListPage />} />
               <Route path="customers/:id" element={<CustomerDetailPage />} />
               <Route path="parts" element={<PartRequestsPage />} />
