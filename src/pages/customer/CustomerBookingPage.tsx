@@ -558,13 +558,16 @@ const CustomerBookingPage: React.FC = () => {
                                                 }}
                                             >
                                                 <Box sx={{
-                                                    width: 80, height: 80,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5
+                                                    width: 110, height: 110,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5,
+                                                    mt: -1 // Pull image up slightly so it fits better
                                                 }}>
                                                     <img src={issue.image} alt={issue.label} style={{
                                                         width: '100%', height: '100%', objectFit: 'contain',
-                                                        filter: isSelected ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' : 'grayscale(0.5) opacity(0.8)',
-                                                        transition: 'all 0.2s'
+                                                        mixBlendMode: 'multiply', // This removes the white background from the images
+                                                        filter: isSelected ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' : 'grayscale(0.4) opacity(0.85)',
+                                                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                                                     }} />
                                                 </Box>
                                                 <Typography sx={{
