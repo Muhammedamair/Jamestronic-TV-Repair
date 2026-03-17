@@ -50,35 +50,42 @@ const MainLayout: React.FC = () => {
     // Fetch initial badge counts and subscribe to changes
     React.useEffect(() => {
         const fetchCounts = async () => {
-            // 1. Procurement: PENDING_REVIEW, OPEN, BIDS_RECEIVED
-            const { count: procurementCount } = await supabase
-                .from('part_requests')
-                .select('*', { count: 'exact', head: true })
-                .in('status', ['PENDING_REVIEW', 'OPEN', 'BIDS_RECEIVED']);
+            let procurementCount = 0, transportCount = 0, techCount = 0, ticketCount = 0;
 
-            // 2. Transporters: Active jobs (not DELIVERED/CANCELLED)
-            const { count: transportCount } = await supabase
-                .from('transport_jobs')
-                .select('*', { count: 'exact', head: true })
-                .in('status', ['PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT']);
+            try {
+                const res = await supabase.from('part_requests')
+                    .select('*', { count: 'exact', head: true })
+                    .in('status', ['PENDING_REVIEW', 'OPEN', 'BIDS_RECEIVED']);
+                procurementCount = res.count || 0;
+            } catch { /* table may not exist */ }
 
-            // 3. Tech Network: Active assignments (not COMPLETED/CANT_REPAIR)
-            const { count: techCount } = await supabase
-                .from('ticket_technician_log')
-                .select('*', { count: 'exact', head: true })
-                .in('tech_status', ['ASSIGNED', 'IN_PROGRESS', 'PART_REQUIRED']);
+            try {
+                const res = await supabase.from('transport_jobs')
+                    .select('*', { count: 'exact', head: true })
+                    .in('status', ['PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT']);
+                transportCount = res.count || 0;
+            } catch { /* table may not exist */ }
 
-            // 4. Tickets: Active tickets (not CLOSED/DELIVERED/CANCELLED)
-            const { count: ticketCount } = await supabase
-                .from('tickets')
-                .select('*', { count: 'exact', head: true })
-                .in('status', ['OPEN', 'ASSIGNED', 'DIAGNOSED', 'PENDING_REVIEW', 'QUOTED', 'IN_PROGRESS', 'PARTS_ORDERED', 'REPAIR_DONE', 'QUALITY_CHECK', 'READY_FOR_DELIVERY', 'OUT_FOR_DELIVERY']);
+            try {
+                const res = await supabase.from('ticket_technician_log')
+                    .select('*', { count: 'exact', head: true })
+                    .in('tech_status', ['ASSIGNED', 'IN_PROGRESS', 'PART_REQUIRED']);
+                techCount = res.count || 0;
+            } catch { /* table may not exist */ }
+
+            try {
+                // Use actual ticket_status enum values from the DB
+                const res = await supabase.from('tickets')
+                    .select('*', { count: 'exact', head: true })
+                    .not('status', 'in', '(CLOSED,DELIVERED)');
+                ticketCount = res.count || 0;
+            } catch { /* ignore */ }
 
             setBadgeCounts({
-                procurement: procurementCount || 0,
-                transporters: transportCount || 0,
-                techNetwork: techCount || 0,
-                tickets: ticketCount || 0
+                procurement: procurementCount,
+                transporters: transportCount,
+                techNetwork: techCount,
+                tickets: ticketCount
             });
         };
 

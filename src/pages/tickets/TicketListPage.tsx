@@ -494,7 +494,7 @@ const TicketListPage: React.FC = () => {
 
                                             <Button
                                                 variant="outlined"
-                                                onClick={() => navigate(`/tickets/${ticket.id}`)}
+                                                onClick={() => navigate(`/admin/tickets/${ticket.id}`)}
                                                 sx={{
                                                     ml: { xs: 0, md: 'auto' },
                                                     borderRadius: 2, textTransform: 'none',
