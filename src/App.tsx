@@ -31,6 +31,7 @@ import CustomerTrackingPage from './pages/customer/CustomerTrackingPage';
 import CustomerTicketsPage from './pages/customer/CustomerTicketsPage';
 import CustomerAccountPage from './pages/customer/CustomerAccountPage';
 import CustomerBuyPage from './pages/customer/CustomerBuyPage';
+import { AdminBannersPage } from './pages/admin/AdminBannersPage';
 import { Box, CircularProgress } from '@mui/material';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ children, allowedRoles }) => {
@@ -88,6 +89,7 @@ const App: React.FC = () => (
               <Route path="tickets" element={<TicketListPage />} />
               <Route path="tickets/new" element={<TicketCreatePage />} />
               <Route path="tickets/:id" element={<TicketDetailPage />} />
+              <Route path="banners" element={<AdminBannersPage />} />
               <Route path="customers" element={<CustomerListPage />} />
               <Route path="customers/:id" element={<CustomerDetailPage />} />
               <Route path="parts" element={<PartRequestsPage />} />

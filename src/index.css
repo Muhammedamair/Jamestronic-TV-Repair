@@ -58,3 +58,21 @@ input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 30px #111827 inset !important;
   -webkit-text-fill-color: #F1F5F9 !important;
 }
+
+/* ========================================================
+   Landing Page Banner Swiper Overrides
+   Makes the pagination dots look modern and premium
+   ======================================================== */
+.swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.4) !important;
+    opacity: 1 !important;
+    width: 6px !important;
+    height: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.swiper-pagination-bullet-active {
+    background: #FFF !important;
+    width: 16px !important;
+    border-radius: 4px !important;
+}

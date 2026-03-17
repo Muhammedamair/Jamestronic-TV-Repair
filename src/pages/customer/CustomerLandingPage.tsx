@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import {
-    Box, Typography, Container, Card, CardActionArea,
-    IconButton, CircularProgress, Dialog, Button, TextField, Divider
-} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Box, Typography, Button, IconButton, TextField, CircularProgress, Container, Card, CardActionArea, Dialog, InputAdornment, Divider } from '@mui/material';
 import {
     LocationOn as LocationIcon,
     Search as SearchIcon,
-    CheckCircle as CheckCircleIcon,
-    Verified as VerifiedIcon,
-    Star as StarIcon,
     Person as PersonIcon,
-    MyLocation as MyLocationIcon,
+    Star as StarIcon,
+    Verified as VerifiedIcon,
+    CheckCircle as CheckCircleIcon,
+    ShoppingBag as ShopIcon,
     Close as CloseIcon,
-    GpsFixed as GpsIcon,
+    MyLocation as MyLocationIcon,
     AddLocationAlt as AddLocationIcon,
     Home as HomeIcon,
     Work as WorkIcon,
@@ -20,11 +18,23 @@ import {
     ArrowBack as BackIcon,
     Delete as DeleteIcon,
     MoreVert as MoreIcon,
-    NavigationOutlined as NavIcon,
-    ShoppingBag as ShopIcon,
+    NavigationOutlined as NavIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
+import { useBanners } from '../../hooks/useBanners';
+import { PromotionalBanner } from '../../types/database';
+
+// Swiper Requirements
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+
+// Static local assets
+import tvRepairImg from '../../assets/tvp.png';
+import tvInstallationImg from '../../assets/install.png';
+import tvUninstallationImg from '../../assets/removal.png';
 
 const SERVICES = [
     { id: 'checkup', label: 'TV Check-up', image: '/services/tv_checkup.png', route: '/book?service=repair' },
@@ -163,6 +173,17 @@ const CustomerLandingPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Array<{ area: string; fullAddress: string; placeId: string }>>([]);
     const [searching, setSearching] = useState(false);
+
+    // Banners
+    const { fetchBanners } = useBanners();
+    const [banners, setBanners] = useState<PromotionalBanner[]>([]);
+
+    useEffect(() => {
+        // Load active banners only
+        fetchBanners(true).then(({ data }) => {
+            if (data) setBanners(data);
+        });
+    }, [fetchBanners]);
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Show all saved addresses
@@ -612,54 +633,111 @@ const CustomerLandingPage: React.FC = () => {
                         </Box>
                     </Box>
 
-                    {/* Hero Promotion */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ flex: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                    JamesTronic <span style={{ color: '#A78BFA' }}>Care</span>
-                                </Typography>
-                                <Box sx={{ background: '#10B981', color: '#FFF', px: 1.2, py: 0.3, borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    10 mins
-                                </Box>
-                            </Box>
-                            <Typography sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, mb: 1, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
-                                Expert TV Repair at <span style={{ color: '#FCD34D' }}>₹249*</span>
-                            </Typography>
-                            <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
-                                * Valid for first 3 bookings • Zero visitation fee
-                            </Typography>
+                    {/* dynamic Swiping Banners */}
+                    {banners.length > 0 ? (
+                        <Box sx={{ mt: 2, mx: -2.5, sm: { mx: 0 } }}>
+                            <Swiper
+                                loop={true}
+                                autoplay={{ delay: 4000, disableOnInteraction: false }}
+                                pagination={{ clickable: true, dynamicBullets: true }}
+                                modules={[Pagination, Autoplay]}
+                                style={{ paddingBottom: '30px' }}
+                            >
+                                {banners.map((banner) => (
+                                    <SwiperSlide key={banner.id}>
+                                        <Box 
+                                            onClick={() => banner.link_url && window.open(banner.link_url, '_blank')}
+                                            sx={{ 
+                                                width: '100%', 
+                                                aspectRatio: { xs: '2.2/1', sm: '2.5/1' },
+                                                px: { xs: 2.5, sm: 0 },
+                                                cursor: banner.link_url ? 'pointer' : 'default',
+                                            }}
+                                        >
+                                            <img 
+                                                src={banner.image_url} 
+                                                alt="Promotion" 
+                                                style={{ 
+                                                    width: '100%', 
+                                                    height: '100%', 
+                                                    objectFit: 'cover',
+                                                    borderRadius: '16px',
+                                                    boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+                                                }} 
+                                            />
+                                        </Box>
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
                         </Box>
-                    </Box>
+                    ) : (
+                        /* Fallback Hero Promotion if no banners uploaded */
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                                    <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                                        JamesTronic <span style={{ color: '#A78BFA' }}>Care</span>
+                                    </Typography>
+                                    <Box sx={{ background: '#10B981', color: '#FFF', px: 1.2, py: 0.3, borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        10 mins
+                                    </Box>
+                                </Box>
+                                <Typography sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, mb: 1, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+                                    Expert TV Repair at <span style={{ color: '#FCD34D' }}>₹249*</span>
+                                </Typography>
+                                <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
+                                    * Valid for first 3 bookings • Zero visitation fee
+                                </Typography>
+                            </Box>
+                        </Box>
+                    )}
                 </Box>
             </Box>
 
-            {/* ════ EXPLORE SERVICES GRID ════ */}
+            {/* ════ EXPLORE SERVICES GRID (CIRCULAR OVERHAUL) ════ */}
             <Container maxWidth="sm" sx={{ mt: 5 }}>
                 <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 3, letterSpacing: '-0.3px', px: 1 }}>
                     Explore all services
                 </Typography>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2.5, px: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1.5, sm: 3 }, px: 1 }}>
                     {SERVICES.map((svc) => (
                         <Box key={svc.id}>
                             <CardActionArea 
                                 onClick={() => navigate(svc.route)}
+                                disableRipple
                                 sx={{ 
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', 
-                                    p: 0, borderRadius: 4, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    '&:hover': { transform: 'scale(1.03) translateY(-4px)' }
+                                    p: 0, transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                    '&:hover': { transform: 'scale(1.05) translateY(-2px)' },
+                                    '&:active': { transform: 'scale(0.95)' }
                                 }}
                             >
                                 <Box sx={{ 
-                                    width: '100%', aspectRatio: '1/1', background: '#F9FAFB', borderRadius: 4,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.5, p: 1.5,
-                                    boxShadow: 'inset 0px -4px 12px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.03)',
-                                    border: '1px solid #F3F4F6'
+                                    width: { xs: '85px', sm: '110px' }, 
+                                    height: { xs: '85px', sm: '110px' }, 
+                                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)', 
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    mb: 1.5, p: 2,
+                                    border: '1.5px solid #FFFFFF',
+                                    boxShadow: '0 8px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.04)'
                                 }}>
-                                    <img src={svc.image} alt={svc.label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.1))' }} />
+                                    <img 
+                                        src={svc.image} 
+                                        alt={svc.label} 
+                                        style={{ 
+                                            width: '100%', 
+                                            height: '100%', 
+                                            objectFit: 'contain', 
+                                            filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' 
+                                        }} 
+                                    />
                                 </Box>
-                                <Typography sx={{ color: '#374151', fontSize: '0.8rem', fontWeight: 700, textAlign: 'center', lineHeight: 1.3, letterSpacing: '-0.2px' }}>
+                                <Typography sx={{ 
+                                    color: '#374151', fontSize: { xs: '0.75rem', sm: '0.85rem' }, 
+                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.2px' 
+                                }}>
                                     {svc.label}
                                 </Typography>
                             </CardActionArea>

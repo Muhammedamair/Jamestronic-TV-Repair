@@ -86,6 +86,29 @@ export const TV_BRANDS = [
     'Nokia', 'Sansui', 'BPL', 'Videocon', 'Other'
 ];
 
+export interface PushNotificationDevice {
+    user_id: string; // Refers to profiles.id
+    token: string;
+    device_type: string; // 'android' | 'ios' | 'web'
+    created_at: string;
+    updated_at: string;
+}
+
+// -----------------------------------------------------
+// 📦 Promotional Banners (Landing Page Carousel)
+// -----------------------------------------------------
+export interface PromotionalBanner {
+    id: string;
+    image_url: string;
+    link_url?: string;
+    is_active: boolean;
+    order_index: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export type TicketServiceType = 'REPAIR' | 'INSTALLATION';
+
 export interface Customer {
     id: string;
     name: string;
@@ -97,7 +120,6 @@ export interface Customer {
     updated_at: string;
 }
 
-export type TicketServiceType = 'REPAIR' | 'INSTALLATION';
 
 export interface Ticket {
     id: string;

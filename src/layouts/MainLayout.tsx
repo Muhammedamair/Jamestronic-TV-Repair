@@ -11,7 +11,8 @@ import {
     Menu as MenuIcon, ChevronLeft as ChevronLeftIcon, Settings as SettingsIcon,
     Logout as LogoutIcon, Build as BuildIcon, Store as StoreIcon,
     BarChart as AnalyticsIcon, Engineering as TechIcon,
-    LocalShipping as TransportIcon, Notifications as NotificationsIcon
+    LocalShipping as TransportIcon, Notifications as NotificationsIcon,
+    ViewCarousel as ViewCarouselIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -22,8 +23,8 @@ const DRAWER_COLLAPSED = 72;
 const navItems = [
     { label: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
     { label: 'Tickets', icon: <TicketIcon />, path: '/admin/tickets' },
+    { label: 'Banners', icon: <ViewCarouselIcon />, path: '/admin/banners' },
     { label: 'Customers', icon: <PeopleIcon />, path: '/admin/customers' },
-    { label: 'Dealer Network', icon: <StoreIcon />, path: '/admin/dealers' },
     { label: 'Tech Network', icon: <TechIcon />, path: '/admin/technicians' },
     { label: 'Transporters', icon: <TransportIcon />, path: '/admin/transporters' },
     { label: 'Procurement', icon: <BuildIcon />, path: '/admin/parts' },
