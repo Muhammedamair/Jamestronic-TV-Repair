@@ -629,9 +629,9 @@ const CustomerBookingPage: React.FC = () => {
                                     <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Wallmount Bracket *</Typography>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
                                         {[
-                                            { label: 'I have a bracket', val: 'Customer has bracket', desc: "We'll install your existing bracket", icon: <CheckCircleOutlineIcon sx={{ fontSize: 28 }} /> },
-                                            { label: 'Bring Non-Movable Bracket', val: 'Needs Fixed Bracket', desc: "Standard flat wall mount", icon: <FilterFramesIcon sx={{ fontSize: 28 }} /> },
-                                            { label: 'Bring Movable Bracket', val: 'Needs Movable Bracket', desc: "Swivel/tilt flexible mount", icon: <OpenWithIcon sx={{ fontSize: 28 }} /> }
+                                            { label: 'I have a bracket', val: 'Customer has bracket', desc: "We'll install your existing bracket.", icon: <CheckCircleOutlineIcon sx={{ fontSize: 28 }} /> },
+                                            { label: 'Bring Non-Movable Bracket', val: 'Needs Fixed Bracket', desc: "Standard flat wall mount.", image: '/assets/brackets/bracket-fixed.png' },
+                                            { label: 'Bring Movable Bracket', val: 'Needs Movable Bracket', desc: "Swivel/tilt flexible mount.", image: '/assets/brackets/bracket-movable.png' }
                                         ].map(opt => {
                                             const isSelected = form.bracketStatus === opt.val;
                                             return (
@@ -649,12 +649,21 @@ const CustomerBookingPage: React.FC = () => {
                                                     }}
                                                 >
                                                     <Box sx={{ 
-                                                        width: 48, height: 48, borderRadius: '50%', background: isSelected ? '#5B4CF2' : '#F3F4F6',
+                                                        width: opt.image ? 64 : 48, height: opt.image ? 64 : 48, 
+                                                        borderRadius: '50%', background: isSelected && !opt.image ? '#5B4CF2' : '#F9FAFB',
                                                         color: isSelected ? '#FFF' : '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        boxShadow: isSelected ? '0 4px 10px rgba(91,76,242,0.3)' : 'none',
-                                                        transition: 'all 0.3s'
+                                                        boxShadow: isSelected ? '0 4px 12px rgba(91,76,242,0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                                                        border: isSelected ? '3px solid #FFF' : '2px solid #F9FAFB',
+                                                        transition: 'all 0.3s', overflow: 'hidden'
                                                     }}>
-                                                        {opt.icon}
+                                                        {opt.image ? (
+                                                            <img src={opt.image} alt={opt.label} style={{
+                                                                width: '100%', height: '100%', objectFit: 'cover',
+                                                                filter: isSelected ? 'none' : 'grayscale(0.6)',
+                                                                transform: 'scale(1.16)',
+                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                            }} />
+                                                        ) : opt.icon}
                                                     </Box>
                                                     <Box sx={{ flex: 1 }}>
                                                         <Typography sx={{
