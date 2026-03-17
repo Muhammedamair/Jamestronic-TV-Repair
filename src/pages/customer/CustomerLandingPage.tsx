@@ -20,16 +20,9 @@ import {
     MoreVert as MoreIcon,
     NavigationOutlined as NavIcon
 } from '@mui/icons-material';
+import { motion, useReducedMotion } from 'framer-motion';
 
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
-import { useBanners } from '../../hooks/useBanners';
-import { PromotionalBanner } from '../../types/database';
-
-// Swiper Requirements
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
 
 // Static local assets
 import tvRepairImg from '../../assets/tvp.png';
@@ -154,6 +147,7 @@ const LABEL_ICONS: Record<string, React.ReactNode> = {
 
 const CustomerLandingPage: React.FC = () => {
     const navigate = useNavigate();
+    const shouldReduce = useReducedMotion();
     const [locationArea, setLocationArea] = useState<string>('');
     const [locationCity, setLocationCity] = useState<string>('');
     const [locating, setLocating] = useState(false);
@@ -173,17 +167,6 @@ const CustomerLandingPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Array<{ area: string; fullAddress: string; placeId: string }>>([]);
     const [searching, setSearching] = useState(false);
-
-    // Banners
-    const { fetchBanners } = useBanners();
-    const [banners, setBanners] = useState<PromotionalBanner[]>([]);
-
-    useEffect(() => {
-        // Load active banners only
-        fetchBanners(true).then(({ data }) => {
-            if (data) setBanners(data);
-        });
-    }, [fetchBanners]);
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Show all saved addresses
@@ -572,7 +555,7 @@ const CustomerLandingPage: React.FC = () => {
                 {addingAddress ? renderAddAddress() : renderLocationPicker()}
             </Dialog>
             
-            {/* ════ TOP PURPLE BANNER AREA ════ */}
+            {/* ════ TOP PURPLE BANNER AREA — ANIMATED ════ */}
             <Box sx={{ background: '#5B4CF2', pt: { xs: 3, sm: 4 }, pb: { xs: 5, sm: 6 }, px: { xs: 2.5, sm: 4 }, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, position: 'relative', overflow: 'hidden' }}>
                 <Box sx={{ 
                     position: 'absolute', top: -100, right: -50, width: 250, height: 250, 
@@ -581,128 +564,157 @@ const CustomerLandingPage: React.FC = () => {
                 
                 <Box sx={{ maxWidth: 600, mx: 'auto', position: 'relative', zIndex: 1 }}>
                     {/* Header Row: Location, Profile */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3.5 }}>
-                        <Box 
-                            onClick={handleLocationTap}
-                            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', '&:active': { opacity: 0.7 } }}
-                        >
-                            <Box sx={{ 
-                                background: 'rgba(255,255,255,0.2)', p: 0.8, borderRadius: '50%', display: 'flex',
-                                animation: !locationArea ? 'pulse 2s ease-in-out infinite' : 'none',
-                                '@keyframes pulse': { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.12)' } }
-                            }}>
-                                <LocationIcon sx={{ color: '#FFF', fontSize: 26 }} />
-                            </Box>
-                            <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#FFF' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.3px' }}>
-                                        {displayArea}
-                                    </Typography>
-                                    <Typography sx={{ fontSize: '0.9rem', ml: 0.5 }}>▾</Typography>
-                                </Box>
-                                <Typography sx={{ 
-                                    color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500,
-                                    maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                    <motion.div
+                        initial={shouldReduce ? false : { opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35 }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3.5 }}>
+                            <Box 
+                                onClick={handleLocationTap}
+                                sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', '&:active': { opacity: 0.7 } }}
+                            >
+                                <Box sx={{ 
+                                    background: 'rgba(255,255,255,0.2)', p: 0.8, borderRadius: '50%', display: 'flex',
+                                    animation: !locationArea ? 'pulse 2s ease-in-out infinite' : 'none',
+                                    '@keyframes pulse': { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.12)' } }
                                 }}>
-                                    {displayCity}
+                                    <LocationIcon sx={{ color: '#FFF', fontSize: 26 }} />
+                                </Box>
+                                <Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#FFF' }}>
+                                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.3px' }}>
+                                            {displayArea}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.9rem', ml: 0.5 }}>▾</Typography>
+                                    </Box>
+                                    <Typography sx={{ 
+                                        color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500,
+                                        maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                    }}>
+                                        {displayCity}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <IconButton 
+                                onClick={() => navigate('/my-tickets')}
+                                sx={{ background: 'rgba(255,255,255,0.15)', color: '#FFF', '&:hover': { background: 'rgba(255,255,255,0.25)' } }}
+                            >
+                                <PersonIcon />
+                            </IconButton>
+                        </Box>
+                    </motion.div>
+
+                    {/* Search Bar — spring slide up */}
+                    <motion.div
+                        initial={shouldReduce ? false : { opacity: 0, y: 20, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.15 }}
+                    >
+                        <Box 
+                            onClick={() => navigate('/book')}
+                            sx={{
+                                background: '#FFF', borderRadius: 4, mb: 4, p: 0.5,
+                                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                                display: 'flex', alignItems: 'center', cursor: 'text'
+                            }}
+                        >
+                            <Box sx={{ pl: 2, display: 'flex', alignItems: 'center', flex: 1 }}>
+                                <SearchIcon sx={{ color: '#9CA3AF', fontSize: 22, mr: 1.5 }} />
+                                <Typography sx={{ color: '#6B7280', fontSize: '1rem', fontWeight: 500, py: 1.5 }}>
+                                    Search for 'TV Repair'
                                 </Typography>
                             </Box>
                         </Box>
-                        <IconButton 
-                            onClick={() => navigate('/my-tickets')}
-                            sx={{ background: 'rgba(255,255,255,0.15)', color: '#FFF', '&:hover': { background: 'rgba(255,255,255,0.25)' } }}
-                        >
-                            <PersonIcon />
-                        </IconButton>
-                    </Box>
+                    </motion.div>
 
-                    {/* Search Bar */}
-                    <Box 
-                        onClick={() => navigate('/book')}
-                        sx={{
-                            background: '#FFF', borderRadius: 4, mb: 4, p: 0.5,
-                            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                            display: 'flex', alignItems: 'center', cursor: 'text'
-                        }}
-                    >
-                        <Box sx={{ pl: 2, display: 'flex', alignItems: 'center', flex: 1 }}>
-                            <SearchIcon sx={{ color: '#9CA3AF', fontSize: 22, mr: 1.5 }} />
-                            <Typography sx={{ color: '#6B7280', fontSize: '1rem', fontWeight: 500, py: 1.5 }}>
-                                Search for 'TV Repair'
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    {/* dynamic Swiping Banners */}
-                    {banners.length > 0 ? (
-                        <Box sx={{ mt: 2, mx: -2.5, sm: { mx: 0 } }}>
-                            <Swiper
-                                loop={true}
-                                autoplay={{ delay: 4000, disableOnInteraction: false }}
-                                pagination={{ clickable: true, dynamicBullets: true }}
-                                modules={[Pagination, Autoplay]}
-                                style={{ paddingBottom: '30px' }}
+                    {/* ═══ HERO PROMOTION — word-by-word stagger ═══ */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ flex: 1 }}>
+                            <motion.div
+                                initial={shouldReduce ? false : { opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.35, delay: 0.25 }}
                             >
-                                {banners.map((banner) => (
-                                    <SwiperSlide key={banner.id}>
-                                        <Box 
-                                            onClick={() => banner.link_url && window.open(banner.link_url, '_blank')}
-                                            sx={{ 
-                                                width: '100%', 
-                                                aspectRatio: { xs: '2.2/1', sm: '2.5/1' },
-                                                px: { xs: 2.5, sm: 0 },
-                                                cursor: banner.link_url ? 'pointer' : 'default',
-                                            }}
-                                        >
-                                            <img 
-                                                src={banner.image_url} 
-                                                alt="Promotion" 
-                                                style={{ 
-                                                    width: '100%', 
-                                                    height: '100%', 
-                                                    objectFit: 'cover',
-                                                    borderRadius: '16px',
-                                                    boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
-                                                }} 
-                                            />
-                                        </Box>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
-                        </Box>
-                    ) : (
-                        /* Fallback Hero Promotion if no banners uploaded */
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Box sx={{ flex: 1 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
                                     <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
                                         JamesTronic <span style={{ color: '#A78BFA' }}>Care</span>
                                     </Typography>
-                                    <Box sx={{ background: '#10B981', color: '#FFF', px: 1.2, py: 0.3, borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                        10 mins
-                                    </Box>
+                                    <motion.div
+                                        animate={shouldReduce ? {} : {
+                                            boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 8px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)']
+                                        }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                        style={{ borderRadius: '4px' }}
+                                    >
+                                        <Box sx={{ background: '#10B981', color: '#FFF', px: 1.2, py: 0.3, borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            10 mins
+                                        </Box>
+                                    </motion.div>
                                 </Box>
-                                <Typography sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, mb: 1, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
-                                    Expert TV Repair at <span style={{ color: '#FCD34D' }}>₹249*</span>
-                                </Typography>
+                            </motion.div>
+
+                            {/* Staggered word-by-word headline */}
+                            <Box sx={{ mb: 1 }}>
+                                {['Expert', 'TV', 'Repair', 'at'].map((word, i) => (
+                                    <motion.span
+                                        key={word + i}
+                                        initial={shouldReduce ? false : { opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.35 + i * 0.08 }}
+                                        style={{ display: 'inline-block', marginRight: '8px' }}
+                                    >
+                                        <Typography component="span" sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+                                            {word}
+                                        </Typography>
+                                    </motion.span>
+                                ))}
+                                <motion.span
+                                    initial={shouldReduce ? false : { opacity: 0, scale: 0.7 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.7 }}
+                                    style={{ display: 'inline-block' }}
+                                >
+                                    <Typography component="span" sx={{ color: '#FCD34D', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+                                        ₹249*
+                                    </Typography>
+                                </motion.span>
+                            </Box>
+
+                            <motion.div
+                                initial={shouldReduce ? false : { opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.85, duration: 0.3 }}
+                            >
                                 <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
                                     * Valid for first 3 bookings • Zero visitation fee
                                 </Typography>
-                            </Box>
+                            </motion.div>
                         </Box>
-                    )}
+                    </Box>
                 </Box>
             </Box>
 
-            {/* ════ EXPLORE SERVICES GRID (CIRCULAR OVERHAUL) ════ */}
+            {/* ════ EXPLORE SERVICES GRID — STAGGERED POP ENTRANCE ════ */}
             <Container maxWidth="sm" sx={{ mt: 5 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 3, letterSpacing: '-0.3px', px: 1 }}>
-                    Explore all services
-                </Typography>
+                <motion.div
+                    initial={shouldReduce ? false : { opacity: 0, x: -15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, delay: 0.4 }}
+                >
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 3, letterSpacing: '-0.3px', px: 1 }}>
+                        Explore all services
+                    </Typography>
+                </motion.div>
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1.5, sm: 3 }, px: 1 }}>
-                    {SERVICES.map((svc) => (
-                        <Box key={svc.id}>
+                    {SERVICES.map((svc, i) => (
+                        <motion.div
+                            key={svc.id}
+                            initial={shouldReduce ? false : { opacity: 0, y: 25, scale: 0.85 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: 0.5 + i * 0.1 }}
+                        >
                             <CardActionArea 
                                 onClick={() => navigate(svc.route)}
                                 disableRipple
@@ -741,70 +753,96 @@ const CustomerLandingPage: React.FC = () => {
                                     {svc.label}
                                 </Typography>
                             </CardActionArea>
-                        </Box>
+                        </motion.div>
                     ))}
                 </Box>
             </Container>
 
-            {/* ════ BRAND PROMISES / TRUST ════ */}
+            {/* ════ BRAND PROMISES / TRUST — FADE IN ════ */}
             <Container maxWidth="sm" sx={{ mt: 6 }}>
                 <Box sx={{ px: 1 }}>
-                    <Card sx={{ background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', border: '1px solid #D1FAE5', borderRadius: 4, mb: 3, boxShadow: 'none' }}>
-                        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                            <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
-                                <VerifiedIcon fontSize="medium" />
+                    <motion.div
+                        initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.95 }}
+                    >
+                        <Card sx={{ background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', border: '1px solid #D1FAE5', borderRadius: 4, mb: 3, boxShadow: 'none' }}>
+                            <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                                <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                                    <VerifiedIcon fontSize="medium" />
+                                </Box>
+                                <Box>
+                                    <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
+                                    <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
+                                </Box>
                             </Box>
-                            <Box>
-                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
-                                <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
-                            </Box>
-                        </Box>
-                    </Card>
+                        </Card>
+                    </motion.div>
 
                     <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2, px: 0.5, mx: -0.5, '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-                        <Card sx={{ minWidth: 220, flexShrink: 0, p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                                <Box sx={{ background: '#FEF3C7', p: 0.8, borderRadius: 2, color: '#D97706', display: 'flex' }}><StarIcon sx={{ fontSize: 20 }} /></Box>
-                                <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>4.8/5 Rating</Typography>
-                            </Box>
-                            <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>Trusted by over 1.1M customers in Hyderabad.</Typography>
-                        </Card>
-                        <Card sx={{ minWidth: 220, flexShrink: 0, p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                                <Box sx={{ background: '#DBEAFE', p: 0.8, borderRadius: 2, color: '#2563EB', display: 'flex' }}><CheckCircleIcon sx={{ fontSize: 20 }} /></Box>
-                                <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>Verified Techs</Typography>
-                            </Box>
-                            <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>100% background checked & brand certified experts.</Typography>
-                        </Card>
+                        <motion.div
+                            initial={shouldReduce ? false : { opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.35, delay: 1.05 }}
+                            style={{ minWidth: 220, flexShrink: 0 }}
+                        >
+                            <Card sx={{ p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF', height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                                    <Box sx={{ background: '#FEF3C7', p: 0.8, borderRadius: 2, color: '#D97706', display: 'flex' }}><StarIcon sx={{ fontSize: 20 }} /></Box>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>4.8/5 Rating</Typography>
+                                </Box>
+                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>Trusted by over 1.1M customers in Hyderabad.</Typography>
+                            </Card>
+                        </motion.div>
+                        <motion.div
+                            initial={shouldReduce ? false : { opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.35, delay: 1.15 }}
+                            style={{ minWidth: 220, flexShrink: 0 }}
+                        >
+                            <Card sx={{ p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF', height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                                    <Box sx={{ background: '#DBEAFE', p: 0.8, borderRadius: 2, color: '#2563EB', display: 'flex' }}><CheckCircleIcon sx={{ fontSize: 20 }} /></Box>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>Verified Techs</Typography>
+                                </Box>
+                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>100% background checked & brand certified experts.</Typography>
+                            </Card>
+                        </motion.div>
                     </Box>
                 </Box>
             </Container>
 
-            {/* ════ BOTTOM NAVIGATION BAR ════ */}
-            <Box sx={{ 
-                position: 'fixed', bottom: 0, left: 0, right: 0, 
-                background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                borderTop: '1px solid rgba(0,0,0,0.08)',
-                display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
-                pt: 1.5, pb: { xs: 3, sm: 2 }, zIndex: 1000
-            }}>
-                <Box onClick={() => navigate('/')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#000' }}>
-                    <Box sx={{ background: '#000', color: '#FFF', width: 26, height: 26, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem' }}>JT</Box>
-                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 800 }}>JT</Typography>
+            {/* ════ BOTTOM NAVIGATION BAR — SLIDE UP ════ */}
+            <motion.div
+                initial={shouldReduce ? false : { y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 250, damping: 25, delay: 1.1 }}
+                style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}
+            >
+                <Box sx={{ 
+                    background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    borderTop: '1px solid rgba(0,0,0,0.08)',
+                    display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
+                    pt: 1.5, pb: { xs: 3, sm: 2 }
+                }}>
+                    <Box onClick={() => navigate('/')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#000' }}>
+                        <Box sx={{ background: '#000', color: '#FFF', width: 26, height: 26, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem' }}>JT</Box>
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 800 }}>JT</Typography>
+                    </Box>
+                    <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                        <SearchIcon sx={{ fontSize: 26 }} />
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
+                    </Box>
+                    <Box onClick={() => navigate('/buy')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                        <ShopIcon sx={{ fontSize: 26 }} />
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Buy</Typography>
+                    </Box>
+                    <Box onClick={() => navigate('/account')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                        <PersonIcon sx={{ fontSize: 26 }} />
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Account</Typography>
+                    </Box>
                 </Box>
-                <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                    <SearchIcon sx={{ fontSize: 26 }} />
-                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
-                </Box>
-                <Box onClick={() => navigate('/buy')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                    <ShopIcon sx={{ fontSize: 26 }} />
-                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Buy</Typography>
-                </Box>
-                <Box onClick={() => navigate('/account')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                    <PersonIcon sx={{ fontSize: 26 }} />
-                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Account</Typography>
-                </Box>
-            </Box>
+            </motion.div>
         </Box>
     );
 };
