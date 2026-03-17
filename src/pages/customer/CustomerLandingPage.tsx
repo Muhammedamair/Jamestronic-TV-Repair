@@ -21,6 +21,7 @@ import {
     Delete as DeleteIcon,
     MoreVert as MoreIcon,
     NavigationOutlined as NavIcon,
+    ShoppingBag as ShopIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
@@ -718,7 +719,7 @@ const CustomerLandingPage: React.FC = () => {
                     <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
                 </Box>
                 <Box onClick={() => navigate('/buy')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                    <LocationIcon sx={{ fontSize: 26 }} />
+                    <ShopIcon sx={{ fontSize: 26 }} />
                     <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Buy</Typography>
                 </Box>
                 <Box onClick={() => navigate('/account')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>

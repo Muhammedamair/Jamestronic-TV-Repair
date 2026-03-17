@@ -238,12 +238,12 @@ const CustomerAccountPage: React.FC = () => {
                         </CardContent>
                     </Card>
 
-                    <Card onClick={() => navigate('/my-tickets')} sx={{ cursor: 'pointer', background: '#FFF', border: '1px solid #F3F4F6', borderRadius: 3, boxShadow: 'none', transition: 'all 0.2s', '&:hover': { borderColor: '#10B981', boxShadow: '0 4px 16px rgba(16,185,129,0.1)' } }}>
+                    <Card onClick={() => navigate('/buy')} sx={{ cursor: 'pointer', background: '#FFF', border: '1px solid #F3F4F6', borderRadius: 3, boxShadow: 'none', transition: 'all 0.2s', '&:hover': { borderColor: '#10B981', boxShadow: '0 4px 16px rgba(16,185,129,0.1)' } }}>
                         <CardContent sx={{ p: 2, pb: '16px !important', display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ background: '#D1FAE5', p: 1.2, borderRadius: 2, display: 'flex' }}><HistoryIcon sx={{ color: '#059669' }} /></Box>
+                            <Box sx={{ background: '#D1FAE5', p: 1.2, borderRadius: 2, display: 'flex' }}><RepairIcon sx={{ color: '#059669' }} /></Box>
                             <Box sx={{ flex: 1 }}>
-                                <Typography sx={{ fontWeight: 700, color: '#111827' }}>View My Repairs</Typography>
-                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem' }}>Track active & past service tickets</Typography>
+                                <Typography sx={{ fontWeight: 700, color: '#111827' }}>Buy Electronics</Typography>
+                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem' }}>Smart TVs, Soundbars & Accessories</Typography>
                             </Box>
                             <ChevronRightIcon sx={{ color: '#D1D5DB' }} />
                         </CardContent>
