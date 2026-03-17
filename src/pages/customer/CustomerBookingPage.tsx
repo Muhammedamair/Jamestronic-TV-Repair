@@ -41,12 +41,12 @@ const TV_BRANDS = [
 const TV_SIZES = ['32"', '40"', '41"', '42"', '43"', '46"', '49"', '50"', '55"', '65"', '75"', '84"', '108"'];
 
 const COMMON_ISSUES = [
-    'No display / Black screen',
-    'Screen flickering',
-    'No sound but video works',
-    'Power issue / Won\'t turn on',
-    'Vertical / Horizontal lines',
-    'Not sure'
+    { label: 'No display', image: '/services/issues/black_screen.png' },
+    { label: 'Flickering', image: '/services/issues/flickering.png' },
+    { label: 'No sound', image: '/services/issues/no_sound.png' },
+    { label: 'Power issue', image: '/services/issues/power.png' },
+    { label: 'Lines on screen', image: '/services/issues/lines.png' },
+    { label: 'Not sure', image: '/services/issues/unknown.png' }
 ];
 
 // Service type config with 3D icon images
@@ -540,28 +540,43 @@ const CustomerBookingPage: React.FC = () => {
                             <Box sx={{ mb: 1 }}>
                                 <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
                                 {/* Quick select options */}
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2, mb: 2 }}>
+                                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
                                     {COMMON_ISSUES.map(issue => {
-                                        const isSelected = form.issueDescription === issue;
+                                        const isSelected = form.issueDescription === issue.label;
                                         return (
                                             <Box
-                                                key={issue}
-                                                onClick={() => updateField('issueDescription', issue)}
+                                                key={issue.label}
+                                                onClick={() => updateField('issueDescription', issue.label)}
                                                 sx={{
-                                                    py: 1.2, px: 2, borderRadius: 4, cursor: 'pointer',
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                                                    py: 1.5, px: 1, borderRadius: 4, cursor: 'pointer',
                                                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #E5E7EB',
+                                                    border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
                                                     background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
                                                     boxShadow: isSelected ? '0 4px 12px rgba(91, 76, 242, 0.15)' : '0 1px 3px rgba(0,0,0,0.02)',
                                                     '&:active': { transform: 'scale(0.96)' }
                                                 }}
                                             >
-                                                <Typography sx={{
-                                                    fontWeight: isSelected ? 700 : 500,
-                                                    fontSize: '0.85rem',
-                                                    color: isSelected ? '#5B4CF2' : '#4B5563',
+                                                <Box sx={{
+                                                    width: 60, height: 60, borderRadius: '50%',
+                                                    background: isSelected ? '#FFF' : '#F9FAFB',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5,
+                                                    boxShadow: isSelected ? 'inset 0 0 10px rgba(91, 76, 242, 0.08)' : 'inset 0 2px 5px rgba(0,0,0,0.02)',
+                                                    p: 0.5
                                                 }}>
-                                                    {issue}
+                                                    <img src={issue.image} alt={issue.label} style={{
+                                                        width: '100%', height: '100%', objectFit: 'contain',
+                                                        filter: isSelected ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' : 'grayscale(0.5) opacity(0.8)',
+                                                        transition: 'all 0.2s'
+                                                    }} />
+                                                </Box>
+                                                <Typography sx={{
+                                                    fontWeight: isSelected ? 800 : 600,
+                                                    fontSize: '0.8rem',
+                                                    color: isSelected ? '#5B4CF2' : '#4B5563',
+                                                    textAlign: 'center', lineHeight: 1.2
+                                                }}>
+                                                    {issue.label}
                                                 </Typography>
                                             </Box>
                                         );
