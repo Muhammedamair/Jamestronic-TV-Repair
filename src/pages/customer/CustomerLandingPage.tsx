@@ -717,11 +717,11 @@ const CustomerLandingPage: React.FC = () => {
                     <SearchIcon sx={{ fontSize: 26 }} />
                     <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
                 </Box>
-                <Box onClick={() => navigate('/book')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                <Box onClick={() => navigate('/buy')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
                     <LocationIcon sx={{ fontSize: 26 }} />
-                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Book</Typography>
+                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Buy</Typography>
                 </Box>
-                <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                <Box onClick={() => navigate('/account')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
                     <PersonIcon sx={{ fontSize: 26 }} />
                     <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Account</Typography>
                 </Box>

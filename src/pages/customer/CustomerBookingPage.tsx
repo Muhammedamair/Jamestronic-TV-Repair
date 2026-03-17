@@ -91,6 +91,23 @@ const CustomerBookingPage: React.FC = () => {
 
     // autocompleteRef removed — Autocomplete component was causing crashes
 
+    // ═══ SESSION-AWARE AUTO-FILL for returning customers ═══
+    useEffect(() => {
+        const token = localStorage.getItem('jamestronic_customer_token');
+        if (token) {
+            supabase.rpc('get_customer_profile', { p_session_token: token }).then(({ data, error: err }) => {
+                if (!err && data) {
+                    setForm(prev => ({
+                        ...prev,
+                        mobile: data.mobile || prev.mobile,
+                        customerName: data.name || prev.customerName,
+                        address: data.address || prev.address,
+                    }));
+                }
+            });
+        }
+    }, []);
+
     // ═══ AUTO-FILL LOCATION from landing page ═══
     useEffect(() => {
         // Read location already set by the user on the landing page
