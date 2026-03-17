@@ -64,12 +64,11 @@ const App: React.FC = () => (
   <ThemeProvider theme={theme}>
     <CssBaseline />
     <AuthProvider>
-      <GoogleMapsProvider>
         <BrowserRouter>
           <Routes>
             {/* ═══ Public Customer Routes ═══ */}
             <Route path="/" element={<CustomerLandingPage />} />
-            <Route path="/book" element={<CustomerBookingPage />} />
+            <Route path="/book" element={<GoogleMapsProvider><CustomerBookingPage /></GoogleMapsProvider>} />
             <Route path="/track" element={<CustomerTrackingPage />} />
             <Route path="/track/:ticketNumber" element={<CustomerTrackingPage />} />
             <Route path="/my-tickets" element={<CustomerTicketsPage />} />
@@ -114,7 +113,6 @@ const App: React.FC = () => (
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </GoogleMapsProvider>
     </AuthProvider>
   </ThemeProvider>
 );
