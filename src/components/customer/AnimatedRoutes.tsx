@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './PageTransition';
 import { useNavigationDirection } from '../../hooks/useNavigationDirection';
@@ -57,6 +57,7 @@ const AnimatedRoutes: React.FC = () => {
                         <CustomerBuyPage />
                     </PageTransition>
                 } />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </AnimatePresence>
     );

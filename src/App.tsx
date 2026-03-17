@@ -62,15 +62,6 @@ const App: React.FC = () => (
     <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* ═══ Public Customer Routes — Animated ═══ */}
-            <Route path="/" element={<AnimatedRoutes />} />
-            <Route path="/book" element={<AnimatedRoutes />} />
-            <Route path="/track" element={<AnimatedRoutes />} />
-            <Route path="/track/:ticketNumber" element={<AnimatedRoutes />} />
-            <Route path="/my-tickets" element={<AnimatedRoutes />} />
-            <Route path="/account" element={<AnimatedRoutes />} />
-            <Route path="/buy" element={<AnimatedRoutes />} />
-
             {/* ═══ Staff Login ═══ */}
             <Route path="/staff-login" element={<StaffLoginRoute><LoginPage /></StaffLoginRoute>} />
             <Route path="/login" element={<Navigate to="/staff-login" replace />} />
@@ -107,7 +98,8 @@ const App: React.FC = () => (
               <Route index element={<TransporterDashboardPage />} />
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* ═══ Customer Routes — single catch-all with AnimatePresence ═══ */}
+            <Route path="/*" element={<AnimatedRoutes />} />
           </Routes>
         </BrowserRouter>
     </AuthProvider>
