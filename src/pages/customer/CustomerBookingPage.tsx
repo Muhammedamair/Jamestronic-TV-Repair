@@ -627,11 +627,16 @@ const CustomerBookingPage: React.FC = () => {
                             {form.serviceType === 'installation' && (
                                 <Box sx={{ mb: 1 }}>
                                     <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Wallmount Bracket *</Typography>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
+                                    <Box sx={{ 
+                                        display: 'flex', overflowX: 'auto', gap: 2, pb: 2, mb: 1, pt: 1, px: 0.5, mx: -0.5,
+                                        scrollSnapType: 'x mandatory',
+                                        WebkitOverflowScrolling: 'touch',
+                                        '&::-webkit-scrollbar': { display: 'none' } 
+                                    }}>
                                         {[
-                                            { label: 'I have a bracket', val: 'Customer has bracket', desc: "We'll install your existing bracket.", icon: <CheckCircleOutlineIcon sx={{ fontSize: 28 }} /> },
-                                            { label: 'Bring Non-Movable Bracket', val: 'Needs Fixed Bracket', desc: "Standard flat wall mount.", image: '/assets/brackets/bracket-fixed.png' },
-                                            { label: 'Bring Movable Bracket', val: 'Needs Movable Bracket', desc: "Swivel/tilt flexible mount.", image: '/assets/brackets/bracket-movable.png' }
+                                            { label: 'I Have a Bracket', val: 'Customer has bracket', desc: "We'll install yours", icon: <CheckCircleOutlineIcon sx={{ fontSize: 40 }} /> },
+                                            { label: 'Non-Movable', val: 'Needs Fixed Bracket', desc: "Standard flat mount", image: '/assets/brackets/bracket-fixed.png' },
+                                            { label: 'Movable', val: 'Needs Movable Bracket', desc: "Swivel/tilt mount", image: '/assets/brackets/bracket-movable.png' }
                                         ].map(opt => {
                                             const isSelected = form.bracketStatus === opt.val;
                                             return (
@@ -639,47 +644,57 @@ const CustomerBookingPage: React.FC = () => {
                                                     key={opt.val}
                                                     onClick={() => updateField('bracketStatus', opt.val)}
                                                     sx={{
-                                                        display: 'flex', alignItems: 'center', gap: 2,
-                                                        py: 2, px: 2.5, borderRadius: 4, cursor: 'pointer',
-                                                        transition: 'all 0.2s',
+                                                        flex: '0 0 auto', width: 140, // Slightly wider to fit descriptions
+                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                                                        py: 2.5, px: 1.5, borderRadius: 5, cursor: 'pointer',
+                                                        scrollSnapAlign: 'start',
+                                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                                         border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
                                                         background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
                                                         boxShadow: isSelected ? '0 8px 16px rgba(91, 76, 242, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
-                                                        '&:active': { transform: 'scale(0.98)' }
+                                                        '&:active': { transform: 'scale(0.96)' }
                                                     }}
                                                 >
-                                                    <Box sx={{ 
-                                                        width: opt.image ? 64 : 48, height: opt.image ? 64 : 48, 
-                                                        borderRadius: '50%', background: isSelected && !opt.image ? '#5B4CF2' : '#F9FAFB',
-                                                        color: isSelected ? '#FFF' : '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    {/* Circular Window */}
+                                                    <Box sx={{
+                                                        width: 90, height: 90, borderRadius: '50%',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        overflow: 'hidden',
+                                                        background: opt.image ? '#FFF' : (isSelected ? '#5B4CF2' : '#F3F4F6'),
+                                                        color: isSelected ? '#FFF' : '#6B7280',
                                                         boxShadow: isSelected ? '0 4px 12px rgba(91,76,242,0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
                                                         border: isSelected ? '3px solid #FFF' : '2px solid #F9FAFB',
-                                                        transition: 'all 0.3s', overflow: 'hidden'
+                                                        mb: 0.5,
+                                                        transition: 'all 0.3s'
                                                     }}>
                                                         {opt.image ? (
                                                             <img src={opt.image} alt={opt.label} style={{
                                                                 width: '100%', height: '100%', objectFit: 'cover',
                                                                 filter: isSelected ? 'none' : 'grayscale(0.6)',
-                                                                transform: 'scale(1.16)',
+                                                                transform: 'scale(1.16)', // Zoom in to cleanly clip the outer edges
                                                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                                                             }} />
                                                         ) : opt.icon}
                                                     </Box>
-                                                    <Box sx={{ flex: 1 }}>
-                                                        <Typography sx={{
-                                                            fontWeight: isSelected ? 800 : 600,
-                                                            fontSize: '1rem',
-                                                            color: isSelected ? '#5B4CF2' : '#111827',
-                                                            mb: 0.3
-                                                        }}>
-                                                            {opt.label}
-                                                        </Typography>
-                                                        <Typography sx={{ color: isSelected ? '#5B4CF2' : '#6B7280', fontSize: '0.8rem', opacity: isSelected ? 0.9 : 1 }}>
-                                                            {opt.desc}
-                                                        </Typography>
-                                                    </Box>
+                                                    <Typography sx={{
+                                                        fontWeight: isSelected ? 800 : 700,
+                                                        fontSize: '0.9rem',
+                                                        color: isSelected ? '#5B4CF2' : '#111827',
+                                                        textAlign: 'center', lineHeight: 1.2
+                                                    }}>
+                                                        {opt.label}
+                                                    </Typography>
+                                                    <Typography sx={{
+                                                        fontWeight: 500,
+                                                        fontSize: '0.75rem',
+                                                        color: isSelected ? '#5B4CF2' : '#6B7280',
+                                                        opacity: isSelected ? 0.9 : 1,
+                                                        textAlign: 'center', lineHeight: 1.2
+                                                    }}>
+                                                        {opt.desc}
+                                                    </Typography>
                                                 </Box>
-                                            )
+                                            );
                                         })}
                                     </Box>
                                     <TextField
