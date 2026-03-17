@@ -558,11 +558,8 @@ const CustomerBookingPage: React.FC = () => {
                                                 }}
                                             >
                                                 <Box sx={{
-                                                    width: 60, height: 60, borderRadius: '50%',
-                                                    background: isSelected ? '#FFF' : '#F9FAFB',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5,
-                                                    boxShadow: isSelected ? 'inset 0 0 10px rgba(91, 76, 242, 0.08)' : 'inset 0 2px 5px rgba(0,0,0,0.02)',
-                                                    p: 0.5
+                                                    width: 80, height: 80,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5
                                                 }}>
                                                     <img src={issue.image} alt={issue.label} style={{
                                                         width: '100%', height: '100%', objectFit: 'contain',
