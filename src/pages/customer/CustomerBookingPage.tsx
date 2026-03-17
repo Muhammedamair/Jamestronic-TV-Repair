@@ -216,11 +216,6 @@ const CustomerBookingPage: React.FC = () => {
                 }
             }).catch(console.error);
 
-            // Clean up Google Maps Autocomplete ref before unmounting the form
-            autocompleteRef.current = null;
-            setStep(0); // Move away from step 2 so Autocomplete unmounts cleanly
-            // Use a microtask to let React unmount the Autocomplete component first
-            await new Promise(resolve => setTimeout(resolve, 50));
             setSuccess({ ticketNumber });
         } catch (err: any) {
             console.error('Booking error:', err);
@@ -230,50 +225,8 @@ const CustomerBookingPage: React.FC = () => {
         }
     };
 
-    // ════ SUCCESS SCREEN ════
-    if (success) {
-        return (
-            <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
-                <Card sx={{ maxWidth: 440, width: '100%', borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', border: 'none' }}>
-                    <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
-                        <Box sx={{ 
-                            width: 80, height: 80, borderRadius: '50%', background: '#D1FAE5', 
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 
-                        }}>
-                            <CheckIcon sx={{ fontSize: 44, color: '#10B981' }} />
-                        </Box>
-                        <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.6rem', mb: 1, letterSpacing: '-0.3px' }}>
-                            Booking Confirmed! 🎉
-                        </Typography>
-                        <Typography sx={{ color: '#6B7280', fontSize: '0.95rem', mb: 4 }}>
-                            Our expert will arrive at your location shortly. Save your ticket number to track progress.
-                        </Typography>
-
-                        <Box sx={{ background: '#F3F4F6', borderRadius: 3, py: 2.5, mb: 4 }}>
-                            <Typography sx={{ color: '#6B7280', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
-                                Ticket Number
-                            </Typography>
-                            <Typography sx={{ color: '#5B4CF2', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
-                                {success.ticketNumber}
-                            </Typography>
-                        </Box>
-
-                        <Button fullWidth variant="contained" onClick={() => navigate(`/track/${success.ticketNumber}`)}
-                            sx={{
-                                py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem', 
-                                mb: 2, boxShadow: '0 4px 14px rgba(91,76,242,0.4)', '&:hover': { background: '#4F46E5' }
-                            }}
-                        >
-                            Track Your TV Status
-                        </Button>
-                        <Button fullWidth variant="text" onClick={() => navigate('/')} sx={{ color: '#6B7280', textTransform: 'none', fontWeight: 600 }}>
-                            Back to Home
-                        </Button>
-                    </CardContent>
-                </Card>
-            </Box>
-        );
-    }
+    // Success screen is now rendered as an overlay inside the main return (see below)
+    // This prevents unmounting the Google Maps Autocomplete which causes __e3_ crashes
 
     const STEPS_CONFIG = [
         { label: 'Your Details', desc: "We'll use this to send you updates" },
@@ -821,6 +774,53 @@ const CustomerBookingPage: React.FC = () => {
                     )}
                 </Container>
             </Box>
+
+            {/* ════ SUCCESS OVERLAY — rendered ON TOP of the form to avoid unmounting Google Maps ════ */}
+            {success && (
+                <Box sx={{ 
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+                    background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    p: 3, zIndex: 9999 
+                }}>
+                    <Card sx={{ maxWidth: 440, width: '100%', borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', border: 'none' }}>
+                        <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+                            <Box sx={{ 
+                                width: 80, height: 80, borderRadius: '50%', background: '#D1FAE5', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 
+                            }}>
+                                <CheckIcon sx={{ fontSize: 44, color: '#10B981' }} />
+                            </Box>
+                            <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.6rem', mb: 1, letterSpacing: '-0.3px' }}>
+                                Booking Confirmed! 🎉
+                            </Typography>
+                            <Typography sx={{ color: '#6B7280', fontSize: '0.95rem', mb: 4 }}>
+                                Our expert will arrive at your location shortly. Save your ticket number to track progress.
+                            </Typography>
+
+                            <Box sx={{ background: '#F3F4F6', borderRadius: 3, py: 2.5, mb: 4 }}>
+                                <Typography sx={{ color: '#6B7280', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
+                                    Ticket Number
+                                </Typography>
+                                <Typography sx={{ color: '#5B4CF2', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                                    {success.ticketNumber}
+                                </Typography>
+                            </Box>
+
+                            <Button fullWidth variant="contained" onClick={() => navigate(`/track/${success.ticketNumber}`)}
+                                sx={{
+                                    py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem', 
+                                    mb: 2, boxShadow: '0 4px 14px rgba(91,76,242,0.4)', '&:hover': { background: '#4F46E5' }
+                                }}
+                            >
+                                Track Your TV Status
+                            </Button>
+                            <Button fullWidth variant="text" onClick={() => navigate('/')} sx={{ color: '#6B7280', textTransform: 'none', fontWeight: 600 }}>
+                                Back to Home
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </Box>
+            )}
         </Box>
     );
 };
