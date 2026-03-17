@@ -216,6 +216,11 @@ const CustomerBookingPage: React.FC = () => {
                 }
             }).catch(console.error);
 
+            // Clean up Google Maps Autocomplete ref before unmounting the form
+            autocompleteRef.current = null;
+            setStep(0); // Move away from step 2 so Autocomplete unmounts cleanly
+            // Use a microtask to let React unmount the Autocomplete component first
+            await new Promise(resolve => setTimeout(resolve, 50));
             setSuccess({ ticketNumber });
         } catch (err: any) {
             console.error('Booking error:', err);
