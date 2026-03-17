@@ -540,7 +540,12 @@ const CustomerBookingPage: React.FC = () => {
                             <Box sx={{ mb: 1 }}>
                                 <Typography sx={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 600, mb: 1.5 }}>Describe the Issue *</Typography>
                                 {/* Quick select options */}
-                                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
+                                <Box sx={{ 
+                                    display: 'flex', overflowX: 'auto', gap: 2, pb: 2, mb: 1, pt: 1, px: 0.5, mx: -0.5,
+                                    scrollSnapType: 'x mandatory',
+                                    WebkitOverflowScrolling: 'touch',
+                                    '&::-webkit-scrollbar': { display: 'none' } 
+                                }}>
                                     {COMMON_ISSUES.map(issue => {
                                         const isSelected = form.issueDescription === issue.label;
                                         return (
@@ -548,31 +553,36 @@ const CustomerBookingPage: React.FC = () => {
                                                 key={issue.label}
                                                 onClick={() => updateField('issueDescription', issue.label)}
                                                 sx={{
+                                                    flex: '0 0 auto', width: 135,
                                                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                                                    py: 1.5, px: 1, borderRadius: 4, cursor: 'pointer',
+                                                    py: 2.5, px: 1.5, borderRadius: 5, cursor: 'pointer',
+                                                    scrollSnapAlign: 'start',
                                                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                                     border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
                                                     background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
-                                                    boxShadow: isSelected ? '0 4px 12px rgba(91, 76, 242, 0.15)' : '0 1px 3px rgba(0,0,0,0.02)',
+                                                    boxShadow: isSelected ? '0 8px 16px rgba(91, 76, 242, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
                                                     '&:active': { transform: 'scale(0.96)' }
                                                 }}
                                             >
+                                                {/* Circular Window to crop out the square bounds of the 3D Image */}
                                                 <Box sx={{
-                                                    width: 110, height: 110,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5,
-                                                    mt: -1 // Pull image up slightly so it fits better
+                                                    width: 90, height: 90, borderRadius: '50%',
+                                                    display: 'flex', alignItems: 'center', justifyItems: 'center',
+                                                    overflow: 'hidden', background: '#FFF',
+                                                    boxShadow: isSelected ? '0 4px 12px rgba(91,76,242,0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                                                    border: isSelected ? '3px solid #FFF' : '2px solid #F9FAFB',
+                                                    mb: 0.5
                                                 }}>
                                                     <img src={issue.image} alt={issue.label} style={{
-                                                        width: '100%', height: '100%', objectFit: 'contain',
-                                                        mixBlendMode: 'multiply', // This removes the white background from the images
-                                                        filter: isSelected ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' : 'grayscale(0.4) opacity(0.85)',
-                                                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                        width: '100%', height: '100%', objectFit: 'cover',
+                                                        filter: isSelected ? 'none' : 'grayscale(0.6)',
+                                                        transform: 'scale(1.16)', // Zoom in to cleanly clip the outer edges, leaving the podium
+                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                                                     }} />
                                                 </Box>
                                                 <Typography sx={{
                                                     fontWeight: isSelected ? 800 : 600,
-                                                    fontSize: '0.8rem',
+                                                    fontSize: '0.85rem',
                                                     color: isSelected ? '#5B4CF2' : '#4B5563',
                                                     textAlign: 'center', lineHeight: 1.2
                                                 }}>
