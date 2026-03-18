@@ -8,58 +8,61 @@ interface BookingSuccessProps {
     ticketNumber: string;
 }
 
-/* ═══ Premium TV Success Animation ═══ */
-const PremiumSuccessAnimation: React.FC = () => (
-    <Box sx={{ position: 'relative', width: 100, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
-        {/* Glow behind TV */}
+/* ═══ Premium "Sofa Relaxation" Success Animation ═══ */
+const SofaRelaxAnimation: React.FC = () => (
+    <Box sx={{ position: 'relative', width: 140, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 4 }}>
+        {/* Glow behind Animation */}
         <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            style={{ position: 'absolute', width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(91,76,242,0.15) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%' }}
+            style={{ position: 'absolute', width: '120%', height: '120%', background: 'radial-gradient(circle, rgba(91,76,242,0.1) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%' }}
         />
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'relative', zIndex: 2 }}>
-            {/* TV Frame */}
+        
+        <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'relative', zIndex: 2 }}>
+            {/* TV Screen (Floating above Sofa) */}
             <motion.rect
-                x="8" y="14" width="48" height="32" rx="4"
-                stroke="#111827" strokeWidth="3" fill="none"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
+                x="35" y="5" width="50" height="30" rx="3"
+                stroke="#111827" strokeWidth="2.5" fill="none"
+                initial={{ pathLength: 0, opacity: 0, y: -10 }}
+                animate={{ pathLength: 1, opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
             />
-            {/* TV Stand Base */}
+            {/* TV Stand */}
+            <motion.path d="M 55 35 L 55 40 M 50 40 L 60 40" stroke="#111827" strokeWidth="2" strokeLinecap="round" 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} />
+            
+            {/* TV Success Checkmark */}
             <motion.path
-                d="M 24 54 L 40 54"
-                stroke="#111827" strokeWidth="3" strokeLinecap="round"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
-            />
-            <motion.path
-                d="M 32 46 L 32 54"
-                stroke="#111827" strokeWidth="3" strokeLinecap="round"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
+                d="M 54 20 L 58 24 L 66 16"
+                stroke="#10B981" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.4, delay: 1.2 }}
             />
 
-            {/* Inner Screen Color Fill (Turns on) */}
-            <motion.rect
-                x="11" y="17" width="42" height="26" rx="2"
-                fill="#D1FAE5"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.8, ease: "easeOut" }}
-            />
-
-            {/* Success Checkmark inside TV */}
+            {/* Sofa (Comfortable Base) */}
             <motion.path
-                d="M 24 30 L 29 35 L 40 23"
-                stroke="#10B981" strokeWidth="3.5" fill="none"
-                strokeLinecap="round" strokeLinejoin="round"
+                d="M 10 60 Q 10 50 20 50 L 100 50 Q 110 50 110 60 L 110 75 Q 110 80 100 80 L 20 80 Q 10 80 10 75 Z"
+                stroke="#111827" strokeWidth="2.5" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
+                transition={{ duration: 0.8, delay: 0.4, ease: "easeInOut" }}
+            />
+            {/* Sofa Armrests */}
+            <motion.path
+                d="M 10 60 Q 5 60 5 68 Q 5 75 10 75 M 110 60 Q 115 60 115 68 Q 115 75 110 75"
+                stroke="#111827" strokeWidth="2.5" fill="none"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+            />
+            {/* Sofa "Comfort" Waves */}
+            <motion.path
+                d="M 30 45 Q 35 40 40 45 M 80 45 Q 85 40 90 45"
+                stroke="#5B4CF2" strokeWidth="2" strokeLinecap="round" opacity="0.6"
+                animate={{ y: [0, -5, 0], opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
         </svg>
     </Box>
@@ -118,7 +121,8 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
         <Box sx={{ 
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
             background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            p: 3, zIndex: 9999 
+            p: 3, zIndex: 9999,
+            colorScheme: 'light' // Force light color scheme for device accessibility
         }}>
             {/* ═══ Lottie Confetti — plays once then stops ═══ */}
             {!shouldReduce && confettiData && (
@@ -141,21 +145,21 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                 transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.15 }}
                 style={{ width: '100%', maxWidth: 440, willChange: 'transform, opacity' }}
             >
-                <Box sx={{ 
+                <Box style={{ background: '#FFFFFF', color: '#111827' }} sx={{ 
                     borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', 
-                    border: 'none', background: '#FFFFFF', color: '#111827', overflow: 'hidden'
+                    border: 'none', overflow: 'hidden'
                 }}>
                     <Box sx={{ p: { xs: 3, sm: 5 } }}>
-                        {/* Premium TV Success Animation */}
-                        <PremiumSuccessAnimation />
+                        {/* Premium Sofa Success Animation */}
+                        <SofaRelaxAnimation />
 
                         {/* Typing text */}
-                        <TypingText text="Booking Confirmed! 🎉" delay={1.4} />
+                        <TypingText text="Booking Confirmed! 🎉" delay={1.6} />
 
                         <motion.div
                             initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 2.2, duration: 0.4 }}
+                            transition={{ delay: 2.4, duration: 0.4 }}
                         >
                             <Typography sx={{ color: '#4B5563', fontSize: '0.95rem', mb: 4, fontWeight: 500 }}>
                                 Our expert will arrive at your location shortly. Save your ticket number to track progress.
