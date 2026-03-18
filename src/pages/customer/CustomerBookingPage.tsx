@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { motion, useReducedMotion } from 'framer-motion';
 
 // Sub-components (split for maintainability & animation readiness)
 import BookingStep1 from './booking/BookingStep1';
@@ -181,6 +182,8 @@ const CustomerBookingPage: React.FC = () => {
         }
     };
 
+    const shouldReduce = useReducedMotion();
+
     const STEPS_CONFIG = [
         { label: 'Your Details', desc: "We'll use this to send you updates" },
         { label: 'TV Information', desc: "Tell us about your TV and the issue" },
@@ -232,10 +235,16 @@ const CustomerBookingPage: React.FC = () => {
                     {STEPS_CONFIG[step].desc}
                 </Typography>
 
-                <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
-                    {step === 0 && (
-                        <BookingStep1 form={form} updateField={updateField} />
-                    )}
+                <motion.div
+                    key={step} // Force re-animation on step change
+                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                >
+                    <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
+                        {step === 0 && (
+                            <BookingStep1 form={form} updateField={updateField} />
+                        )}
                     {step === 1 && (
                         <BookingStep2
                             form={form}
@@ -250,6 +259,7 @@ const CustomerBookingPage: React.FC = () => {
                         <BookingStep3 form={form} updateField={updateField} handleGetCurrentLocation={handleGetCurrentLocation} />
                     )}
                 </Box>
+                </motion.div>
 
                 <Typography sx={{ color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center', mt: 4, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                     <span style={{ fontSize: '1rem' }}>🔒</span> Your information is secure.
@@ -273,16 +283,29 @@ const CustomerBookingPage: React.FC = () => {
                     )}
                     
                     {step < 2 ? (
-                        <Button
-                            variant="contained" disabled={!canProceed()} onClick={() => setStep(s => s + 1)}
-                            sx={{
-                                flex: 2, py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem',
-                                boxShadow: '0 4px 14px rgba(91,76,242,0.3)', '&:hover': { background: '#4F46E5' },
-                                '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' }
-                            }}
-                        >
-                            Continue
-                        </Button>
+                        <Box sx={{ flex: 2, display: 'flex' }}>
+                            <motion.div
+                                animate={shouldReduce ? false : { 
+                                    scale: canProceed() ? [1, 1.05, 1] : 1,
+                                    boxShadow: canProceed() ? ['0 4px 14px rgba(91,76,242,0)', '0 4px 14px rgba(91,76,242,0.5)', '0 4px 14px rgba(91,76,242,0.3)'] : 'none'
+                                }}
+                                transition={{ duration: 0.4 }}
+                                style={{ flex: 1, display: 'flex' }}
+                            >
+                                <Button
+                                    fullWidth
+                                    variant="contained" disabled={!canProceed()} onClick={() => setStep(s => s + 1)}
+                                    sx={{
+                                        py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem',
+                                        boxShadow: '0 4px 14px rgba(91,76,242,0.3)', '&:hover': { background: '#4F46E5' },
+                                        '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' },
+                                        transition: 'background 0.3s'
+                                    }}
+                                >
+                                    Continue
+                                </Button>
+                            </motion.div>
+                        </Box>
                     ) : (
                         <Button
                             variant="contained" disabled={!canProceed() || submitting} onClick={handleSubmit}
