@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, TextField, Dialog, DialogContent } from '@mui/material';
 import { CheckCircleOutline as CheckCircleOutlineIcon } from '@mui/icons-material';
+import { motion, useReducedMotion, Variants } from 'framer-motion';
 
 // Brand config — all popular TV brands in India (especially Hyderabad market)
 const TV_BRANDS = [
@@ -66,6 +67,26 @@ interface BookingStep2Props {
 }
 
 const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBrandPicker, setShowBrandPicker, showSizePicker, setShowSizePicker }) => {
+    const shouldReduce = useReducedMotion();
+
+    // Shake animation variant for issue cards
+    const shakeVariants = {
+        shake: { x: [0, -4, 4, -4, 4, 0], transition: { duration: 0.4 } },
+        tap: { scale: 0.95 }
+    };
+
+    // Staggered list container
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+    };
+    
+    // Staggered list item
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 15, scale: 0.9 },
+        show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 300, damping: 22 } }
+    };
+
     return (
         <>
             {/* ═══ BRAND PICKER DIALOG — Circular Brand Buttons ═══ */}
@@ -88,55 +109,57 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                     <Typography sx={{ color: '#9CA3AF', fontSize: '0.78rem', mb: 3, px: 0.5 }}>
                         Popular brands in Hyderabad
                     </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
-                        {TV_BRANDS.map(brand => {
-                            const isSelected = form.tvBrand === brand.name;
-                            return (
-                                <Box
-                                    key={brand.name}
-                                    onClick={() => { updateField('tvBrand', brand.name); setShowBrandPicker(false); }}
-                                    sx={{
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.15s ease-out',
-                                        '&:active': { transform: 'scale(0.94)' }
-                                    }}
-                                >
-                                    {/* Circular Brand badge */}
-                                    <Box sx={{
-                                        width: 68, height: 68, borderRadius: '50%',
-                                        background: '#FFF',
-                                        border: isSelected ? `2.5px solid ${brand.color}` : '1.5px solid #F3F4F6',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        mb: 1, position: 'relative',
-                                        boxShadow: isSelected
-                                            ? `0 6px 16px ${brand.color}30, inset 0 0 20px ${brand.bg}`
-                                            : '0 4px 12px rgba(0,0,0,0.03)',
-                                    }}>
-                                        <Typography sx={{
-                                            fontWeight: 900,
-                                            fontSize: brand.name.length <= 4 ? '1.1rem' : '0.8rem',
-                                            color: brand.color,
-                                            letterSpacing: brand.name.length <= 3 ? '0.5px' : '-0.3px',
-                                            lineHeight: 1,
-                                            textTransform: brand.name.length <= 4 ? 'uppercase' : 'none',
-                                            position: 'relative', zIndex: 1
-                                        }}>
-                                            {brand.name.length <= 5 ? brand.name : brand.name.split('/')[0]}
-                                        </Typography>
-                                    </Box>
-                                    <Typography sx={{
-                                        fontWeight: isSelected ? 800 : 500,
-                                        fontSize: '0.75rem',
-                                        color: isSelected ? brand.color : '#4B5563',
-                                        textAlign: 'center', lineHeight: 1.2,
-                                    }}>
-                                        {brand.name}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </Box>
+                    <motion.div variants={shouldReduce ? {} : containerVariants} initial="hidden" animate="show">
+                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+                            {TV_BRANDS.map(brand => {
+                                const isSelected = form.tvBrand === brand.name;
+                                return (
+                                    <motion.div key={brand.name} variants={shouldReduce ? {} : itemVariants}>
+                                        <motion.div
+                                            whileTap={shouldReduce ? {} : { scale: 0.9 }}
+                                            onClick={() => { updateField('tvBrand', brand.name); setShowBrandPicker(false); }}
+                                            style={{
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {/* Circular Brand badge */}
+                                            <Box sx={{
+                                                width: 68, height: 68, borderRadius: '50%',
+                                                background: '#FFF',
+                                                border: isSelected ? `2.5px solid ${brand.color}` : '1.5px solid #F3F4F6',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                mb: 1, position: 'relative',
+                                                boxShadow: isSelected
+                                                    ? `0 6px 16px ${brand.color}30, inset 0 0 20px ${brand.bg}`
+                                                    : '0 4px 12px rgba(0,0,0,0.03)',
+                                            }}>
+                                                <Typography sx={{
+                                                    fontWeight: 900,
+                                                    fontSize: brand.name.length <= 4 ? '1.1rem' : '0.8rem',
+                                                    color: brand.color,
+                                                    letterSpacing: brand.name.length <= 3 ? '0.5px' : '-0.3px',
+                                                    lineHeight: 1,
+                                                    textTransform: brand.name.length <= 4 ? 'uppercase' : 'none',
+                                                    position: 'relative', zIndex: 1
+                                                }}>
+                                                    {brand.name.length <= 5 ? brand.name : brand.name.split('/')[0]}
+                                                </Typography>
+                                            </Box>
+                                            <Typography sx={{
+                                                fontWeight: isSelected ? 800 : 500,
+                                                fontSize: '0.75rem',
+                                                color: isSelected ? brand.color : '#4B5563',
+                                                textAlign: 'center', lineHeight: 1.2,
+                                            }}>
+                                                {brand.name}
+                                            </Typography>
+                                        </motion.div>
+                                    </motion.div>
+                                );
+                            })}
+                        </Box>
+                    </motion.div>
                 </DialogContent>
             </Dialog>
 
@@ -157,33 +180,35 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                     <Typography sx={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827', mb: 3, px: 0.5 }}>
                         Select TV Size
                     </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
-                        {TV_SIZES.map(size => {
-                            const isSelected = form.tvSize === size;
-                            return (
-                                <Box
-                                    key={size}
-                                    onClick={() => { updateField('tvSize', size); setShowSizePicker(false); }}
-                                    sx={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        py: 2, borderRadius: 3, cursor: 'pointer',
-                                        transition: 'all 0.1s ease-out',
-                                        border: isSelected ? `2px solid #5B4CF2` : '1.5px solid #F3F4F6',
-                                        background: isSelected ? '#F3F0FF' : '#FAFAFA',
-                                        '&:active': { transform: 'scale(0.95)' }
-                                    }}
-                                >
-                                    <Typography sx={{
-                                        fontWeight: isSelected ? 800 : 600,
-                                        fontSize: '1rem',
-                                        color: isSelected ? '#5B4CF2' : '#374151',
-                                    }}>
-                                        {size}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </Box>
+                    <motion.div variants={shouldReduce ? {} : containerVariants} initial="hidden" animate="show">
+                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+                            {TV_SIZES.map(size => {
+                                const isSelected = form.tvSize === size;
+                                return (
+                                    <motion.div key={size} variants={shouldReduce ? {} : itemVariants}>
+                                        <motion.div
+                                            whileTap={shouldReduce ? {} : { scale: 0.9 }}
+                                            onClick={() => { updateField('tvSize', size); setShowSizePicker(false); }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                padding: '16px 0', borderRadius: '12px', cursor: 'pointer',
+                                                border: isSelected ? `2px solid #5B4CF2` : '1.5px solid #F3F4F6',
+                                                background: isSelected ? '#F3F0FF' : '#FAFAFA',
+                                            }}
+                                        >
+                                            <Typography sx={{
+                                                fontWeight: isSelected ? 800 : 600,
+                                                fontSize: '1rem',
+                                                color: isSelected ? '#5B4CF2' : '#374151',
+                                            }}>
+                                                {size}
+                                            </Typography>
+                                        </motion.div>
+                                    </motion.div>
+                                );
+                            })}
+                        </Box>
+                    </motion.div>
                 </DialogContent>
             </Dialog>
 
@@ -204,25 +229,44 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                                     border: isActive ? `2px solid ${option.color}` : '1.5px solid #F3F4F6',
                                     background: '#FFF',
                                     boxShadow: isActive ? `0 8px 20px ${option.color}25` : '0 2px 8px rgba(0,0,0,0.04)',
-                                    '&:active': { transform: 'scale(0.96)' }
+                                    '&:active': { transform: 'scale(0.96)' },
+                                    position: 'relative'
                                 }}
                             >
                                 <Box sx={{
                                     width: 90, height: 90, borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    overflow: 'hidden', background: '#FFF',
+                                    background: '#FFF', position: 'relative',
                                     boxShadow: isActive ? `0 4px 12px ${option.color}40` : '0 2px 8px rgba(0,0,0,0.06)',
-                                    border: isActive ? '3px solid #FFF' : '2px solid #F9FAFB',
                                     mb: 0.5
                                 }}>
-                                    <img src={option.image} alt={option.label}
-                                        style={{ 
-                                            width: '100%', height: '100%', objectFit: 'cover', 
-                                            filter: isActive ? 'none' : 'grayscale(0.6)',
-                                            transform: 'scale(1.16)',
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
-                                        }}
-                                    />
+                                    {/* Animated SVG Ring */}
+                                    {isActive && !shouldReduce && (
+                                        <svg width="90" height="90" viewBox="0 0 90 90" style={{ position: 'absolute', top: 0, left: 0 }}>
+                                            <motion.circle
+                                                cx="45" cy="45" r="43.5"
+                                                fill="transparent"
+                                                stroke={option.color}
+                                                strokeWidth="3"
+                                                initial={{ pathLength: 0 }}
+                                                animate={{ pathLength: 1 }}
+                                                transition={{ duration: 0.6, ease: "easeOut" }}
+                                            />
+                                        </svg>
+                                    )}
+                                    <Box sx={{
+                                        width: 84, height: 84, borderRadius: '50%', overflow: 'hidden',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        <img src={option.image} alt={option.label}
+                                            style={{ 
+                                                width: '100%', height: '100%', objectFit: 'cover', 
+                                                filter: isActive ? 'none' : 'grayscale(0.6)',
+                                                transform: 'scale(1.16)',
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+                                            }}
+                                        />
+                                    </Box>
                                 </Box>
                                 <Typography sx={{
                                     fontWeight: isActive ? 800 : 600, fontSize: '0.75rem',
@@ -297,19 +341,20 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                         {COMMON_ISSUES.map(issue => {
                             const isSelected = form.issueDescription === issue.label;
                             return (
-                                <Box
+                                <motion.div
                                     key={issue.label}
+                                    variants={shouldReduce ? {} : shakeVariants}
+                                    animate={isSelected ? "shake" : ""}
+                                    whileTap={shouldReduce ? {} : "tap"}
                                     onClick={() => updateField('issueDescription', issue.label)}
-                                    sx={{
+                                    style={{
                                         flex: '0 0 auto', width: 135,
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                                        py: 2.5, px: 1.5, borderRadius: 5, cursor: 'pointer',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                                        padding: '20px 12px', borderRadius: '20px', cursor: 'pointer',
                                         scrollSnapAlign: 'start',
-                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                         border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
                                         background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
                                         boxShadow: isSelected ? '0 8px 16px rgba(91, 76, 242, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
-                                        '&:active': { transform: 'scale(0.96)' }
                                     }}
                                 >
                                     <Box sx={{
@@ -335,7 +380,7 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                                     }}>
                                         {issue.label}
                                     </Typography>
-                                </Box>
+                                </motion.div>
                             );
                         })}
                     </Box>
@@ -364,19 +409,20 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                         ].map(opt => {
                             const isSelected = form.bracketStatus === opt.val;
                             return (
-                                <Box
+                                <motion.div
                                     key={opt.val}
+                                    variants={shouldReduce ? {} : shakeVariants}
+                                    animate={isSelected ? "shake" : ""}
+                                    whileTap={shouldReduce ? {} : "tap"}
                                     onClick={() => updateField('bracketStatus', opt.val)}
-                                    sx={{
+                                    style={{
                                         flex: '0 0 auto', width: 140,
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                                        py: 2.5, px: 1.5, borderRadius: 5, cursor: 'pointer',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                                        padding: '20px 12px', borderRadius: '20px', cursor: 'pointer',
                                         scrollSnapAlign: 'start',
-                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                         border: isSelected ? '2px solid #5B4CF2' : '1.5px solid #F3F4F6',
                                         background: isSelected ? 'linear-gradient(135deg, #F3F0FF 0%, #EDE9FE 100%)' : '#FFF',
                                         boxShadow: isSelected ? '0 8px 16px rgba(91, 76, 242, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
-                                        '&:active': { transform: 'scale(0.96)' }
                                     }}
                                 >
                                     <Box sx={{
@@ -416,7 +462,7 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                                     }}>
                                         {opt.desc}
                                     </Typography>
-                                </Box>
+                                </motion.div>
                             );
                         })}
                     </Box>
