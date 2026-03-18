@@ -13,10 +13,30 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { motion, useReducedMotion, Variants } from 'framer-motion';
+import { keyframes } from '@mui/system';
+
+const shimmerKeyframe = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
 
 const CustomerTicketsPage: React.FC = () => {
     const navigate = useNavigate();
+    const shouldReduce = useReducedMotion();
     
+    // Stagger container
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    };
+    
+    // Stagger item
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    };
+
     const [view, setView] = useState<'LOGIN' | 'OTP' | 'TICKETS'>('LOGIN');
     const [mobile, setMobile] = useState('');
     const [otp, setOtp] = useState('');
@@ -239,47 +259,52 @@ const CustomerTicketsPage: React.FC = () => {
             )}
 
             {!loading && tickets.length > 0 && (
-                <Stack spacing={2}>
+                <Stack component={motion.div} variants={shouldReduce ? {} : containerVariants} initial="hidden" animate="show" spacing={2}>
                     {tickets.map((ticket: any) => (
-                        <Card 
-                            key={ticket.id}
-                            onClick={() => navigate(`/track/${ticket.ticket_number}`)}
-                            sx={{ 
-                                background: '#FFF', 
-                                border: '1px solid #F3F4F6', 
-                                borderRadius: 4,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                                '&:hover': {
-                                    borderColor: '#5B4CF2',
-                                    boxShadow: '0 8px 24px rgba(91,76,242,0.1)',
-                                    transform: 'translateY(-2px)'
-                                }
-                            }}
-                        >
-                            <CardContent sx={{ p: 2.5, pb: '20px !important' }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                    <Box>
-                                        <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.2rem', fontFamily: 'monospace' }}>
-                                            {ticket.ticket_number}
-                                        </Typography>
-                                        <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', mt: 0.5 }}>
-                                            {new Date(ticket.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                        </Typography>
-                                    </Box>
-                                    <Chip 
-                                        label={ticket.status === 'DELIVERED' || ticket.status === 'CLOSED' ? 'Completed' : ticket.status === 'CANCELLED' ? 'Cancelled' : 'Track Status'} 
-                                        size="small"
-                                        sx={{ 
-                                            fontWeight: 700, borderRadius: 2,
-                                            ...(ticket.status === 'DELIVERED' || ticket.status === 'CLOSED' 
-                                                ? { background: '#D1FAE5', color: '#065F46' } 
-                                                : ticket.status === 'CANCELLED' 
-                                                ? { background: '#FEE2E2', color: '#991B1B' } 
-                                                : { background: '#E0E7FF', color: '#3730A3' })
-                                        }}
-                                    />
+                        <motion.div key={ticket.id} variants={shouldReduce ? {} : itemVariants}>
+                            <Card 
+                                onClick={() => navigate(`/track/${ticket.ticket_number}`)}
+                                sx={{ 
+                                    background: '#FFF', 
+                                    border: '1px solid #F3F4F6', 
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                                    '&:hover': {
+                                        borderColor: '#5B4CF2',
+                                        boxShadow: '0 8px 24px rgba(91,76,242,0.1)',
+                                        transform: 'translateY(-2px)'
+                                    }
+                                }}
+                            >
+                                <CardContent sx={{ p: 2.5, pb: '20px !important' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                        <Box>
+                                            <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.2rem', fontFamily: 'monospace' }}>
+                                                {ticket.ticket_number}
+                                            </Typography>
+                                            <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', mt: 0.5 }}>
+                                                {new Date(ticket.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </Typography>
+                                        </Box>
+                                        <Chip 
+                                            label={ticket.status === 'DELIVERED' || ticket.status === 'CLOSED' ? 'Completed' : ticket.status === 'CANCELLED' ? 'Cancelled' : 'Track Status'} 
+                                            size="small"
+                                            sx={{ 
+                                                fontWeight: 800, borderRadius: 2,
+                                                ...(ticket.status === 'DELIVERED' || ticket.status === 'CLOSED' 
+                                                    ? { 
+                                                        background: 'linear-gradient(110deg, #D1FAE5 40%, #A7F3D0 50%, #D1FAE5 60%)', 
+                                                        backgroundSize: '200% 100%',
+                                                        animation: `${shimmerKeyframe} 2s infinite linear`,
+                                                        color: '#065F46' 
+                                                      } 
+                                                    : ticket.status === 'CANCELLED' 
+                                                    ? { background: '#FEE2E2', color: '#991B1B' } 
+                                                    : { background: '#E0E7FF', color: '#3730A3' })
+                                            }}
+                                        />
                                 </Box>
                                 <Divider sx={{ borderColor: '#F3F4F6', mb: 2 }} />
                                 <Box sx={{ display: 'flex', gap: 3, background: '#F9FAFB', p: 1.5, borderRadius: 2 }}>
@@ -294,8 +319,9 @@ const CustomerTicketsPage: React.FC = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     ))}
                 </Stack>
             )}
