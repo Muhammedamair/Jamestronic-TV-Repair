@@ -30,10 +30,6 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children, direction = '
                 opacity: { duration: 0.12, ease: 'easeInOut' },
             }}
             style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
                 minHeight: '100dvh',
                 background: '#F9FAFB',
             }}

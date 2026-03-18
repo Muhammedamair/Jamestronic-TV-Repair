@@ -22,10 +22,8 @@ const AnimatedRoutes: React.FC = () => {
 
     return (
         <Box sx={{
-            position: 'relative',
             minHeight: '100dvh',
             background: '#F9FAFB',   // Always white — prevents dark theme bleed
-            overflow: 'hidden',       // Clip overlapping pages during crossfade
         }}>
             <AnimatePresence mode="popLayout" custom={direction}>
                 <PageTransition key={location.pathname} direction={direction}>
