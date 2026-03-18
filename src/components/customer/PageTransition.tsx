@@ -6,8 +6,6 @@ interface PageTransitionProps {
     direction?: 'forward' | 'back';
 }
 
-const slideDistance = 60; // px — subtle enough not to feel jarring on mid-range phones
-
 const variants = {
     enter: {
         opacity: 0,
@@ -29,7 +27,15 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children, direction = '
             animate="center"
             exit="exit"
             transition={{
-                opacity: { duration: 0.15, ease: 'easeInOut' },
+                opacity: { duration: 0.12, ease: 'easeInOut' },
+            }}
+            style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                minHeight: '100dvh',
+                background: '#F9FAFB',
             }}
         >
             {children}

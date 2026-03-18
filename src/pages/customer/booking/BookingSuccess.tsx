@@ -44,7 +44,7 @@ const SofaRelaxAnimation: React.FC = () => (
             {/* Sofa (Comfortable Base) */}
             <motion.path
                 d="M 10 60 Q 10 50 20 50 L 100 50 Q 110 50 110 60 L 110 75 Q 110 80 100 80 L 20 80 Q 10 80 10 75 Z"
-                stroke="#111827" strokeWidth="2.5" fill="none"
+                stroke="#111827" strokeWidth="2.5" fill="#F3F4F6"
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.4, ease: "easeInOut" }}
@@ -52,7 +52,7 @@ const SofaRelaxAnimation: React.FC = () => (
             {/* Sofa Armrests */}
             <motion.path
                 d="M 10 60 Q 5 60 5 68 Q 5 75 10 75 M 110 60 Q 115 60 115 68 Q 115 75 110 75"
-                stroke="#111827" strokeWidth="2.5" fill="none"
+                stroke="#111827" strokeWidth="2.5" fill="#E5E7EB"
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
@@ -60,9 +60,9 @@ const SofaRelaxAnimation: React.FC = () => (
             {/* Sofa "Comfort" Waves */}
             <motion.path
                 d="M 30 45 Q 35 40 40 45 M 80 45 Q 85 40 90 45"
-                stroke="#5B4CF2" strokeWidth="2" strokeLinecap="round" opacity="0.6"
-                animate={{ y: [0, -5, 0], opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                stroke="#5B4CF2" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"
+                animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             />
         </svg>
     </Box>

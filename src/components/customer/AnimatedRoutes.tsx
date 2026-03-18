@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { Box } from '@mui/material';
 import PageTransition from './PageTransition';
 import { useNavigationDirection } from '../../hooks/useNavigationDirection';
 
@@ -20,46 +21,29 @@ const AnimatedRoutes: React.FC = () => {
     const direction = useNavigationDirection();
 
     return (
-        <AnimatePresence mode="wait" custom={direction}>
-            <Routes location={location} key={location.pathname}>
-                <Route path="/" element={
-                    <PageTransition direction={direction}>
-                        <CustomerLandingPage />
-                    </PageTransition>
-                } />
-                <Route path="/book" element={
-                    <PageTransition direction={direction}>
-                        <GoogleMapsProvider><CustomerBookingPage /></GoogleMapsProvider>
-                    </PageTransition>
-                } />
-                <Route path="/track" element={
-                    <PageTransition direction={direction}>
-                        <CustomerTrackingPage />
-                    </PageTransition>
-                } />
-                <Route path="/track/:ticketNumber" element={
-                    <PageTransition direction={direction}>
-                        <CustomerTrackingPage />
-                    </PageTransition>
-                } />
-                <Route path="/my-tickets" element={
-                    <PageTransition direction={direction}>
-                        <CustomerTicketsPage />
-                    </PageTransition>
-                } />
-                <Route path="/account" element={
-                    <PageTransition direction={direction}>
-                        <CustomerAccountPage />
-                    </PageTransition>
-                } />
-                <Route path="/buy" element={
-                    <PageTransition direction={direction}>
-                        <CustomerBuyPage />
-                    </PageTransition>
-                } />
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </AnimatePresence>
+        <Box sx={{
+            position: 'relative',
+            minHeight: '100dvh',
+            background: '#F9FAFB',   // Always white — prevents dark theme bleed
+            overflow: 'hidden',       // Clip overlapping pages during crossfade
+        }}>
+            <AnimatePresence mode="popLayout" custom={direction}>
+                <PageTransition key={location.pathname} direction={direction}>
+                    <Routes location={location}>
+                        <Route path="/" element={<CustomerLandingPage />} />
+                        <Route path="/book" element={
+                            <GoogleMapsProvider><CustomerBookingPage /></GoogleMapsProvider>
+                        } />
+                        <Route path="/track" element={<CustomerTrackingPage />} />
+                        <Route path="/track/:ticketNumber" element={<CustomerTrackingPage />} />
+                        <Route path="/my-tickets" element={<CustomerTicketsPage />} />
+                        <Route path="/account" element={<CustomerAccountPage />} />
+                        <Route path="/buy" element={<CustomerBuyPage />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </PageTransition>
+            </AnimatePresence>
+        </Box>
     );
 };
 
