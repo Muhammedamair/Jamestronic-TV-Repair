@@ -546,7 +546,7 @@ const CustomerLandingPage: React.FC = () => {
     );
 
     return (
-        <Box sx={{ minHeight: '100dvh', background: '#FFFFFF', pb: 14, overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
+        <Box sx={{ minHeight: '100dvh', background: '#FFFFFF', pb: '110px', overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
             <PWAInstallPrompt />
 
             {/* ════ LOCATION BOTTOM SHEET ════ */}
@@ -824,13 +824,13 @@ const CustomerLandingPage: React.FC = () => {
 
             {/* ════ BOTTOM NAVIGATION BAR — SLIDE UP ════ */}
             <motion.div
-                initial={shouldReduce ? false : { y: 60, opacity: 0 }}
+                initial={(shouldReduce || !isFirstVisit) ? false : { y: 60, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 250, damping: 25, delay: 1.1 }}
-                style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}
+                transition={{ type: 'spring', stiffness: 250, damping: 25, delay: isFirstVisit ? 1.1 : 0 }}
+                style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, width: '100vw' }}
             >
                 <Box sx={{ 
-                    background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                     borderTop: '1px solid rgba(0,0,0,0.08)',
                     display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
                     pt: 1.5, pb: { xs: 3, sm: 2 }
