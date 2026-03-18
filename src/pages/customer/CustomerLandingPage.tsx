@@ -154,6 +154,16 @@ const CustomerLandingPage: React.FC = () => {
     const [showLocationDialog, setShowLocationDialog] = useState(false);
     const [locError, setLocError] = useState<string | null>(null);
 
+    // Track if this is the first visit this session to avoid playing heavy staggers on 'back' nav
+    const [isFirstVisit] = useState(() => {
+        const visited = sessionStorage.getItem('jt_landing_visited');
+        if (!visited) {
+            sessionStorage.setItem('jt_landing_visited', 'true');
+            return true;
+        }
+        return false;
+    });
+
     // Saved addresses
     const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -565,7 +575,7 @@ const CustomerLandingPage: React.FC = () => {
                 <Box sx={{ maxWidth: 600, mx: 'auto', position: 'relative', zIndex: 1 }}>
                     {/* Header Row: Location, Profile */}
                     <motion.div
-                        initial={shouldReduce ? false : { opacity: 0, y: -10 }}
+                        initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.35 }}
                     >
@@ -632,9 +642,9 @@ const CustomerLandingPage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box sx={{ flex: 1 }}>
                             <motion.div
-                                initial={shouldReduce ? false : { opacity: 0, x: -10 }}
+                                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.35, delay: 0.25 }}
+                                transition={{ duration: 0.35, delay: isFirstVisit ? 0.25 : 0 }}
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
                                     <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
@@ -659,9 +669,9 @@ const CustomerLandingPage: React.FC = () => {
                                 {['Expert', 'TV', 'Repair', 'at'].map((word, i) => (
                                     <motion.span
                                         key={word + i}
-                                        initial={shouldReduce ? false : { opacity: 0, y: 12 }}
+                                        initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: 0.35 + i * 0.08 }}
+                                        transition={{ duration: 0.3, delay: isFirstVisit ? 0.35 + i * 0.08 : 0 }}
                                         style={{ display: 'inline-block', marginRight: '8px' }}
                                     >
                                         <Typography component="span" sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
@@ -670,9 +680,9 @@ const CustomerLandingPage: React.FC = () => {
                                     </motion.span>
                                 ))}
                                 <motion.span
-                                    initial={shouldReduce ? false : { opacity: 0, scale: 0.7 }}
+                                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.7 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.7 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 15, delay: isFirstVisit ? 0.7 : 0 }}
                                     style={{ display: 'inline-block' }}
                                 >
                                     <Typography component="span" sx={{ color: '#FCD34D', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
@@ -682,9 +692,9 @@ const CustomerLandingPage: React.FC = () => {
                             </Box>
 
                             <motion.div
-                                initial={shouldReduce ? false : { opacity: 0 }}
+                                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ delay: 0.85, duration: 0.3 }}
+                                transition={{ delay: isFirstVisit ? 0.85 : 0, duration: 0.3 }}
                             >
                                 <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
                                     * Valid for first 3 bookings • Zero visitation fee
@@ -698,9 +708,9 @@ const CustomerLandingPage: React.FC = () => {
             {/* ════ EXPLORE SERVICES GRID — STAGGERED POP ENTRANCE ════ */}
             <Container maxWidth="sm" sx={{ mt: 5 }}>
                 <motion.div
-                    initial={shouldReduce ? false : { opacity: 0, x: -15 }}
+                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.35, delay: 0.4 }}
+                    transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
                 >
                     <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 3, letterSpacing: '-0.3px', px: 1 }}>
                         Explore all services
@@ -711,9 +721,9 @@ const CustomerLandingPage: React.FC = () => {
                     {SERVICES.map((svc, i) => (
                         <motion.div
                             key={svc.id}
-                            initial={shouldReduce ? false : { opacity: 0, y: 25, scale: 0.85 }}
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 25, scale: 0.85 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: 0.5 + i * 0.1 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.5 + i * 0.1 : 0 }}
                         >
                             <CardActionArea 
                                 onClick={() => navigate(svc.route)}
