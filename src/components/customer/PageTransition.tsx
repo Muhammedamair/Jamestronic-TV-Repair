@@ -31,7 +31,6 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children, direction = '
             transition={{
                 opacity: { duration: 0.15, ease: 'easeInOut' },
             }}
-            style={{ willChange: 'transform, opacity' }}
         >
             {children}
         </motion.div>
