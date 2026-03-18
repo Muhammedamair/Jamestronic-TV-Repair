@@ -18,7 +18,7 @@ import {
     ArrowBack as BackIcon,
     Delete as DeleteIcon,
     MoreVert as MoreIcon,
-    Route as RouteIcon,
+    LocalShippingOutlined as TrackIcon,
     NavigationOutlined as NavIcon
 } from '@mui/icons-material';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -844,7 +844,7 @@ const CustomerLandingPage: React.FC = () => {
                         </motion.div>
                         <motion.div whileTap={{ scale: 0.85 }} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                             <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                                <RouteIcon sx={{ fontSize: 26 }} />
+                                <TrackIcon sx={{ fontSize: 26 }} />
                                 <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
                             </Box>
                         </motion.div>

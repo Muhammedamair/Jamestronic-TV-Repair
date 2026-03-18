@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Button, Card, CardContent } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import Lottie from 'lottie-react';
@@ -141,11 +141,11 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                 transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.15 }}
                 style={{ width: '100%', maxWidth: 440, willChange: 'transform, opacity' }}
             >
-                <Card sx={{ 
+                <Box sx={{ 
                     borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', 
-                    border: 'none', bgcolor: '#FFFFFF !important', color: '#111827 !important' 
+                    border: 'none', background: '#FFFFFF', color: '#111827', overflow: 'hidden'
                 }}>
-                    <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+                    <Box sx={{ p: { xs: 3, sm: 5 } }}>
                         {/* Premium TV Success Animation */}
                         <PremiumSuccessAnimation />
 
@@ -157,7 +157,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 2.2, duration: 0.4 }}
                         >
-                            <Typography sx={{ color: '#4B5563 !important', fontSize: '0.95rem', mb: 4, fontWeight: 500 }}>
+                            <Typography sx={{ color: '#4B5563', fontSize: '0.95rem', mb: 4, fontWeight: 500 }}>
                                 Our expert will arrive at your location shortly. Save your ticket number to track progress.
                             </Typography>
                         </motion.div>
@@ -169,10 +169,10 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                             transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 2.4 }}
                         >
                             <Box sx={{ background: '#F3F4F6', borderRadius: 3, py: 2.5, mb: 4, border: '1px solid #E5E7EB' }}>
-                                <Typography sx={{ color: '#4B5563 !important', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
+                                <Typography sx={{ color: '#4B5563', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
                                     Ticket Number
                                 </Typography>
-                                <Typography sx={{ color: '#5B4CF2 !important', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                                <Typography sx={{ color: '#5B4CF2', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
                                     {ticketNumber}
                                 </Typography>
                             </Box>
@@ -187,7 +187,8 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                             <Button fullWidth variant="contained" onClick={() => navigate(`/track/${ticketNumber}`)}
                                 sx={{
                                     py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem', 
-                                    mb: 2, boxShadow: '0 4px 14px rgba(91,76,242,0.4)', '&:hover': { background: '#4F46E5' }
+                                    mb: 2, boxShadow: '0 4px 14px rgba(91,76,242,0.4)', '&:hover': { background: '#4F46E5' },
+                                    color: '#FFF'
                                 }}
                             >
                                 Track Your TV Status
@@ -202,8 +203,8 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                                 Back to Home
                             </Button>
                         </motion.div>
-                    </CardContent>
-                </Card>
+                    </Box>
+                </Box>
             </motion.div>
         </Box>
     );
