@@ -63,12 +63,12 @@ const CustomerTicketsPage: React.FC = () => {
         setError(null);
 
         try {
-            const { data, error: rpcError } = await supabase.rpc('request_customer_otp', {
-                p_mobile: mobile
+            const { data, error: fnError } = await supabase.functions.invoke('send-customer-otp', {
+                body: { mobile }
             });
 
-            if (rpcError) throw rpcError;
-            console.log("Mock OTP to enter:", data);
+            if (fnError) throw fnError;
+            if (data?.error) throw new Error(data.error);
             setView('OTP');
         } catch (err: any) {
             setError(err.message || 'Failed to send OTP. Have you booked a repair yet?');

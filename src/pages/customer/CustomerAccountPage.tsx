@@ -76,9 +76,11 @@ const CustomerAccountPage: React.FC = () => {
         setActionLoading(true);
         setError(null);
         try {
-            const { data, error: rpcError } = await supabase.rpc('request_customer_otp', { p_mobile: mobile });
-            if (rpcError) throw rpcError;
-            console.log("Mock OTP:", data);
+            const { data, error: fnError } = await supabase.functions.invoke('send-customer-otp', {
+                body: { mobile }
+            });
+            if (fnError) throw fnError;
+            if (data?.error) throw new Error(data.error);
             setView('OTP');
         } catch (err: any) {
             setError(err.message || 'Failed to send OTP.');
