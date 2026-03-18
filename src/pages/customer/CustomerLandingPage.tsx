@@ -822,15 +822,15 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             </Container>
 
-            {/* ════ BOTTOM NAVIGATION BAR — SLIDE UP ════ */}
-            <motion.div
-                initial={(shouldReduce || !isFirstVisit) ? false : { y: 60, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 250, damping: 25, delay: isFirstVisit ? 1.1 : 0 }}
-                style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, width: '100vw' }}
-            >
-                <Box sx={{ 
-                    background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+            {/* ════ BOTTOM NAVIGATION BAR — FIXED ════ */}
+            <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, width: '100%' }}>
+                <motion.div
+                    initial={(shouldReduce || !isFirstVisit) ? false : { y: 60, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 250, damping: 25, delay: isFirstVisit ? 1.1 : 0 }}
+                >
+                    <Box sx={{ 
+                        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                     borderTop: '1px solid rgba(0,0,0,0.08)',
                     display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
                     pt: 1.5, pb: { xs: 3, sm: 2 }
@@ -851,8 +851,9 @@ const CustomerLandingPage: React.FC = () => {
                         <PersonIcon sx={{ fontSize: 26 }} />
                         <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Account</Typography>
                     </Box>
-                </Box>
-            </motion.div>
+                    </Box>
+                </motion.div>
+            </Box>
         </Box>
     );
 };
