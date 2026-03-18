@@ -274,7 +274,7 @@ const CustomerAccountPage: React.FC = () => {
 
     return (
         <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", sans-serif', pb: 12 }}>
-            <Box sx={{ px: 2, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#FFF', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 10 }}>
+            <Box sx={{ pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 2, px: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#FFF', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 10 }}>
                 <IconButton onClick={() => navigate('/')} sx={{ color: '#111827' }}><BackIcon /></IconButton>
                 <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.1rem' }}>My Account</Typography>
             </Box>

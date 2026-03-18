@@ -567,7 +567,7 @@ const CustomerLandingPage: React.FC = () => {
             </Dialog>
             
             {/* ════ TOP PURPLE BANNER AREA — ANIMATED ════ */}
-            <Box sx={{ background: '#5B4CF2', pt: { xs: 3, sm: 4 }, pb: { xs: 5, sm: 6 }, px: { xs: 2.5, sm: 4 }, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, position: 'relative', overflow: 'hidden' }}>
+            <Box sx={{ background: '#5B4CF2', pt: { xs: 'calc(env(safe-area-inset-top) + 24px)', sm: 'calc(env(safe-area-inset-top) + 32px)' }, pb: { xs: 5, sm: 6 }, px: { xs: 2.5, sm: 4 }, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, position: 'relative', overflow: 'hidden' }}>
                 <Box sx={{ 
                     position: 'absolute', top: -100, right: -50, width: 250, height: 250, 
                     background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%'
