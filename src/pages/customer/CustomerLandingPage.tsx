@@ -18,6 +18,7 @@ import {
     ArrowBack as BackIcon,
     Delete as DeleteIcon,
     MoreVert as MoreIcon,
+    Route as RouteIcon,
     NavigationOutlined as NavIcon
 } from '@mui/icons-material';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -831,26 +832,34 @@ const CustomerLandingPage: React.FC = () => {
                 >
                     <Box sx={{ 
                         background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                    borderTop: '1px solid rgba(0,0,0,0.08)',
-                    display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
-                    pt: 1.5, pb: { xs: 3, sm: 2 }
-                }}>
-                    <Box onClick={() => navigate('/')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#000' }}>
-                        <Box sx={{ background: '#000', color: '#FFF', width: 26, height: 26, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem' }}>JT</Box>
-                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 800 }}>JT</Typography>
-                    </Box>
-                    <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                        <SearchIcon sx={{ fontSize: 26 }} />
-                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
-                    </Box>
-                    <Box onClick={() => navigate('/buy')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                        <ShopIcon sx={{ fontSize: 26 }} />
-                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Buy</Typography>
-                    </Box>
-                    <Box onClick={() => navigate('/account')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
-                        <PersonIcon sx={{ fontSize: 26 }} />
-                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Account</Typography>
-                    </Box>
+                        borderTop: '1px solid rgba(0,0,0,0.08)',
+                        display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
+                        pt: 1.5, pb: { xs: 3, sm: 2 }
+                    }}>
+                        <motion.div whileTap={{ scale: 0.85 }} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                            <Box onClick={() => navigate('/')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#000' }}>
+                                <Box sx={{ background: '#000', color: '#FFF', width: 26, height: 26, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem' }}>JT</Box>
+                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 800 }}>JT</Typography>
+                            </Box>
+                        </motion.div>
+                        <motion.div whileTap={{ scale: 0.85 }} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                            <Box onClick={() => navigate('/my-tickets')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                                <RouteIcon sx={{ fontSize: 26 }} />
+                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Track</Typography>
+                            </Box>
+                        </motion.div>
+                        <motion.div whileTap={{ scale: 0.85 }} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                            <Box onClick={() => navigate('/buy')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                                <ShopIcon sx={{ fontSize: 26 }} />
+                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Buy</Typography>
+                            </Box>
+                        </motion.div>
+                        <motion.div whileTap={{ scale: 0.85 }} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                            <Box onClick={() => navigate('/account')} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#6B7280', transition: 'color 0.2s', '&:hover': { color: '#000' } }}>
+                                <PersonIcon sx={{ fontSize: 26 }} />
+                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 600 }}>Account</Typography>
+                            </Box>
+                        </motion.div>
                     </Box>
                 </motion.div>
             </Box>

@@ -9,13 +9,18 @@ interface BookingStep1Props {
     updateField: (field: string, value: any) => void;
 }
 
-// Clean Light Theme Inputs
+// Clean Light Theme Inputs with Autofill Override
 const lightTextFieldStyle = {
     '& .MuiOutlinedInput-root': {
         backgroundColor: '#F9FAFB', borderRadius: 2.5, color: '#111827', fontSize: '1rem',
         '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1.5px' },
         '&:hover fieldset': { borderColor: '#D1D5DB' },
         '&.Mui-focused fieldset': { borderColor: '#5B4CF2' },
+        '& input:-webkit-autofill, & input:-webkit-autofill:hover, & input:-webkit-autofill:focus, & input:-webkit-autofill:active': {
+            WebkitBoxShadow: '0 0 0 30px #F9FAFB inset !important',
+            WebkitTextFillColor: '#111827 !important',
+            transition: 'background-color 5000s ease-in-out 0s'
+        }
     },
 };
 

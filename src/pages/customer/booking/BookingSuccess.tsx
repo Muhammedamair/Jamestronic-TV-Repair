@@ -8,28 +8,61 @@ interface BookingSuccessProps {
     ticketNumber: string;
 }
 
-/* ═══ SVG Animated Checkmark ═══ */
-const AnimatedCheckmark: React.FC = () => (
-    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Circle draw */}
-        <motion.circle
-            cx="26" cy="26" r="23"
-            stroke="#10B981" strokeWidth="3" fill="none"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
+/* ═══ Premium TV Success Animation ═══ */
+const PremiumSuccessAnimation: React.FC = () => (
+    <Box sx={{ position: 'relative', width: 100, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+        {/* Glow behind TV */}
+        <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            style={{ position: 'absolute', width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(91,76,242,0.15) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%' }}
         />
-        {/* Check path draws after circle */}
-        <motion.path
-            d="M15 27 L22 34 L37 19"
-            stroke="#10B981" strokeWidth="3.5" fill="none"
-            strokeLinecap="round" strokeLinejoin="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.35, delay: 0.45, ease: 'easeOut' }}
-        />
-    </svg>
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'relative', zIndex: 2 }}>
+            {/* TV Frame */}
+            <motion.rect
+                x="8" y="14" width="48" height="32" rx="4"
+                stroke="#111827" strokeWidth="3" fill="none"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+            />
+            {/* TV Stand Base */}
+            <motion.path
+                d="M 24 54 L 40 54"
+                stroke="#111827" strokeWidth="3" strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
+            />
+            <motion.path
+                d="M 32 46 L 32 54"
+                stroke="#111827" strokeWidth="3" strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
+            />
+
+            {/* Inner Screen Color Fill (Turns on) */}
+            <motion.rect
+                x="11" y="17" width="42" height="26" rx="2"
+                fill="#D1FAE5"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.8, ease: "easeOut" }}
+            />
+
+            {/* Success Checkmark inside TV */}
+            <motion.path
+                d="M 24 30 L 29 35 L 40 23"
+                stroke="#10B981" strokeWidth="3.5" fill="none"
+                strokeLinecap="round" strokeLinejoin="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
+            />
+        </svg>
+    </Box>
 );
 
 /* ═══ Typing Text Effect ═══ */
@@ -108,25 +141,23 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                 transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.15 }}
                 style={{ width: '100%', maxWidth: 440, willChange: 'transform, opacity' }}
             >
-                <Card sx={{ borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', border: 'none' }}>
+                <Card sx={{ 
+                    borderRadius: 4, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', 
+                    border: 'none', bgcolor: '#FFFFFF !important', color: '#111827 !important' 
+                }}>
                     <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
-                        {/* Checkmark circle */}
-                        <Box sx={{ 
-                            width: 80, height: 80, borderRadius: '50%', background: '#D1FAE5', 
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 
-                        }}>
-                            <AnimatedCheckmark />
-                        </Box>
+                        {/* Premium TV Success Animation */}
+                        <PremiumSuccessAnimation />
 
                         {/* Typing text */}
-                        <TypingText text="Booking Confirmed! 🎉" delay={0.85} />
+                        <TypingText text="Booking Confirmed! 🎉" delay={1.4} />
 
                         <motion.div
                             initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1.8, duration: 0.4 }}
+                            transition={{ delay: 2.2, duration: 0.4 }}
                         >
-                            <Typography sx={{ color: '#6B7280', fontSize: '0.95rem', mb: 4 }}>
+                            <Typography sx={{ color: '#4B5563 !important', fontSize: '0.95rem', mb: 4, fontWeight: 500 }}>
                                 Our expert will arrive at your location shortly. Save your ticket number to track progress.
                             </Typography>
                         </motion.div>
@@ -135,13 +166,13 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                         <motion.div
                             initial={shouldReduce ? {} : { y: 30, opacity: 0, scale: 0.95 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 2.0 }}
+                            transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 2.4 }}
                         >
-                            <Box sx={{ background: '#F3F4F6', borderRadius: 3, py: 2.5, mb: 4 }}>
-                                <Typography sx={{ color: '#6B7280', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
+                            <Box sx={{ background: '#F3F4F6', borderRadius: 3, py: 2.5, mb: 4, border: '1px solid #E5E7EB' }}>
+                                <Typography sx={{ color: '#4B5563 !important', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', mb: 0.5 }}>
                                     Ticket Number
                                 </Typography>
-                                <Typography sx={{ color: '#5B4CF2', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                                <Typography sx={{ color: '#5B4CF2 !important', fontWeight: 800, fontSize: '1.6rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
                                     {ticketNumber}
                                 </Typography>
                             </Box>
@@ -151,7 +182,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                         <motion.div
                             initial={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: [0.9, 1.04, 1] }}
-                            transition={{ delay: 2.5, duration: 0.5, ease: 'easeOut' }}
+                            transition={{ delay: 2.8, duration: 0.5, ease: 'easeOut' }}
                         >
                             <Button fullWidth variant="contained" onClick={() => navigate(`/track/${ticketNumber}`)}
                                 sx={{
@@ -165,7 +196,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                         <motion.div
                             initial={shouldReduce ? {} : { opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 2.8, duration: 0.3 }}
+                            transition={{ delay: 3.1, duration: 0.3 }}
                         >
                             <Button fullWidth variant="text" onClick={() => navigate('/')} sx={{ color: '#6B7280', textTransform: 'none', fontWeight: 600 }}>
                                 Back to Home
