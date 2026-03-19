@@ -55,6 +55,98 @@ const SERVICES = [
     { id: 'checkup', label: 'TV Check-up', image: '/services/tv_checkup.png', route: '/book?service=repair' },
 ];
 
+const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }> = ({ id, image, label }) => {
+    let wrapProps: any = {};
+    let overlay = null;
+
+    switch (id) {
+        case 'no_display':
+            // Breathing fade to dark/black to simulate a dead screen
+            wrapProps = {
+                animate: { filter: ['brightness(1)', 'brightness(0.3)', 'brightness(1)'] },
+                transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+            };
+            break;
+        case 'flickering':
+            // Rapid strobe opacity and brightness to simulate broken backlight/panel
+            wrapProps = {
+                animate: { opacity: [1, 0.4, 0.9, 0.2, 1], filter: ['brightness(1)', 'brightness(1.5)', 'brightness(0.8)', 'brightness(1)'] },
+                transition: { duration: 0.5, repeat: Infinity, repeatType: 'mirror' }
+            };
+            break;
+        case 'no_sound':
+            // Vigorous shaking (like a vibrating/broken speaker)
+            wrapProps = {
+                animate: { rotate: [0, -6, 6, -6, 6, 0] },
+                transition: { duration: 0.5, repeat: Infinity, repeatDelay: 1.5 }
+            };
+            break;
+        case 'power_issue':
+            // Dead / sudden glitch grayscale pulse to simulate power cuts
+            wrapProps = {
+                animate: { x: [0, -2, 2, 0], filter: ['grayscale(0)', 'grayscale(1) contrast(1.5)', 'grayscale(0)'] },
+                transition: { duration: 2.5, repeat: Infinity }
+            };
+            break;
+        case 'lines':
+            // Scanning line overlay simulating horizontal damage lines
+            overlay = (
+                <motion.div
+                    animate={{ top: ['10%', '90%', '10%'], opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                    style={{ position: 'absolute', left: '15%', right: '15%', height: '2px', background: 'rgba(91,76,242,0.8)', boxShadow: '0 0 8px rgba(91,76,242,1)', zIndex: 2 }}
+                />
+            );
+            break;
+        case 'screen_repair':
+            // Glowing spark effect around the broken screen
+            wrapProps = {
+                animate: { filter: ['drop-shadow(0px 8px 12px rgba(0,0,0,0.08))', 'drop-shadow(0px 0px 15px rgba(91,76,242,0.6))', 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))'] },
+                transition: { duration: 1.5, repeat: Infinity }
+            };
+            break;
+        case 'not_sure':
+            // Confused hover tilt
+            wrapProps = {
+                animate: { y: [0, -5, 0], rotate: [0, 3, -3, 0] },
+                transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+            };
+            break;
+        case 'installation':
+            // Sliding smoothly into place onto the wall
+            wrapProps = {
+                animate: { y: [-15, 0, 0], opacity: [0, 1, 1] },
+                transition: { duration: 2.5, repeat: Infinity, ease: 'easeOut' }
+            };
+            break;
+        case 'uninstallation':
+            // Lifting off the wall and disappearing
+            wrapProps = {
+                animate: { y: [0, -15, -15], opacity: [1, 0, 0] },
+                transition: { duration: 2.5, repeat: Infinity, ease: 'easeIn' }
+            };
+            break;
+        case 'checkup':
+            // Magnifying glass gentle zoom pulsing
+            wrapProps = {
+                animate: { scale: [1, 1.1, 1] },
+                transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+            };
+            break;
+        default:
+            break;
+    }
+
+    return (
+        <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+            <motion.div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} {...wrapProps}>
+                <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: id === 'screen_repair' ? 'none' : 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' }} />
+                {overlay}
+            </motion.div>
+        </Box>
+    );
+};
+
 const WHY_CHOOSE_US = [
     { icon: <CheckCircleIcon />, title: 'Verified Techs', desc: 'Background checked & brand certified', color: '#2563EB', bg: '#DBEAFE' },
     { icon: <SpeedIcon />, title: 'Same-Day Service', desc: '40-minute response time', color: '#059669', bg: '#D1FAE5' },
@@ -746,11 +838,10 @@ const CustomerLandingPage: React.FC = () => {
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     mb: 1.5, p: 2,
                                     border: '1.5px solid #FFFFFF',
-                                    boxShadow: '0 8px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.04)'
+                                    boxShadow: '0 8px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.04)',
+                                    overflow: 'hidden'
                                 }}>
-                                    <img src={svc.image} alt={svc.label}
-                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' }}
-                                    />
+                                    <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
                                 </Box>
                                 <Typography sx={{
                                     color: '#374151', fontSize: { xs: '0.75rem', sm: '0.85rem' },
