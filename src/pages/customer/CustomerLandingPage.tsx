@@ -135,6 +135,142 @@ const TypewriterSearch: React.FC = () => {
     );
 };
 
+// ─── Search Overlay ───
+const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (route: string) => void }> = ({ open, onClose, onSelect }) => {
+    const [query, setQuery] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const filtered = query.trim()
+        ? SERVICES.filter(s => s.label.toLowerCase().includes(query.toLowerCase()))
+        : SERVICES; // Show all when empty
+
+    useEffect(() => {
+        if (open) {
+            setQuery('');
+            // Auto-focus after dialog animation
+            setTimeout(() => inputRef.current?.focus(), 150);
+        }
+    }, [open]);
+
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullScreen
+            PaperProps={{
+                sx: {
+                    background: '#FAFAFA',
+                    display: 'flex', flexDirection: 'column',
+                }
+            }}
+            TransitionProps={{ timeout: 250 }}
+        >
+            {/* Top Bar — Search Input */}
+            <Box sx={{ 
+                background: '#FFFFFF', px: 2, pt: 2, pb: 1.5,
+                borderBottom: '1px solid rgba(0,0,0,0.06)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <IconButton onClick={onClose} sx={{ p: 0.8 }}>
+                        <BackIcon sx={{ fontSize: 22, color: '#374151' }} />
+                    </IconButton>
+                    <Box sx={{
+                        flex: 1, display: 'flex', alignItems: 'center',
+                        background: '#F3F4F6', borderRadius: '14px',
+                        px: 2, py: 0.8,
+                        border: '2px solid #D97706',
+                    }}>
+                        <SearchIcon sx={{ color: '#9CA3AF', fontSize: 20, mr: 1 }} />
+                        <input
+                            ref={inputRef}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search for a service..."
+                            style={{
+                                border: 'none', outline: 'none', background: 'transparent',
+                                fontSize: '0.95rem', fontWeight: 500, color: '#111827',
+                                width: '100%', fontFamily: 'inherit',
+                            }}
+                        />
+                        {query && (
+                            <IconButton onClick={() => setQuery('')} sx={{ p: 0.3 }}>
+                                <CloseIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
+                            </IconButton>
+                        )}
+                    </Box>
+                </Box>
+            </Box>
+
+            {/* Results */}
+            <Box sx={{ flex: 1, overflow: 'auto', px: 2, pt: 2 }}>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.5px', mb: 1.5, px: 0.5 }}>
+                    {query.trim() ? `${filtered.length} RESULT${filtered.length !== 1 ? 'S' : ''}` : 'POPULAR SERVICES'}
+                </Typography>
+
+                {filtered.length === 0 ? (
+                    <Box sx={{ textAlign: 'center', py: 8 }}>
+                        <Typography sx={{ fontSize: '1.2rem', mb: 1 }}>🔍</Typography>
+                        <Typography sx={{ color: '#6B7280', fontWeight: 600, fontSize: '0.95rem' }}>
+                            No services found for "{query}"
+                        </Typography>
+                        <Typography sx={{ color: '#9CA3AF', fontSize: '0.8rem', mt: 0.5 }}>
+                            Try searching for "No Display", "Installation", etc.
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {filtered.map((svc, i) => (
+                            <motion.div
+                                key={svc.id}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, delay: i * 0.04 }}
+                            >
+                                <Card
+                                    sx={{
+                                        borderRadius: '16px',
+                                        border: '1px solid rgba(0,0,0,0.05)',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                        transition: 'all 0.15s',
+                                        '&:active': { transform: 'scale(0.98)', background: '#F9FAFB' },
+                                    }}
+                                >
+                                    <CardActionArea
+                                        onClick={() => { onClose(); onSelect(svc.route); }}
+                                        sx={{ display: 'flex', alignItems: 'center', p: 1.5, gap: 2, justifyContent: 'flex-start' }}
+                                    >
+                                        {/* Service Icon */}
+                                        <Box sx={{
+                                            width: 56, height: 56, flexShrink: 0,
+                                            background: 'linear-gradient(135deg, #F9FAFB, #F3F4F6)',
+                                            borderRadius: '14px', display: 'flex',
+                                            alignItems: 'center', justifyContent: 'center', p: 0.8,
+                                        }}>
+                                            <img src={svc.image} alt={svc.label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                        </Box>
+                                        {/* Label */}
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827' }}>
+                                                {svc.label}
+                                            </Typography>
+                                            <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: 500, mt: 0.2 }}>
+                                                {svc.id.includes('install') ? 'Installation & Setup' : svc.id === 'checkup' ? 'Maintenance' : 'TV Repair'}
+                                            </Typography>
+                                        </Box>
+                                        {/* Arrow */}
+                                        <ArrowForwardIcon sx={{ fontSize: 18, color: '#D1D5DB' }} />
+                                    </CardActionArea>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </Box>
+                )}
+            </Box>
+        </Dialog>
+    );
+};
+
 const SERVICES = [
     // Repair Issues — using existing 3D icons
     { id: 'no_display', label: 'No Display', image: '/services/issues/black_screen.png', route: '/book?service=repair&issue=no_display' },
@@ -444,6 +580,7 @@ const CustomerLandingPage: React.FC = () => {
 
     // Show all saved addresses
     const [showAll, setShowAll] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
 
     // Load saved data on mount
     useEffect(() => {
@@ -811,6 +948,7 @@ const CustomerLandingPage: React.FC = () => {
     return (
         <Box sx={{ minHeight: '100dvh', background: '#FFFFFF', pb: '110px', overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
             <PWAInstallPrompt />
+            <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} onSelect={(route) => navigate(route)} />
 
             {/* ════ LOCATION BOTTOM SHEET ════ */}
             <Dialog
@@ -874,7 +1012,7 @@ const CustomerLandingPage: React.FC = () => {
                     }}>
                         {/* Search Bar — Top Section with Auto-Typing */}
                         <Box 
-                            onClick={() => navigate('/book')}
+                            onClick={() => setSearchOpen(true)}
                             sx={{
                                 display: 'flex', alignItems: 'center',
                                 p: '10px 12px 10px 16px',
