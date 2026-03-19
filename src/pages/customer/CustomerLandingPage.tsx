@@ -56,125 +56,52 @@ const SERVICES = [
 ];
 
 const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }> = ({ id, image, label }) => {
-    // We use a randomized float delay so the grid looks organic, not robotic.
-    const floatDelay = React.useMemo(() => Math.random() * 2, []);
-
     let badgeText = '';
-    let badgeEmoji = '';
     let badgeColor = '';
     let badgeBg = '';
-    let badgeAnim = {};
 
     switch (id) {
-        case 'no_display':
-            badgeText = 'Blank';
-            badgeEmoji = '⬛';
-            badgeColor = '#FFFFFF';
-            badgeBg = '#111827';
-            badgeAnim = { opacity: [1, 0.4, 1], scale: [1, 0.95, 1], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } };
-            break;
-        case 'flickering':
-            badgeText = 'Glitch';
-            badgeEmoji = '⚡';
-            badgeColor = '#B45309';
-            badgeBg = '#FEF3C7';
-            badgeAnim = { opacity: [1, 0.5, 1, 0.2, 1], transition: { duration: 0.8, repeat: Infinity, repeatType: 'mirror' } };
-            break;
-        case 'no_sound':
-            badgeText = 'Muted';
-            badgeEmoji = '🔇';
-            badgeColor = '#991B1B';
-            badgeBg = '#FEE2E2';
-            badgeAnim = { rotate: [0, -10, 10, -10, 10, 0], transition: { duration: 0.6, repeat: Infinity, repeatDelay: 1.5 } };
-            break;
-        case 'power_issue':
-            badgeText = 'Dead';
-            badgeEmoji = '🔌';
-            badgeColor = '#9A3412';
-            badgeBg = '#FFEDD5';
-            badgeAnim = { x: [0, -3, 3, -3, 3, 0], filter: ['saturate(1)', 'saturate(2)', 'saturate(1)'], transition: { duration: 2.5, repeat: Infinity } };
-            break;
-        case 'lines':
-            badgeText = 'Lines';
-            badgeEmoji = '📺';
-            badgeColor = '#5B21B6';
-            badgeBg = '#EDE9FE';
-            badgeAnim = { y: [0, -3, 0], transition: { duration: 1.5, repeat: Infinity, ease: 'linear' } };
-            break;
-        case 'screen_repair':
-            badgeText = 'Broken';
-            badgeEmoji = '🛠️';
-            badgeColor = '#86198F';
-            badgeBg = '#FAE8FF';
-            badgeAnim = { boxShadow: ['0 0 0 rgba(134,25,143,0)', '0 0 12px rgba(134,25,143,0.5)', '0 0 0 rgba(134,25,143,0)'], transition: { duration: 1.5, repeat: Infinity } };
-            break;
-        case 'not_sure':
-            badgeText = 'Unknown';
-            badgeEmoji = '❓';
-            badgeColor = '#374151';
-            badgeBg = '#F3F4F6';
-            badgeAnim = { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } };
-            break;
-        case 'installation':
-            badgeText = 'Mount';
-            badgeEmoji = '⬇️';
-            badgeColor = '#065F46';
-            badgeBg = '#D1FAE5';
-            badgeAnim = { y: [-3, 3, -3], transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } };
-            break;
-        case 'uninstallation':
-            badgeText = 'Unmount';
-            badgeEmoji = '⬆️';
-            badgeColor = '#1E3A8A';
-            badgeBg = '#DBEAFE';
-            badgeAnim = { y: [3, -3, 3], transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } };
-            break;
-        case 'checkup':
-            badgeText = 'Checkup';
-            badgeEmoji = '🔍';
-            badgeColor = '#065F46';
-            badgeBg = '#D1FAE5';
-            badgeAnim = { scale: [1, 1.05, 1], transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } };
-            break;
-        default:
-            break;
+        case 'no_display': badgeText = 'BLANK'; badgeColor = '#FFFFFF'; badgeBg = '#111827'; break;
+        case 'flickering': badgeText = 'GLITCH'; badgeColor = '#B45309'; badgeBg = '#FEF3C7'; break;
+        case 'no_sound': badgeText = 'MUTED'; badgeColor = '#991B1B'; badgeBg = '#FEE2E2'; break;
+        case 'power_issue': badgeText = 'DEAD'; badgeColor = '#9A3412'; badgeBg = '#FFEDD5'; break;
+        case 'lines': badgeText = 'LINES'; badgeColor = '#5B21B6'; badgeBg = '#EDE9FE'; break;
+        case 'screen_repair': badgeText = 'BROKEN'; badgeColor = '#86198F'; badgeBg = '#FAE8FF'; break;
+        case 'not_sure': badgeText = 'UNKNOWN'; badgeColor = '#374151'; badgeBg = '#F3F4F6'; break;
+        case 'installation': badgeText = 'MOUNT'; badgeColor = '#065F46'; badgeBg = '#D1FAE5'; break;
+        case 'uninstallation': badgeText = 'UNMOUNT'; badgeColor = '#1E3A8A'; badgeBg = '#DBEAFE'; break;
+        case 'checkup': badgeText = 'CHECKUP'; badgeColor = '#065F46'; badgeBg = '#D1FAE5'; break;
+        default: break;
     }
 
     return (
         <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-            <motion.div 
-                style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: floatDelay }}
-            >
+            <Box style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.06))' }} />
-            </motion.div>
+            </Box>
 
-            {/* Floating Action Badge */}
+            {/* Static Professional Badge */}
             {badgeText && (
-                <motion.div
-                    animate={badgeAnim}
-                    style={{
+                <Box
+                    sx={{
                         position: 'absolute',
                         bottom: -4,
-                        right: -12,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                         background: badgeBg,
-                        border: '1px solid rgba(0,0,0,0.05)',
                         color: badgeColor,
-                        padding: '2px 8px',
-                        borderRadius: '20px',
-                        fontSize: '0.65rem',
+                        padding: '2px 10px',
+                        borderRadius: '6px',
+                        fontSize: '0.6rem',
                         fontWeight: 800,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                        zIndex: 10
+                        letterSpacing: '0.5px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        zIndex: 10,
+                        whiteSpace: 'nowrap'
                     }}
                 >
-                    <span style={{ fontSize: '0.7rem' }}>{badgeEmoji}</span>
-                    <span style={{ letterSpacing: '-0.3px', textTransform: 'uppercase' }}>{badgeText}</span>
-                </motion.div>
+                    {badgeText}
+                </Box>
             )}
         </Box>
     );

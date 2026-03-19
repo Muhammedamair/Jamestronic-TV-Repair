@@ -714,22 +714,24 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
                 )}
 
                 {/* ═══ HERO CONTENT — Dynamic Layout with Pro Transition ═══ */}
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={bannerKey}
-                        initial={shouldReduce ? false : { opacity: 0, x: 40, filter: 'blur(6px)' }}
-                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, x: -40, filter: 'blur(6px)' }}
-                        transition={{
-                            duration: 0.45,
-                            ease: [0.22, 1, 0.36, 1], // custom cubic-bezier (ease-out-expo)
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            {renderHeroContent()}
-                        </Box>
-                    </motion.div>
-                </AnimatePresence>
+                <Box sx={{ minHeight: { xs: 180, sm: 220 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={bannerKey}
+                            initial={shouldReduce ? false : { opacity: 0, x: 40, filter: 'blur(6px)' }}
+                            animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, x: -40, filter: 'blur(6px)' }}
+                            transition={{
+                                duration: 0.45,
+                                ease: [0.22, 1, 0.36, 1], // custom cubic-bezier (ease-out-expo)
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                {renderHeroContent()}
+                            </Box>
+                        </motion.div>
+                    </AnimatePresence>
+                </Box>
             </Box>
         </Box>
     );
