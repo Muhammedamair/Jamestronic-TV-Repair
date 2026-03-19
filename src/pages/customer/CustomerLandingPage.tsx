@@ -1144,7 +1144,7 @@ const CustomerLandingPage: React.FC = () => {
             )}
 
             {/* ════ 2. SEARCH + TRUST STRIP — Combined Section ════ */}
-            <Container maxWidth="sm" sx={{ mt: 3, mb: 2 }}>
+            <Container maxWidth="sm" sx={{ mt: 2, mb: 2 }}>
                 <motion.div
                     initial={shouldReduce ? false : { opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1152,7 +1152,7 @@ const CustomerLandingPage: React.FC = () => {
                 >
                     <Card sx={{
                         background: '#FFFFFF',
-                        borderRadius: '20px', mx: 1,
+                        borderRadius: '32px', // Matches the 32px curve of the Hero Banner
                         border: '1px solid rgba(0,0,0,0.06)',
                         boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
                         overflow: 'hidden',
