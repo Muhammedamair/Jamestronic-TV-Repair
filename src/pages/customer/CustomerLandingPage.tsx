@@ -799,54 +799,60 @@ const CustomerLandingPage: React.FC = () => {
                     display: 'grid', 
                     gridTemplateRows: 'repeat(2, 1fr)', 
                     gridAutoFlow: 'column',
-                    gridAutoColumns: { xs: '115px', sm: '135px' }, // Scale up columns
-                    columnGap: { xs: 2.5, sm: 3 }, 
-                    rowGap: { xs: 3.5, sm: 4 },
+                    gridAutoColumns: { xs: 'calc(50% - 12px)', sm: 'calc(33.33% - 16px)', md: 'calc(25% - 20px)' }, // Exactly 2 per row on mobile
+                    columnGap: { xs: 1.5, sm: 2.5 }, 
+                    rowGap: { xs: 2.5, sm: 3 },
                     px: 1,
                     pb: 3, 
                     overflowX: 'auto', 
                     scrollSnapType: 'x mandatory',
                     scrollPaddingLeft: '8px',
                     WebkitOverflowScrolling: 'touch',
-                    '&::-webkit-scrollbar': { display: 'none' }, // Safari & Chrome
-                    msOverflowStyle: 'none', // IE & Edge
-                    scrollbarWidth: 'none', // Firefox
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
                 }}>
                     {SERVICES.map((svc, i) => (
                         <motion.div
                             key={svc.id}
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 15, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.3 + (i % 5) * 0.08 : 0 }}
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: isFirstVisit ? 0.3 + (i % 5) * 0.08 : 0 }}
                             style={{ scrollSnapAlign: 'start' }}
                         >
                             <CardActionArea
                                 onClick={() => navigate(svc.route)}
                                 disableRipple
                                 sx={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                    p: 0, transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                    '&:hover': { transform: 'scale(1.05) translateY(-2px)' },
-                                    '&:active': { transform: 'scale(0.95)' }
+                                    display: 'flex', flexDirection: 'column',
+                                    p: 0, transition: 'all 0.25s cubic-bezier(0.2, 0, 0, 1)',
+                                    '&:hover': { transform: 'translateY(-4px)' },
+                                    '&:active': { transform: 'scale(0.98)' },
+                                    borderRadius: '24px',
                                 }}
                             >
                                 <Box sx={{
-                                    width: { xs: '105px', sm: '125px' }, // Scaled up premium icons
-                                    height: { xs: '105px', sm: '125px' }, // Scaled up premium icons
-                                    background: 'linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%)',
-                                    borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    mb: 1.5, p: 1.5,
-                                    border: '2px solid #FFFFFF',
-                                    boxShadow: '0 6px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.02)',
-                                    position: 'relative'
+                                    width: '100%',
+                                    height: { xs: '150px', sm: '180px' }, // Tall premium card format
+                                    background: 'rgba(255, 255, 255, 0.7)',
+                                    borderRadius: '24px',
+                                    display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center',
+                                    mb: 1.5, p: 2,
+                                    border: '1px solid rgba(255, 255, 255, 0.8)',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                                    backdropFilter: 'blur(10px)',
+                                    position: 'relative',
+                                    overflow: 'hidden'
                                 }}>
-                                    <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
+                                    <Box sx={{ width: '100%', height: '85%', position: 'relative' }}>
+                                        <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
+                                    </Box>
                                 </Box>
                                 <Typography sx={{
-                                    color: '#374151', fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                                    fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.2px',
-                                    wordWrap: 'break-word', width: '100%'
+                                    color: '#111827', fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                    fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.3px',
+                                    px: 1
                                 }}>
                                     {svc.label}
                                 </Typography>
