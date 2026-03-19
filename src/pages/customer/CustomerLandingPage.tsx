@@ -58,19 +58,19 @@ const SERVICES = [
 const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }> = ({ id, image, label }) => {
     let badgeText = '';
     let badgeColor = '';
-    let badgeBg = '';
+    let shadowColor = '';
 
     switch (id) {
-        case 'no_display': badgeText = 'BLANK'; badgeColor = '#FFFFFF'; badgeBg = '#111827'; break;
-        case 'flickering': badgeText = 'GLITCH'; badgeColor = '#B45309'; badgeBg = '#FEF3C7'; break;
-        case 'no_sound': badgeText = 'MUTED'; badgeColor = '#991B1B'; badgeBg = '#FEE2E2'; break;
-        case 'power_issue': badgeText = 'DEAD'; badgeColor = '#9A3412'; badgeBg = '#FFEDD5'; break;
-        case 'lines': badgeText = 'LINES'; badgeColor = '#5B21B6'; badgeBg = '#EDE9FE'; break;
-        case 'screen_repair': badgeText = 'BROKEN'; badgeColor = '#86198F'; badgeBg = '#FAE8FF'; break;
-        case 'not_sure': badgeText = 'UNKNOWN'; badgeColor = '#374151'; badgeBg = '#F3F4F6'; break;
-        case 'installation': badgeText = 'MOUNT'; badgeColor = '#065F46'; badgeBg = '#D1FAE5'; break;
-        case 'uninstallation': badgeText = 'UNMOUNT'; badgeColor = '#1E3A8A'; badgeBg = '#DBEAFE'; break;
-        case 'checkup': badgeText = 'CHECKUP'; badgeColor = '#065F46'; badgeBg = '#D1FAE5'; break;
+        case 'no_display': badgeText = 'BLANK'; badgeColor = '#111827'; shadowColor = 'rgba(17,24,39,0.15)'; break;
+        case 'flickering': badgeText = 'GLITCH'; badgeColor = '#D97706'; shadowColor = 'rgba(217,119,6,0.15)'; break;
+        case 'no_sound': badgeText = 'MUTED'; badgeColor = '#DC2626'; shadowColor = 'rgba(220,38,38,0.15)'; break;
+        case 'power_issue': badgeText = 'DEAD'; badgeColor = '#EA580C'; shadowColor = 'rgba(234,88,12,0.15)'; break;
+        case 'lines': badgeText = 'LINES'; badgeColor = '#7C3AED'; shadowColor = 'rgba(124,58,237,0.15)'; break;
+        case 'screen_repair': badgeText = 'BROKEN'; badgeColor = '#C026D3'; shadowColor = 'rgba(192,38,211,0.15)'; break;
+        case 'not_sure': badgeText = 'UNKNOWN'; badgeColor = '#4B5563'; shadowColor = 'rgba(75,85,99,0.15)'; break;
+        case 'installation': badgeText = 'MOUNT'; badgeColor = '#059669'; shadowColor = 'rgba(5,150,105,0.15)'; break;
+        case 'uninstallation': badgeText = 'UNMOUNT'; badgeColor = '#2563EB'; shadowColor = 'rgba(37,99,235,0.15)'; break;
+        case 'checkup': badgeText = 'CHECKUP'; badgeColor = '#0D9488'; shadowColor = 'rgba(13,148,136,0.15)'; break;
         default: break;
     }
 
@@ -80,24 +80,27 @@ const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }
                 <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.06))' }} />
             </Box>
 
-            {/* Static Professional Badge */}
+            {/* Premium Glassmorphic Badge */}
             {badgeText && (
                 <Box
                     sx={{
                         position: 'absolute',
-                        bottom: -4,
+                        bottom: -10,
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        background: badgeBg,
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 1)',
                         color: badgeColor,
-                        padding: '2px 10px',
-                        borderRadius: '6px',
-                        fontSize: '0.6rem',
-                        fontWeight: 800,
-                        letterSpacing: '0.5px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        padding: '3px 12px',
+                        borderRadius: '24px',
+                        fontSize: '0.65rem',
+                        fontWeight: 900,
+                        letterSpacing: '0.3px',
+                        boxShadow: `0 4px 12px ${shadowColor}, 0 2px 4px rgba(0,0,0,0.04)`,
                         zIndex: 10,
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        backdropFilter: 'blur(12px)',
+                        fontFamily: "'Inter', sans-serif"
                     }}
                 >
                     {badgeText}
