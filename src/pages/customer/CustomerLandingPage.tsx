@@ -156,18 +156,7 @@ const AnimatedTrustStrip: React.FC = () => {
 
             {/* Google Rating */}
             <Box sx={{ textAlign: 'center', minWidth: 65, position: 'relative', zIndex: 2 }}>
-                {/* Floating Animated Badge */}
-                <motion.div
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{ position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
-                >
-                    <Box sx={{ background: '#EF4444', color: '#FFF', fontSize: '0.55rem', fontWeight: 800, px: 0.8, py: 0.25, borderRadius: 4, boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)' }}>
-                        TOP RATED
-                    </Box>
-                </motion.div>
-
-                <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1, mt: 0.8 }}>
+                <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1 }}>
                     4.9
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.4 }}>
@@ -181,7 +170,25 @@ const AnimatedTrustStrip: React.FC = () => {
                         </motion.div>
                     ))}
                 </Box>
-                <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 800 }}>Google</Typography>
+                {/* Google and Animated Badge */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
+                    <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 800 }}>Google</Typography>
+                    <motion.div
+                        animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{ display: 'flex' }}
+                    >
+                        <Box sx={{ 
+                            background: '#EF4444', color: '#FFF', 
+                            fontSize: '0.45rem', fontWeight: 800, 
+                            px: 0.5, py: 0.2, borderRadius: 1, 
+                            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            TOP RATED
+                        </Box>
+                    </motion.div>
+                </Box>
             </Box>
             
             <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A', zIndex: 2 }} />
