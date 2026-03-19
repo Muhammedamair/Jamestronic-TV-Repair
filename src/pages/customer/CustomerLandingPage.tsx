@@ -147,7 +147,6 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
     useEffect(() => {
         if (open) {
             setQuery('');
-            // Auto-focus after dialog animation
             setTimeout(() => inputRef.current?.focus(), 150);
         }
     }, [open]);
@@ -159,43 +158,47 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
             fullScreen
             PaperProps={{
                 sx: {
-                    background: '#FAFAFA',
+                    background: '#F9FAFB',
                     display: 'flex', flexDirection: 'column',
                 }
             }}
             TransitionProps={{ timeout: 250 }}
         >
-            {/* Top Bar — Search Input */}
+            {/* Top Bar — Search Input with Dynamic Island Padding */}
             <Box sx={{ 
-                background: '#FFFFFF', px: 2, pt: 2, pb: 1.5,
+                background: '#FFFFFF', px: 2, 
+                pt: 'max(env(safe-area-inset-top), 52px)', // aggressive padding for dynamic island
+                pb: 2,
                 borderBottom: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+                position: 'relative', zIndex: 10
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <IconButton onClick={onClose} sx={{ p: 0.8 }}>
+                    <IconButton onClick={onClose} sx={{ p: 1, background: '#F3F4F6' }}>
                         <BackIcon sx={{ fontSize: 22, color: '#374151' }} />
                     </IconButton>
                     <Box sx={{
                         flex: 1, display: 'flex', alignItems: 'center',
-                        background: '#F3F4F6', borderRadius: '14px',
-                        px: 2, py: 0.8,
-                        border: '2px solid #D97706',
+                        background: '#FFFFFF', borderRadius: '16px',
+                        px: 2, py: 1,
+                        border: '2px solid #5B4CF2', // Use theme purple for active search
+                        boxShadow: '0 2px 12px rgba(91,76,242,0.15)'
                     }}>
-                        <SearchIcon sx={{ color: '#9CA3AF', fontSize: 20, mr: 1 }} />
+                        <SearchIcon sx={{ color: '#5B4CF2', fontSize: 20, mr: 1.5 }} />
                         <input
                             ref={inputRef}
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search for a service..."
+                            placeholder="Type a tv issue or service..."
                             style={{
                                 border: 'none', outline: 'none', background: 'transparent',
-                                fontSize: '0.95rem', fontWeight: 500, color: '#111827',
+                                fontSize: '1rem', fontWeight: 600, color: '#111827',
                                 width: '100%', fontFamily: 'inherit',
                             }}
                         />
                         {query && (
-                            <IconButton onClick={() => setQuery('')} sx={{ p: 0.3 }}>
-                                <CloseIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
+                            <IconButton onClick={() => setQuery('')} sx={{ p: 0.5, background: '#F3F4F6' }}>
+                                <CloseIcon sx={{ fontSize: 16, color: '#6B7280' }} />
                             </IconButton>
                         )}
                     </Box>
@@ -203,67 +206,107 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
             </Box>
 
             {/* Results */}
-            <Box sx={{ flex: 1, overflow: 'auto', px: 2, pt: 2 }}>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.5px', mb: 1.5, px: 0.5 }}>
+            <Box sx={{ flex: 1, overflow: 'auto', px: 2, pt: 3, pb: 6 }}>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: '#6B7280', letterSpacing: '0.8px', mb: 2, px: 0.5, textTransform: 'uppercase' }}>
                     {query.trim() ? `${filtered.length} RESULT${filtered.length !== 1 ? 'S' : ''}` : 'POPULAR SERVICES'}
                 </Typography>
 
                 {filtered.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 8 }}>
-                        <Typography sx={{ fontSize: '1.2rem', mb: 1 }}>🔍</Typography>
-                        <Typography sx={{ color: '#6B7280', fontWeight: 600, fontSize: '0.95rem' }}>
-                            No services found for "{query}"
+                        <Typography sx={{ fontSize: '2.5rem', mb: 2 }}>🕵️‍♂️</Typography>
+                        <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.2rem' }}>
+                            No exact matches found
                         </Typography>
-                        <Typography sx={{ color: '#9CA3AF', fontSize: '0.8rem', mt: 0.5 }}>
-                            Try searching for "No Display", "Installation", etc.
+                        <Typography sx={{ color: '#6B7280', fontSize: '0.9rem', mt: 1, px: 4 }}>
+                            Try searching for terms like "No Display", "Flickering", or "Installation"
                         </Typography>
                     </Box>
                 ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {filtered.map((svc, i) => (
-                            <motion.div
-                                key={svc.id}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, delay: i * 0.04 }}
-                            >
-                                <Card
-                                    sx={{
-                                        borderRadius: '16px',
-                                        border: '1px solid rgba(0,0,0,0.05)',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                                        transition: 'all 0.15s',
-                                        '&:active': { transform: 'scale(0.98)', background: '#F9FAFB' },
-                                    }}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {filtered.map((svc, i) => {
+                            const isInstall = svc.id.includes('install');
+                            const isCheckup = svc.id === 'checkup';
+                            const categoryColor = isInstall ? '#10B981' : isCheckup ? '#3B82F6' : '#EF4444';
+                            const categoryLabel = isInstall ? 'Installation' : isCheckup ? 'Maintenance' : 'Repair';
+
+                            return (
+                                <motion.div
+                                    key={svc.id}
+                                    initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    transition={{ duration: 0.25, delay: i * 0.05, type: 'spring', stiffness: 300, damping: 25 }}
                                 >
-                                    <CardActionArea
-                                        onClick={() => { onClose(); onSelect(svc.route); }}
-                                        sx={{ display: 'flex', alignItems: 'center', p: 1.5, gap: 2, justifyContent: 'flex-start' }}
+                                    <Card
+                                        sx={{
+                                            borderRadius: '24px',
+                                            background: '#FFFFFF', // Fixes bad dark-mode inversion
+                                            border: '1px solid rgba(0,0,0,0.06)',
+                                            boxShadow: '0 8px 30px rgba(0,0,0,0.05)',
+                                            overflow: 'overflow',
+                                            transition: 'transform 0.2s, box-shadow 0.2s',
+                                            '&:active': { transform: 'scale(0.97)', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' },
+                                        }}
                                     >
-                                        {/* Service Icon */}
-                                        <Box sx={{
-                                            width: 56, height: 56, flexShrink: 0,
-                                            background: 'linear-gradient(135deg, #F9FAFB, #F3F4F6)',
-                                            borderRadius: '14px', display: 'flex',
-                                            alignItems: 'center', justifyContent: 'center', p: 0.8,
-                                        }}>
-                                            <img src={svc.image} alt={svc.label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                                        </Box>
-                                        {/* Label */}
-                                        <Box sx={{ flex: 1 }}>
-                                            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827' }}>
-                                                {svc.label}
-                                            </Typography>
-                                            <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: 500, mt: 0.2 }}>
-                                                {svc.id.includes('install') ? 'Installation & Setup' : svc.id === 'checkup' ? 'Maintenance' : 'TV Repair'}
-                                            </Typography>
-                                        </Box>
-                                        {/* Arrow */}
-                                        <ArrowForwardIcon sx={{ fontSize: 18, color: '#D1D5DB' }} />
-                                    </CardActionArea>
-                                </Card>
-                            </motion.div>
-                        ))}
+                                        <CardActionArea
+                                            onClick={() => { onClose(); onSelect(svc.route); }}
+                                            sx={{ display: 'flex', p: 2, gap: 2.5, alignItems: 'center' }}
+                                        >
+                                            {/* Premium Image Container */}
+                                            <Box sx={{
+                                                width: 90, height: 90, flexShrink: 0,
+                                                background: 'linear-gradient(145deg, #F3F4F6 0%, #E5E7EB 100%)',
+                                                borderRadius: '20px', display: 'flex',
+                                                alignItems: 'center', justifyContent: 'center', p: 1,
+                                                position: 'relative',
+                                                border: '1px solid #FFFFFF',
+                                                boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)'
+                                            }}>
+                                                <img src={svc.image} alt={svc.label} style={{ width: '95%', height: '95%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.1))' }} />
+                                            </Box>
+                                            
+                                            {/* Details & Action */}
+                                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                                {/* Floating Badge */}
+                                                <Box sx={{ 
+                                                    alignSelf: 'flex-start',
+                                                    background: `${categoryColor}15`,
+                                                    color: categoryColor,
+                                                    px: 1.2, py: 0.4, borderRadius: '8px',
+                                                    fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px', mb: 1
+                                                }}>
+                                                    {categoryLabel}
+                                                </Box>
+
+                                                <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#111827', mb: 0.5, lineHeight: 1.2 }}>
+                                                    {svc.label}
+                                                </Typography>
+                                                
+                                                {/* Price/Action Row */}
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <VerifiedIcon sx={{ fontSize: 14, color: '#10B981' }} />
+                                                        <Typography sx={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 600 }}>Assured</Typography>
+                                                    </Box>
+                                                    
+                                                    {/* Custom ADD/BOOK Button */}
+                                                    <Box sx={{
+                                                        background: '#5B4CF2',
+                                                        color: '#FFFFFF',
+                                                        borderRadius: '10px',
+                                                        px: 2, py: 0.8,
+                                                        fontSize: '0.75rem', fontWeight: 800,
+                                                        boxShadow: '0 4px 12px rgba(91,76,242,0.3)',
+                                                    }}>
+                                                        BOOK
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        </CardActionArea>
+                                    </Card>
+                                </motion.div>
+                            );
+                        })}
                     </Box>
                 )}
             </Box>
