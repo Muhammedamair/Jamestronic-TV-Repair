@@ -624,12 +624,16 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
         }
     };
 
+    // Create a unique key for AnimatePresence based on the banner id
+    const bannerKey = banner?.id || 'default';
+
     return (
         <Box
             sx={{
                 background: `linear-gradient(135deg, ${gradStart} 0%, ${gradEnd} 50%, ${gradStart} 100%)`,
                 backgroundSize: '200% 200%',
                 animation: shouldReduce ? 'none' : 'gradientShift 8s ease-in-out infinite',
+                transition: 'background 0.8s ease-in-out',
                 pt: { xs: 'calc(env(safe-area-inset-top) + 24px)', sm: 'calc(env(safe-area-inset-top) + 32px)' },
                 pb: { xs: 5, sm: 6 },
                 px: { xs: 2.5, sm: 4 },
@@ -709,10 +713,23 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
                     </motion.div>
                 )}
 
-                {/* ═══ HERO CONTENT — Dynamic Layout ═══ */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    {renderHeroContent()}
-                </Box>
+                {/* ═══ HERO CONTENT — Dynamic Layout with Pro Transition ═══ */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={bannerKey}
+                        initial={shouldReduce ? false : { opacity: 0, x: 40, filter: 'blur(6px)' }}
+                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, x: -40, filter: 'blur(6px)' }}
+                        transition={{
+                            duration: 0.45,
+                            ease: [0.22, 1, 0.36, 1], // custom cubic-bezier (ease-out-expo)
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            {renderHeroContent()}
+                        </Box>
+                    </motion.div>
+                </AnimatePresence>
             </Box>
         </Box>
     );
