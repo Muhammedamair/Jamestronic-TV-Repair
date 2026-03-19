@@ -156,12 +156,13 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
             open={open}
             onClose={onClose}
             fullScreen
-            sx={{ zIndex: 99999 }} // Ensures it covers the bottom navigation bar even when the keyboard opens
+            sx={{ zIndex: 99999, '& .MuiDialog-container': { background: '#F9FAFB' } }} // Fills backdrop to prevent overscroll bleed
             PaperProps={{
                 sx: {
                     background: '#F9FAFB',
                     display: 'flex', flexDirection: 'column',
-                    minHeight: '100dvh', // Ensures it stretches correctly on mobile
+                    minHeight: '100dvh',
+                    overscrollBehavior: 'none', // Prevents iOS rubber-banding effect
                 }
             }}
             TransitionProps={{ timeout: 250 }}
@@ -192,6 +193,10 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Type a tv issue or service..."
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
                             style={{
                                 border: 'none', outline: 'none', background: 'transparent',
                                 fontSize: '1rem', fontWeight: 600, color: '#111827',
