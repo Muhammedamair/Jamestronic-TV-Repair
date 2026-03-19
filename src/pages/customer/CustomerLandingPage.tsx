@@ -56,82 +56,85 @@ const SERVICES = [
 ];
 
 const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }> = ({ id, image, label }) => {
-    let wrapProps: any = {};
-    let overlay = null;
+    // We use a randomized float delay so the grid looks organic, not robotic.
+    const floatDelay = React.useMemo(() => Math.random() * 2, []);
+
+    let badgeText = '';
+    let badgeEmoji = '';
+    let badgeColor = '';
+    let badgeBg = '';
+    let badgeAnim = {};
 
     switch (id) {
         case 'no_display':
-            // Breathing fade to dark/black to simulate a dead screen
-            wrapProps = {
-                animate: { filter: ['brightness(1)', 'brightness(0.3)', 'brightness(1)'] },
-                transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
-            };
+            badgeText = 'Blank';
+            badgeEmoji = '⬛';
+            badgeColor = '#FFFFFF';
+            badgeBg = '#111827';
+            badgeAnim = { opacity: [1, 0.4, 1], scale: [1, 0.95, 1], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } };
             break;
         case 'flickering':
-            // Rapid strobe opacity and brightness to simulate broken backlight/panel
-            wrapProps = {
-                animate: { opacity: [1, 0.4, 0.9, 0.2, 1], filter: ['brightness(1)', 'brightness(1.5)', 'brightness(0.8)', 'brightness(1)'] },
-                transition: { duration: 0.5, repeat: Infinity, repeatType: 'mirror' }
-            };
+            badgeText = 'Glitch';
+            badgeEmoji = '⚡';
+            badgeColor = '#B45309';
+            badgeBg = '#FEF3C7';
+            badgeAnim = { opacity: [1, 0.5, 1, 0.2, 1], transition: { duration: 0.8, repeat: Infinity, repeatType: 'mirror' } };
             break;
         case 'no_sound':
-            // Vigorous shaking (like a vibrating/broken speaker)
-            wrapProps = {
-                animate: { rotate: [0, -6, 6, -6, 6, 0] },
-                transition: { duration: 0.5, repeat: Infinity, repeatDelay: 1.5 }
-            };
+            badgeText = 'Muted';
+            badgeEmoji = '🔇';
+            badgeColor = '#991B1B';
+            badgeBg = '#FEE2E2';
+            badgeAnim = { rotate: [0, -10, 10, -10, 10, 0], transition: { duration: 0.6, repeat: Infinity, repeatDelay: 1.5 } };
             break;
         case 'power_issue':
-            // Dead / sudden glitch grayscale pulse to simulate power cuts
-            wrapProps = {
-                animate: { x: [0, -2, 2, 0], filter: ['grayscale(0)', 'grayscale(1) contrast(1.5)', 'grayscale(0)'] },
-                transition: { duration: 2.5, repeat: Infinity }
-            };
+            badgeText = 'Dead';
+            badgeEmoji = '🔌';
+            badgeColor = '#9A3412';
+            badgeBg = '#FFEDD5';
+            badgeAnim = { x: [0, -3, 3, -3, 3, 0], filter: ['saturate(1)', 'saturate(2)', 'saturate(1)'], transition: { duration: 2.5, repeat: Infinity } };
             break;
         case 'lines':
-            // Scanning line overlay simulating horizontal damage lines
-            overlay = (
-                <motion.div
-                    animate={{ top: ['10%', '90%', '10%'], opacity: [0, 1, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                    style={{ position: 'absolute', left: '15%', right: '15%', height: '2px', background: 'rgba(91,76,242,0.8)', boxShadow: '0 0 8px rgba(91,76,242,1)', zIndex: 2 }}
-                />
-            );
+            badgeText = 'Lines';
+            badgeEmoji = '📺';
+            badgeColor = '#5B21B6';
+            badgeBg = '#EDE9FE';
+            badgeAnim = { y: [0, -3, 0], transition: { duration: 1.5, repeat: Infinity, ease: 'linear' } };
             break;
         case 'screen_repair':
-            // Glowing spark effect around the broken screen
-            wrapProps = {
-                animate: { filter: ['drop-shadow(0px 8px 12px rgba(0,0,0,0.08))', 'drop-shadow(0px 0px 15px rgba(91,76,242,0.6))', 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))'] },
-                transition: { duration: 1.5, repeat: Infinity }
-            };
+            badgeText = 'Broken';
+            badgeEmoji = '🛠️';
+            badgeColor = '#86198F';
+            badgeBg = '#FAE8FF';
+            badgeAnim = { boxShadow: ['0 0 0 rgba(134,25,143,0)', '0 0 12px rgba(134,25,143,0.5)', '0 0 0 rgba(134,25,143,0)'], transition: { duration: 1.5, repeat: Infinity } };
             break;
         case 'not_sure':
-            // Confused hover tilt
-            wrapProps = {
-                animate: { y: [0, -5, 0], rotate: [0, 3, -3, 0] },
-                transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
-            };
+            badgeText = 'Unknown';
+            badgeEmoji = '❓';
+            badgeColor = '#374151';
+            badgeBg = '#F3F4F6';
+            badgeAnim = { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } };
             break;
         case 'installation':
-            // Sliding smoothly into place onto the wall
-            wrapProps = {
-                animate: { y: [-15, 0, 0], opacity: [0, 1, 1] },
-                transition: { duration: 2.5, repeat: Infinity, ease: 'easeOut' }
-            };
+            badgeText = 'Mount';
+            badgeEmoji = '⬇️';
+            badgeColor = '#065F46';
+            badgeBg = '#D1FAE5';
+            badgeAnim = { y: [-3, 3, -3], transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } };
             break;
         case 'uninstallation':
-            // Lifting off the wall and disappearing
-            wrapProps = {
-                animate: { y: [0, -15, -15], opacity: [1, 0, 0] },
-                transition: { duration: 2.5, repeat: Infinity, ease: 'easeIn' }
-            };
+            badgeText = 'Unmount';
+            badgeEmoji = '⬆️';
+            badgeColor = '#1E3A8A';
+            badgeBg = '#DBEAFE';
+            badgeAnim = { y: [3, -3, 3], transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } };
             break;
         case 'checkup':
-            // Magnifying glass gentle zoom pulsing
-            wrapProps = {
-                animate: { scale: [1, 1.1, 1] },
-                transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
-            };
+            badgeText = 'Checkup';
+            badgeEmoji = '🔍';
+            badgeColor = '#065F46';
+            badgeBg = '#D1FAE5';
+            badgeAnim = { scale: [1, 1.05, 1], transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } };
             break;
         default:
             break;
@@ -139,10 +142,40 @@ const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }
 
     return (
         <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-            <motion.div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} {...wrapProps}>
-                <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: id === 'screen_repair' ? 'none' : 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' }} />
-                {overlay}
+            <motion.div 
+                style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: floatDelay }}
+            >
+                <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.06))' }} />
             </motion.div>
+
+            {/* Floating Action Badge */}
+            {badgeText && (
+                <motion.div
+                    animate={badgeAnim}
+                    style={{
+                        position: 'absolute',
+                        bottom: -4,
+                        right: -12,
+                        background: badgeBg,
+                        border: '1px solid rgba(0,0,0,0.05)',
+                        color: badgeColor,
+                        padding: '2px 8px',
+                        borderRadius: '20px',
+                        fontSize: '0.65rem',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                        zIndex: 10
+                    }}
+                >
+                    <span style={{ fontSize: '0.7rem' }}>{badgeEmoji}</span>
+                    <span style={{ letterSpacing: '-0.3px', textTransform: 'uppercase' }}>{badgeText}</span>
+                </motion.div>
+            )}
         </Box>
     );
 };
@@ -833,13 +866,13 @@ const CustomerLandingPage: React.FC = () => {
                                 <Box sx={{
                                     width: { xs: '85px', sm: '110px' },
                                     height: { xs: '85px', sm: '110px' },
-                                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+                                    background: 'linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%)',
                                     borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     mb: 1.5, p: 2,
-                                    border: '1.5px solid #FFFFFF',
-                                    boxShadow: '0 8px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.04)',
-                                    overflow: 'hidden'
+                                    border: '2px solid #FFFFFF',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.05), inset 0px -4px 10px rgba(0,0,0,0.03)',
+                                    position: 'relative'
                                 }}>
                                     <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
                                 </Box>
