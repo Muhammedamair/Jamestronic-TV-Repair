@@ -112,7 +112,14 @@ export interface PromotionalBanner {
     gradient_start?: string;
     gradient_end?: string;
     banner_type?: string;      // 'hero' | 'promo_card'
-    animation_style?: string;  // 'particles' | 'shimmer' | 'waves' | 'celebration'
+    animation_style?: string;  // 'particles' | 'celebration' | 'aurora' | 'minimal'
+    // V2 fields
+    cta_text?: string;         // "Book Now", "Grab Offer"
+    cta_link?: string;         // "/book?service=repair"
+    schedule_start?: string;   // ISO date — auto-publish
+    schedule_end?: string;     // ISO date — auto-unpublish
+    countdown_end?: string;    // ISO date — countdown timer
+    emoji_set?: string[];      // ["🌙","✨","🕌"]
     created_at: string;
     updated_at: string;
 }

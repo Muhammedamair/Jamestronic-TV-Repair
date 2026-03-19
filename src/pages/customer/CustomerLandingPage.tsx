@@ -177,24 +177,40 @@ const CustomerLandingPage: React.FC = () => {
     const [newLabel, setNewLabel] = useState('Home');
     const [newAddressText, setNewAddressText] = useState('');
 
-    // Dynamic banner from database
-    const [heroBanner, setHeroBanner] = useState<PromotionalBanner | null>(null);
+    // Dynamic banners from database (carousel)
+    const [heroBanners, setHeroBanners] = useState<PromotionalBanner[]>([]);
+    const [activeBannerIdx, setActiveBannerIdx] = useState(0);
 
     useEffect(() => {
-        const fetchHeroBanner = async () => {
+        const fetchHeroBanners = async () => {
             const { data } = await supabase
                 .from('promotional_banners')
                 .select('*')
                 .eq('is_active', true)
                 .eq('banner_type', 'hero')
-                .order('order_index', { ascending: true })
-                .limit(1);
+                .order('order_index', { ascending: true });
             if (data && data.length > 0) {
-                setHeroBanner(data[0] as PromotionalBanner);
+                // Filter by schedule dates client-side
+                const now = new Date();
+                const visible = (data as PromotionalBanner[]).filter(b => {
+                    if (b.schedule_start && new Date(b.schedule_start) > now) return false;
+                    if (b.schedule_end && new Date(b.schedule_end) < now) return false;
+                    return true;
+                });
+                setHeroBanners(visible.length ? visible : [data[0] as PromotionalBanner]);
             }
         };
-        fetchHeroBanner();
+        fetchHeroBanners();
     }, []);
+
+    // Auto-rotate carousel every 5 seconds
+    useEffect(() => {
+        if (heroBanners.length <= 1) return;
+        const timer = setInterval(() => {
+            setActiveBannerIdx(prev => (prev + 1) % heroBanners.length);
+        }, 5000);
+        return () => clearInterval(timer);
+    }, [heroBanners.length]);
 
     // Search
     const [searchQuery, setSearchQuery] = useState('');
@@ -588,9 +604,9 @@ const CustomerLandingPage: React.FC = () => {
                 {addingAddress ? renderAddAddress() : renderLocationPicker()}
             </Dialog>
             
-            {/* ════ DYNAMIC ANIMATED HERO BANNER ════ */}
+            {/* ════ DYNAMIC ANIMATED HERO BANNER CAROUSEL ════ */}
             <AnimatedHeroBanner
-                banner={heroBanner}
+                banner={heroBanners[activeBannerIdx] || null}
                 isFirstVisit={isFirstVisit}
                 onLocationTap={handleLocationTap}
                 locationArea={displayArea}
@@ -614,6 +630,26 @@ const CustomerLandingPage: React.FC = () => {
                     </Box>
                 </Box>
             </AnimatedHeroBanner>
+
+            {/* Carousel Dot Indicators */}
+            {heroBanners.length > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: -3.5, mb: 1, position: 'relative', zIndex: 2 }}>
+                    {heroBanners.map((_, i) => (
+                        <Box
+                            key={i}
+                            onClick={() => setActiveBannerIdx(i)}
+                            sx={{
+                                width: i === activeBannerIdx ? 24 : 8,
+                                height: 8,
+                                borderRadius: 4,
+                                background: i === activeBannerIdx ? '#5B4CF2' : 'rgba(91,76,242,0.25)',
+                                transition: 'all 0.3s ease',
+                                cursor: 'pointer',
+                            }}
+                        />
+                    ))}
+                </Box>
+            )}
 
             {/* ════ EXPLORE SERVICES GRID — STAGGERED POP ENTRANCE ════ */}
             <Container maxWidth="sm" sx={{ mt: 5 }}>
