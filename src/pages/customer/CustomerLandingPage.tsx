@@ -1300,10 +1300,10 @@ const CustomerLandingPage: React.FC = () => {
                                             {/* Pulsing Icon */}
                                             <motion.div
                                                 animate={{ 
-                                                    scale: [1, 1.08, 1],
-                                                    boxShadow: ['0 0 0px rgba(0,0,0,0)', `0 0 14px ${item.color}40`, '0 0 0px rgba(0,0,0,0)']
+                                                    scale: [1, 1.15, 1],
+                                                    boxShadow: ['0 0 0px rgba(0,0,0,0)', `0 0 20px ${item.color}80`, '0 0 0px rgba(0,0,0,0)']
                                                 }}
-                                                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}
+                                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
                                                 style={{ display: 'inline-flex', marginBottom: '12px', alignSelf: 'flex-start', borderRadius: '50%' }}
                                             >
                                                 <Box sx={{ 
@@ -1333,10 +1333,10 @@ const CustomerLandingPage: React.FC = () => {
                             {/* The 5th Pulsing Icon - Warranty */}
                             <motion.div
                                 animate={{ 
-                                    scale: [1, 1.05, 1],
-                                    boxShadow: ['0 4px 12px rgba(16,185,129,0.3)', '0 4px 24px rgba(16,185,129,0.6)', '0 4px 12px rgba(16,185,129,0.3)']
+                                    scale: [1, 1.12, 1],
+                                    boxShadow: ['0 4px 12px rgba(16,185,129,0.3)', '0 4px 28px rgba(16,185,129,0.8)', '0 4px 12px rgba(16,185,129,0.3)']
                                 }}
-                                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                                 style={{ borderRadius: '50%', flexShrink: 0 }}
                             >
                                 <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex' }}>
