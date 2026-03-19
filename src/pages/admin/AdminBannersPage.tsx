@@ -140,6 +140,13 @@ const PREMIUM_GRADIENTS = [
     { start: '#000000', end: '#DC2626' }, // Flash Red
 ];
 
+const LAYOUT_STYLES = [
+    { value: 'classic', label: 'Classic', icon: '📝', desc: 'Left-aligned — Brand → Headline → Offer' },
+    { value: 'center', label: 'Center Focus', icon: '🎯', desc: 'Center-aligned — symmetrical & balanced' },
+    { value: 'offer_first', label: 'Offer First', icon: '💰', desc: 'Huge price on top — aggressive sales' },
+    { value: 'split', label: 'Split Layout', icon: '📺', desc: 'Text left, giant emoji right' },
+];
+
 export const AdminBannersPage: React.FC = () => {
     const [banners, setBanners] = useState<PromotionalBanner[]>([]);
     const { fetchBanners, createBanner, updateBanner, deleteBanner, loading } = useBanners();
@@ -176,6 +183,7 @@ export const AdminBannersPage: React.FC = () => {
                 cta_text: banner.cta_text || '', cta_link: banner.cta_link || '/book',
                 schedule_start: banner.schedule_start || '', schedule_end: banner.schedule_end || '',
                 countdown_end: banner.countdown_end || '', emoji_set: banner.emoji_set || [],
+                layout_style: banner.layout_style || 'classic',
             });
         } else {
             setEditingBannerId(null);
@@ -186,6 +194,7 @@ export const AdminBannersPage: React.FC = () => {
                 gradient_start: '#5B4CF2', gradient_end: '#7C3AED',
                 animation_style: 'particles', cta_text: '', cta_link: '/book',
                 schedule_start: '', schedule_end: '', countdown_end: '', emoji_set: [],
+                layout_style: 'classic',
             });
         }
         setEditDialogOpen(true);
@@ -730,6 +739,31 @@ export const AdminBannersPage: React.FC = () => {
                             </Box>
                         </Grid>
                     </Grid>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* ─── Typography Layout Style ─── */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ViewCarousel sx={{ fontSize: 18 }} /> Typography & Layout Style
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5, flexWrap: 'wrap' }}>
+                        {LAYOUT_STYLES.map(ls => (
+                            <Box key={ls.value} onClick={() => setDraft(p => ({ ...p, layout_style: ls.value }))}
+                                sx={{
+                                    flex: '1 1 130px', p: 1.5, borderRadius: 2, cursor: 'pointer',
+                                    border: draft.layout_style === ls.value ? '2px solid #6C63FF' : '2px solid rgba(255,255,255,0.06)',
+                                    bgcolor: draft.layout_style === ls.value ? 'rgba(108,99,255,0.12)' : 'rgba(15,23,42,0.5)',
+                                    transition: 'all 0.2s', textAlign: 'center',
+                                    '&:hover': { border: '2px solid rgba(108,99,255,0.5)' },
+                                }}>
+                                <Typography sx={{ fontSize: 24, mb: 0.5 }}>{ls.icon}</Typography>
+                                <Typography variant="body2" fontWeight={700} sx={{ color: draft.layout_style === ls.value ? '#6C63FF' : '#E2E8F0' }}>
+                                    {ls.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.6rem' }}>{ls.desc}</Typography>
+                            </Box>
+                        ))}
+                    </Box>
 
                     <Divider sx={{ my: 2 }} />
 

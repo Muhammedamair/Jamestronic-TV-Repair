@@ -313,6 +313,7 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
     const ctaLink = banner?.cta_link || '/book';
     const countdownEnd = banner?.countdown_end;
     const emojis = banner?.emoji_set || [];
+    const layoutStyle = banner?.layout_style || 'classic';
 
     const titleParts = title.split(' ');
     const brandPart = titleParts.length > 1 ? titleParts.slice(0, -1).join(' ') : title;
@@ -330,6 +331,296 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
             case 'minimal': return <FloatingEmojis emojis={emojis} />;
             case 'particles':
             default: return <><FloatingParticles /><GlowingOrbs /><FloatingEmojis emojis={emojis} /></>;
+        }
+    };
+
+    // ─── Shared sub-components ───
+    const TagBadge = () => tagText ? (
+        <motion.div
+            animate={shouldReduce ? {} : {
+                boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 8px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)'],
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ borderRadius: '6px', display: 'inline-block' }}
+        >
+            <Box sx={{
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                color: '#FFF', px: 1.2, py: 0.3, borderRadius: '6px',
+                fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px',
+            }}>
+                {tagText}
+            </Box>
+        </motion.div>
+    ) : null;
+
+    const CtaButton = () => ctaText ? (
+        <motion.div
+            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: isFirstVisit ? 1 : 0.2, duration: 0.35 }}
+        >
+            <Button
+                onClick={() => navigate(ctaLink)}
+                variant="contained"
+                sx={{
+                    mt: 2, background: 'rgba(255,255,255,0.95)', color: gradStart,
+                    fontWeight: 800, fontSize: '0.9rem', borderRadius: '12px',
+                    px: 3, py: 1.2, textTransform: 'none',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    transition: 'all 0.2s',
+                    animation: shouldReduce ? 'none' : 'ctaPulse 3s ease-in-out infinite',
+                    '&:hover': {
+                        background: '#FFF', transform: 'scale(1.03)',
+                        boxShadow: '0 6px 25px rgba(0,0,0,0.2)',
+                    },
+                    '&:active': { transform: 'scale(0.97)' },
+                    '@keyframes ctaPulse': {
+                        '0%,100%': { boxShadow: '0 4px 20px rgba(0,0,0,0.15)' },
+                        '50%': { boxShadow: `0 4px 25px rgba(0,0,0,0.15), 0 0 0 4px rgba(255,255,255,0.2)` },
+                    },
+                }}
+            >
+                {ctaText} →
+            </Button>
+        </motion.div>
+    ) : null;
+
+    // ═══════════════════════════════════════════
+    // LAYOUT RENDERERS
+    // ═══════════════════════════════════════════
+
+    // ─── CLASSIC: Left-aligned. Brand → Tag → Headline → Offer → CTA ───
+    const renderClassicLayout = () => (
+        <Box sx={{ flex: 1 }}>
+            <motion.div
+                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35, delay: isFirstVisit ? 0.25 : 0 }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+                    <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                        {brandPart}{' '}
+                        {accentPart && <span style={{ color: '#A78BFA' }}>{accentPart}</span>}
+                    </Typography>
+                    <TagBadge />
+                </Box>
+            </motion.div>
+            <Box sx={{ mb: 1 }}>
+                {subtitleWords.map((word, i) => (
+                    <motion.span key={word + i}
+                        initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: isFirstVisit ? 0.35 + i * 0.08 : 0 }}
+                        style={{ display: 'inline-block', marginRight: '8px' }}
+                    >
+                        <Typography component="span" sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+                            {word}
+                        </Typography>
+                    </motion.span>
+                ))}
+                {highlightText && (
+                    <motion.span
+                        initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.7 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15, delay: isFirstVisit ? 0.7 : 0 }}
+                        style={{ display: 'inline-block', position: 'relative' }}
+                    >
+                        <Typography component="span" sx={{
+                            color: '#FCD34D', fontWeight: 900, fontSize: { xs: '1.8rem', sm: '2.2rem' },
+                            lineHeight: 1.15, letterSpacing: '-0.5px',
+                            textShadow: shouldReduce ? 'none' : '0 0 20px rgba(252,211,77,0.4), 0 0 40px rgba(252,211,77,0.2)',
+                        }}>
+                            {highlightText}
+                        </Typography>
+                        {!shouldReduce && <ShimmerSweep />}
+                    </motion.span>
+                )}
+            </Box>
+            {offerText && (
+                <motion.div initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: isFirstVisit ? 0.85 : 0, duration: 0.3 }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>{offerText}</Typography>
+                </motion.div>
+            )}
+            {countdownEnd && <CountdownTimer endDate={countdownEnd} />}
+            <CtaButton />
+        </Box>
+    );
+
+    // ─── CENTER FOCUS: Center-aligned, symmetrical ───
+    const renderCenterLayout = () => (
+        <Box sx={{ flex: 1, textAlign: 'center' }}>
+            <motion.div
+                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: isFirstVisit ? 0.25 : 0 }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <TagBadge />
+                </Box>
+                <Typography sx={{ color: '#FFF', fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.5px', mb: 1 }}>
+                    {brandPart}{' '}
+                    {accentPart && <span style={{ color: '#A78BFA' }}>{accentPart}</span>}
+                </Typography>
+            </motion.div>
+            <motion.div
+                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20, delay: isFirstVisit ? 0.4 : 0 }}
+            >
+                <Typography sx={{
+                    color: '#FFF', fontWeight: 800, fontSize: { xs: '1.6rem', sm: '2rem' },
+                    lineHeight: 1.2, letterSpacing: '-0.5px', mb: 0.5,
+                }}>
+                    {subtitle}
+                </Typography>
+                {highlightText && (
+                    <Box sx={{ display: 'inline-block', position: 'relative' }}>
+                        <Typography component="span" sx={{
+                            color: '#FCD34D', fontWeight: 900, fontSize: { xs: '2.2rem', sm: '2.8rem' },
+                            lineHeight: 1.1,
+                            textShadow: shouldReduce ? 'none' : '0 0 25px rgba(252,211,77,0.5), 0 0 50px rgba(252,211,77,0.25)',
+                        }}>
+                            {highlightText}
+                        </Typography>
+                        {!shouldReduce && <ShimmerSweep />}
+                    </Box>
+                )}
+            </motion.div>
+            {offerText && (
+                <motion.div initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: isFirstVisit ? 0.7 : 0, duration: 0.3 }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', fontWeight: 500, mt: 1 }}>{offerText}</Typography>
+                </motion.div>
+            )}
+            {countdownEnd && <Box sx={{ display: 'flex', justifyContent: 'center' }}><CountdownTimer endDate={countdownEnd} /></Box>}
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}><CtaButton /></Box>
+        </Box>
+    );
+
+    // ─── OFFER FIRST: Huge price/discount first, then brand below ───
+    const renderOfferFirstLayout = () => (
+        <Box sx={{ flex: 1 }}>
+            {/* Big highlight at the top */}
+            <motion.div
+                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 15, delay: isFirstVisit ? 0.2 : 0 }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1, flexWrap: 'wrap' }}>
+                    {highlightText && (
+                        <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                            <Typography component="span" sx={{
+                                color: '#FCD34D', fontWeight: 900, fontSize: { xs: '3rem', sm: '3.8rem' },
+                                lineHeight: 1, letterSpacing: '-2px',
+                                textShadow: shouldReduce ? 'none' : '0 0 30px rgba(252,211,77,0.5), 0 0 60px rgba(252,211,77,0.2)',
+                            }}>
+                                {highlightText}
+                            </Typography>
+                            {!shouldReduce && <ShimmerSweep />}
+                        </Box>
+                    )}
+                    <TagBadge />
+                </Box>
+            </motion.div>
+            {/* Subtitle below the price */}
+            <motion.div
+                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35, delay: isFirstVisit ? 0.45 : 0 }}
+            >
+                <Typography sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.4rem', sm: '1.7rem' }, lineHeight: 1.2, mb: 0.5 }}>
+                    {subtitle}
+                </Typography>
+                <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', mb: 0.5 }}>
+                    {brandPart}{' '}
+                    {accentPart && <span style={{ color: '#A78BFA' }}>{accentPart}</span>}
+                </Typography>
+            </motion.div>
+            {offerText && (
+                <motion.div initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: isFirstVisit ? 0.65 : 0, duration: 0.3 }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>{offerText}</Typography>
+                </motion.div>
+            )}
+            {countdownEnd && <CountdownTimer endDate={countdownEnd} />}
+            <CtaButton />
+        </Box>
+    );
+
+    // ─── SPLIT: Text left, huge floating emoji right ───
+    const renderSplitLayout = () => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Left: Text */}
+            <Box sx={{ flex: 1 }}>
+                <motion.div
+                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: isFirstVisit ? 0.25 : 0 }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                        <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.3px' }}>
+                            {brandPart}{' '}
+                            {accentPart && <span style={{ color: '#A78BFA' }}>{accentPart}</span>}
+                        </Typography>
+                        <TagBadge />
+                    </Box>
+                </motion.div>
+                <motion.div
+                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
+                >
+                    <Typography sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.4rem', sm: '1.7rem' }, lineHeight: 1.2, mb: 0.5 }}>
+                        {subtitle}
+                    </Typography>
+                    {highlightText && (
+                        <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                            <Typography component="span" sx={{
+                                color: '#FCD34D', fontWeight: 900, fontSize: { xs: '1.6rem', sm: '2rem' },
+                                lineHeight: 1.1,
+                                textShadow: shouldReduce ? 'none' : '0 0 20px rgba(252,211,77,0.4)',
+                            }}>
+                                {highlightText}
+                            </Typography>
+                            {!shouldReduce && <ShimmerSweep />}
+                        </Box>
+                    )}
+                </motion.div>
+                {offerText && (
+                    <motion.div initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: isFirstVisit ? 0.6 : 0, duration: 0.3 }}>
+                        <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.8rem', fontWeight: 500, mt: 0.5 }}>{offerText}</Typography>
+                    </motion.div>
+                )}
+                {countdownEnd && <CountdownTimer endDate={countdownEnd} />}
+                <CtaButton />
+            </Box>
+            {/* Right: Huge emoji showcase */}
+            <motion.div
+                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.5, rotate: -15 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 250, damping: 15, delay: isFirstVisit ? 0.5 : 0.1 }}
+            >
+                <Box sx={{
+                    fontSize: { xs: '4rem', sm: '5rem' }, lineHeight: 1,
+                    filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))',
+                    animation: shouldReduce ? 'none' : 'splitFloat 4s ease-in-out infinite',
+                    '@keyframes splitFloat': {
+                        '0%,100%': { transform: 'translateY(0) rotate(0deg)' },
+                        '50%': { transform: 'translateY(-10px) rotate(5deg)' },
+                    },
+                }}>
+                    {emojis.length > 0 ? emojis[0] : '📺'}
+                </Box>
+            </motion.div>
+        </Box>
+    );
+
+    // ─── Layout Switcher ───
+    const renderHeroContent = () => {
+        switch (layoutStyle) {
+            case 'center': return renderCenterLayout();
+            case 'offer_first': return renderOfferFirstLayout();
+            case 'split': return renderSplitLayout();
+            case 'classic':
+            default: return renderClassicLayout();
         }
     };
 
@@ -418,129 +709,9 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
                     </motion.div>
                 )}
 
-                {/* ═══ HERO CONTENT ═══ */}
+                {/* ═══ HERO CONTENT — Dynamic Layout ═══ */}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box sx={{ flex: 1 }}>
-                        {/* Title + Tag */}
-                        <motion.div
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.35, delay: isFirstVisit ? 0.25 : 0 }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-                                <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                    {brandPart}{' '}
-                                    {accentPart && <span style={{ color: '#A78BFA' }}>{accentPart}</span>}
-                                </Typography>
-                                {tagText && (
-                                    <motion.div
-                                        animate={shouldReduce ? {} : {
-                                            boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 8px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)'],
-                                        }}
-                                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                                        style={{ borderRadius: '6px' }}
-                                    >
-                                        <Box sx={{
-                                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                                            color: '#FFF', px: 1.2, py: 0.3, borderRadius: '6px',
-                                            fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px',
-                                        }}>
-                                            {tagText}
-                                        </Box>
-                                    </motion.div>
-                                )}
-                            </Box>
-                        </motion.div>
-
-                        {/* Subtitle words + highlight */}
-                        <Box sx={{ mb: 1 }}>
-                            {subtitleWords.map((word, i) => (
-                                <motion.span
-                                    key={word + i}
-                                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: isFirstVisit ? 0.35 + i * 0.08 : 0 }}
-                                    style={{ display: 'inline-block', marginRight: '8px' }}
-                                >
-                                    <Typography component="span" sx={{
-                                        color: '#FFF', fontWeight: 800,
-                                        fontSize: { xs: '1.8rem', sm: '2.2rem' },
-                                        lineHeight: 1.15, letterSpacing: '-0.5px',
-                                    }}>
-                                        {word}
-                                    </Typography>
-                                </motion.span>
-                            ))}
-                            {highlightText && (
-                                <motion.span
-                                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.7 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ type: 'spring', stiffness: 400, damping: 15, delay: isFirstVisit ? 0.7 : 0 }}
-                                    style={{ display: 'inline-block', position: 'relative' }}
-                                >
-                                    <Typography component="span" sx={{
-                                        color: '#FCD34D', fontWeight: 900,
-                                        fontSize: { xs: '1.8rem', sm: '2.2rem' },
-                                        lineHeight: 1.15, letterSpacing: '-0.5px',
-                                        textShadow: shouldReduce ? 'none' : '0 0 20px rgba(252,211,77,0.4), 0 0 40px rgba(252,211,77,0.2)',
-                                    }}>
-                                        {highlightText}
-                                    </Typography>
-                                    {!shouldReduce && <ShimmerSweep />}
-                                </motion.span>
-                            )}
-                        </Box>
-
-                        {/* Offer text */}
-                        {offerText && (
-                            <motion.div
-                                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: isFirstVisit ? 0.85 : 0, duration: 0.3 }}
-                            >
-                                <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
-                                    {offerText}
-                                </Typography>
-                            </motion.div>
-                        )}
-
-                        {/* Countdown Timer */}
-                        {countdownEnd && <CountdownTimer endDate={countdownEnd} />}
-
-                        {/* CTA Button */}
-                        {ctaText && (
-                            <motion.div
-                                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: isFirstVisit ? 1 : 0.2, duration: 0.35 }}
-                            >
-                                <Button
-                                    onClick={() => navigate(ctaLink)}
-                                    variant="contained"
-                                    sx={{
-                                        mt: 2, background: 'rgba(255,255,255,0.95)', color: gradStart,
-                                        fontWeight: 800, fontSize: '0.9rem', borderRadius: '12px',
-                                        px: 3, py: 1.2, textTransform: 'none',
-                                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                                        transition: 'all 0.2s',
-                                        animation: shouldReduce ? 'none' : 'ctaPulse 3s ease-in-out infinite',
-                                        '&:hover': {
-                                            background: '#FFF',
-                                            transform: 'scale(1.03)',
-                                            boxShadow: '0 6px 25px rgba(0,0,0,0.2)',
-                                        },
-                                        '&:active': { transform: 'scale(0.97)' },
-                                        '@keyframes ctaPulse': {
-                                            '0%,100%': { boxShadow: '0 4px 20px rgba(0,0,0,0.15)' },
-                                            '50%': { boxShadow: `0 4px 25px rgba(0,0,0,0.15), 0 0 0 4px rgba(255,255,255,0.2)` },
-                                        },
-                                    }}
-                                >
-                                    {ctaText} →
-                                </Button>
-                            </motion.div>
-                        )}
-                    </Box>
+                    {renderHeroContent()}
                 </Box>
             </Box>
         </Box>

@@ -120,6 +120,7 @@ export interface PromotionalBanner {
     schedule_end?: string;     // ISO date — auto-unpublish
     countdown_end?: string;    // ISO date — countdown timer
     emoji_set?: string[];      // ["🌙","✨","🕌"]
+    layout_style?: string;     // 'classic' | 'center' | 'offer_first' | 'split'
     created_at: string;
     updated_at: string;
 }
