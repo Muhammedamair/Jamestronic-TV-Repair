@@ -1266,42 +1266,55 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             </Container>
 
-            {/* ════ WHY CHOOSE US ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2, px: 1 }}>Why choose JamesTronic?</Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, px: 1 }}>
-                    {WHY_CHOOSE_US.map((item, i) => (
-                        <motion.div key={item.title}
-                            initial={shouldReduce ? false : { opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.9 + i * 0.08 }}
-                        >
-                            <Card sx={{
-                                p: 2, borderRadius: 3, border: '1px solid #F3F4F6',
-                                boxShadow: '0 2px 12px rgba(0,0,0,0.04)', height: '100%',
-                                transition: 'all 0.2s',
-                                '&:active': { transform: 'scale(0.97)' },
-                            }}>
-                                <Box sx={{ background: item.bg, p: 0.8, borderRadius: 2, color: item.color, display: 'inline-flex', mb: 1 }}>
-                                    {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                                </Box>
-                                <Typography sx={{ fontWeight: 800, fontSize: '0.85rem', color: '#111827', mb: 0.3 }}>{item.title}</Typography>
-                                <Typography sx={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </Box>
-            </Container>
-
-            {/* ════ WARRANTY CARD ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4 }}>
+            {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
                 <motion.div
-                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+                    initial={shouldReduce ? false : { opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.95 }}
+                    transition={{ duration: 0.4, delay: 0.9 }}
                 >
-                    <Card sx={{ background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', border: '1px solid #D1FAE5', borderRadius: 4, mx: 1, boxShadow: 'none' }}>
-                        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                    <Card sx={{
+                        background: '#FFFFFF', // Forces light mode surface, fixing invisible text
+                        borderRadius: '32px',
+                        border: '1px solid rgba(0,0,0,0.06)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+                        overflow: 'hidden',
+                    }}>
+                        {/* Top Half: Why Choose Us */}
+                        <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2 }}>Why choose JamesTronic?</Typography>
+                            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
+                                {WHY_CHOOSE_US.map((item, i) => (
+                                    <motion.div key={item.title}
+                                        initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 1.0 + i * 0.08 }}
+                                    >
+                                        <Box sx={{
+                                            p: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.04)',
+                                            background: '#FAFAFA', // Distinct inner contrast color
+                                            height: '100%',
+                                            transition: 'all 0.2s',
+                                            '&:active': { transform: 'scale(0.97)' },
+                                        }}>
+                                            <Box sx={{ background: item.bg, p: 0.8, borderRadius: 2, color: item.color, display: 'inline-flex', mb: 1 }}>
+                                                {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                                            </Box>
+                                            <Typography sx={{ fontWeight: 800, fontSize: '0.85rem', color: '#111827', mb: 0.3 }}>{item.title}</Typography>
+                                            <Typography sx={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
+                                        </Box>
+                                    </motion.div>
+                                ))}
+                            </Box>
+                        </Box>
+
+                        {/* Bottom Half: Warranty Footer */}
+                        <Box sx={{
+                            background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
+                            borderTop: '1px solid rgba(16, 185, 129, 0.15)',
+                            p: { xs: 2.5, sm: 3 },
+                            display: 'flex', alignItems: 'center', gap: 2.5
+                        }}>
                             <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
                                 <VerifiedIcon fontSize="medium" />
                             </Box>
