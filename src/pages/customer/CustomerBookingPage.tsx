@@ -211,16 +211,23 @@ const CustomerBookingPage: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', pb: 12, overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", sans-serif' }}>
-            {/* Header */}
-            <Box sx={{ pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 2, px: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#FFF', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 10 }}>
-                <IconButton onClick={() => navigate('/')} sx={{ color: '#111827' }} edge="start">
-                    <BackIcon />
-                </IconButton>
-                <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.1rem' }}>
-                    Book Service
-                </Typography>
-            </Box>
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            style={{ width: '100%', minHeight: '100dvh' }}
+        >
+            <Box sx={{ minHeight: '100dvh', background: '#F9FAFB', pb: 12, overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", sans-serif' }}>
+                {/* Header */}
+                <Box sx={{ pt: 'calc(env(safe-area-inset-top) + 16px)', pb: 2, px: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#FFF', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 10 }}>
+                    <IconButton onClick={() => navigate('/')} sx={{ color: '#111827' }} edge="start">
+                        <BackIcon />
+                    </IconButton>
+                    <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.1rem' }}>
+                        Book Service
+                    </Typography>
+                </Box>
 
             <Container maxWidth="sm" sx={{ py: 4, px: { xs: 2.5, sm: 3 } }}>
                 {error && (
@@ -300,63 +307,66 @@ const CustomerBookingPage: React.FC = () => {
             </Container>
 
             {/* Sticky Bottom Actions */}
-            <Box sx={{
-                position: 'fixed', bottom: 0, left: 0, right: 0, 
-                background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderTop: '1px solid #E5E7EB',
-                p: 2, display: 'flex', gap: 2, zIndex: 100
-            }}>
-                <Container maxWidth="sm" sx={{ display: 'flex', gap: 2, p: 0 }}>
-                    {step > 0 && (
-                        <Button 
-                            variant="outlined" onClick={() => setStep(s => s - 1)} 
-                            sx={{ flex: 1, py: 1.8, borderRadius: 3, color: '#4B5563', borderColor: '#D1D5DB', fontWeight: 700, textTransform: 'none', '&:hover': { background: '#F3F4F6', borderColor: '#D1D5DB' } }}
-                        >
-                            Back
-                        </Button>
-                    )}
-                    
-                    {step < 2 ? (
-                        <Box sx={{ flex: 2, display: 'flex' }}>
-                            <motion.div
-                                animate={shouldReduce ? false : { 
-                                    scale: canProceed() ? [1, 1.05, 1] : 1,
-                                    boxShadow: canProceed() ? ['0 4px 14px rgba(91,76,242,0)', '0 4px 14px rgba(91,76,242,0.5)', '0 4px 14px rgba(91,76,242,0.3)'] : 'none'
-                                }}
-                                transition={{ duration: 0.4 }}
-                                style={{ flex: 1, display: 'flex' }}
+            {!isCheckingSession && (
+                <Box sx={{
+                    position: 'fixed', bottom: 0, left: 0, right: 0, 
+                    background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderTop: '1px solid #E5E7EB',
+                    p: 2, display: 'flex', gap: 2, zIndex: 100
+                }}>
+                    <Container maxWidth="sm" sx={{ display: 'flex', gap: 2, p: 0 }}>
+                        {step > 0 && (
+                            <Button 
+                                variant="outlined" onClick={() => setStep(s => s - 1)} 
+                                sx={{ flex: 1, py: 1.8, borderRadius: 3, color: '#4B5563', borderColor: '#D1D5DB', fontWeight: 700, textTransform: 'none', '&:hover': { background: '#F3F4F6', borderColor: '#D1D5DB' } }}
                             >
-                                <Button
-                                    fullWidth
-                                    variant="contained" disabled={!canProceed()} onClick={() => setStep(s => s + 1)}
-                                    sx={{
-                                        py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem',
-                                        boxShadow: '0 4px 14px rgba(91,76,242,0.3)', '&:hover': { background: '#4F46E5' },
-                                        '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' },
-                                        transition: 'background 0.3s'
+                                Back
+                            </Button>
+                        )}
+                        
+                        {step < 2 ? (
+                            <Box sx={{ flex: 2, display: 'flex' }}>
+                                <motion.div
+                                    animate={shouldReduce ? false : { 
+                                        scale: canProceed() ? [1, 1.05, 1] : 1,
+                                        boxShadow: canProceed() ? ['0 4px 14px rgba(91,76,242,0)', '0 4px 14px rgba(91,76,242,0.5)', '0 4px 14px rgba(91,76,242,0.3)'] : 'none'
                                     }}
+                                    transition={{ duration: 0.4 }}
+                                    style={{ flex: 1, display: 'flex' }}
                                 >
-                                    Continue
-                                </Button>
-                            </motion.div>
-                        </Box>
-                    ) : (
-                        <Button
-                            variant="contained" disabled={!canProceed() || submitting} onClick={handleSubmit}
-                            sx={{
-                                flex: 2, py: 1.8, borderRadius: 3, background: '#10B981', fontWeight: 800, textTransform: 'none', fontSize: '1.05rem',
-                                boxShadow: '0 4px 14px rgba(16,185,129,0.3)', '&:hover': { background: '#059669' },
-                                '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' }
-                            }}
-                        >
-                            {submitting ? <CircularProgress size={24} sx={{ color: '#FFF' }} /> : 'Confirm Booking'}
-                        </Button>
-                    )}
-                </Container>
-            </Box>
+                                    <Button
+                                        fullWidth
+                                        variant="contained" disabled={!canProceed()} onClick={() => setStep(s => s + 1)}
+                                        sx={{
+                                            py: 1.8, borderRadius: 3, background: '#5B4CF2', fontWeight: 700, textTransform: 'none', fontSize: '1.05rem',
+                                            boxShadow: '0 4px 14px rgba(91,76,242,0.3)', '&:hover': { background: '#4F46E5' },
+                                            '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' },
+                                            transition: 'background 0.3s'
+                                        }}
+                                    >
+                                        Continue
+                                    </Button>
+                                </motion.div>
+                            </Box>
+                        ) : (
+                            <Button
+                                variant="contained" disabled={!canProceed() || submitting} onClick={handleSubmit}
+                                sx={{
+                                    flex: 2, py: 1.8, borderRadius: 3, background: '#10B981', fontWeight: 800, textTransform: 'none', fontSize: '1.05rem',
+                                    boxShadow: '0 4px 14px rgba(16,185,129,0.3)', '&:hover': { background: '#059669' },
+                                    '&.Mui-disabled': { background: '#E5E7EB', color: '#9CA3AF' }
+                                }}
+                            >
+                                {submitting ? <CircularProgress size={24} sx={{ color: '#FFF' }} /> : 'Confirm Booking'}
+                            </Button>
+                        )}
+                    </Container>
+                </Box>
+            )}
 
             {/* ════ SUCCESS OVERLAY ════ */}
             {success && <BookingSuccess ticketNumber={success.ticketNumber} />}
-        </Box>
+            </Box>
+        </motion.div>
     );
 };
 
