@@ -103,6 +103,16 @@ export interface PromotionalBanner {
     link_url?: string;
     is_active: boolean;
     order_index: number;
+    // Content fields (admin-editable)
+    title?: string;
+    subtitle?: string;
+    highlight_text?: string;
+    tag_text?: string;
+    offer_text?: string;
+    gradient_start?: string;
+    gradient_end?: string;
+    banner_type?: string;      // 'hero' | 'promo_card'
+    animation_style?: string;  // 'particles' | 'shimmer' | 'waves' | 'celebration'
     created_at: string;
     updated_at: string;
 }

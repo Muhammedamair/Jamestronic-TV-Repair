@@ -24,6 +24,9 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
+import AnimatedHeroBanner from '../../components/customer/AnimatedHeroBanner';
+import { supabase } from '../../supabaseClient';
+import { PromotionalBanner } from '../../types/database';
 
 // Static local assets
 import tvRepairImg from '../../assets/tvp.png';
@@ -173,6 +176,25 @@ const CustomerLandingPage: React.FC = () => {
     const [addingAddress, setAddingAddress] = useState(false);
     const [newLabel, setNewLabel] = useState('Home');
     const [newAddressText, setNewAddressText] = useState('');
+
+    // Dynamic banner from database
+    const [heroBanner, setHeroBanner] = useState<PromotionalBanner | null>(null);
+
+    useEffect(() => {
+        const fetchHeroBanner = async () => {
+            const { data } = await supabase
+                .from('promotional_banners')
+                .select('*')
+                .eq('is_active', true)
+                .eq('banner_type', 'hero')
+                .order('order_index', { ascending: true })
+                .limit(1);
+            if (data && data.length > 0) {
+                setHeroBanner(data[0] as PromotionalBanner);
+            }
+        };
+        fetchHeroBanner();
+    }, []);
 
     // Search
     const [searchQuery, setSearchQuery] = useState('');
@@ -566,145 +588,32 @@ const CustomerLandingPage: React.FC = () => {
                 {addingAddress ? renderAddAddress() : renderLocationPicker()}
             </Dialog>
             
-            {/* ════ TOP PURPLE BANNER AREA — ANIMATED ════ */}
-            <Box sx={{ background: '#5B4CF2', pt: { xs: 'calc(env(safe-area-inset-top) + 24px)', sm: 'calc(env(safe-area-inset-top) + 32px)' }, pb: { xs: 5, sm: 6 }, px: { xs: 2.5, sm: 4 }, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, position: 'relative', overflow: 'hidden' }}>
-                <Box sx={{ 
-                    position: 'absolute', top: -100, right: -50, width: 250, height: 250, 
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%'
-                }} />
-                
-                <Box sx={{ maxWidth: 600, mx: 'auto', position: 'relative', zIndex: 1 }}>
-                    {/* Header Row: Location, Profile */}
-                    <motion.div
-                        initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35 }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3.5 }}>
-                            <Box 
-                                onClick={handleLocationTap}
-                                sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', '&:active': { opacity: 0.7 } }}
-                            >
-                                <Box sx={{ 
-                                    background: 'rgba(255,255,255,0.2)', p: 0.8, borderRadius: '50%', display: 'flex',
-                                    animation: !locationArea ? 'pulse 2s ease-in-out infinite' : 'none',
-                                    '@keyframes pulse': { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.12)' } }
-                                }}>
-                                    <LocationIcon sx={{ color: '#FFF', fontSize: 26 }} />
-                                </Box>
-                                <Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#FFF' }}>
-                                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.3px' }}>
-                                            {displayArea}
-                                        </Typography>
-                                        <Typography sx={{ fontSize: '0.9rem', ml: 0.5 }}>▾</Typography>
-                                    </Box>
-                                    <Typography sx={{ 
-                                        color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500,
-                                        maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                                    }}>
-                                        {displayCity}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                            <IconButton 
-                                onClick={() => navigate('/my-tickets')}
-                                sx={{ background: 'rgba(255,255,255,0.15)', color: '#FFF', '&:hover': { background: 'rgba(255,255,255,0.25)' } }}
-                            >
-                                <PersonIcon />
-                            </IconButton>
-                        </Box>
-                    </motion.div>
-
-                    {/* Search Bar — spring slide up */}
-                    <motion.div
-                        initial={shouldReduce ? false : { opacity: 0, y: 20, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.15 }}
-                    >
-                        <Box 
-                            onClick={() => navigate('/book')}
-                            sx={{
-                                background: '#FFF', borderRadius: 4, mb: 4, p: 0.5,
-                                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                                display: 'flex', alignItems: 'center', cursor: 'text'
-                            }}
-                        >
-                            <Box sx={{ pl: 2, display: 'flex', alignItems: 'center', flex: 1 }}>
-                                <SearchIcon sx={{ color: '#9CA3AF', fontSize: 22, mr: 1.5 }} />
-                                <Typography sx={{ color: '#6B7280', fontSize: '1rem', fontWeight: 500, py: 1.5 }}>
-                                    Search for 'TV Repair'
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </motion.div>
-
-                    {/* ═══ HERO PROMOTION — word-by-word stagger ═══ */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ flex: 1 }}>
-                            <motion.div
-                                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.35, delay: isFirstVisit ? 0.25 : 0 }}
-                            >
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                    <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                        JamesTronic <span style={{ color: '#A78BFA' }}>Care</span>
-                                    </Typography>
-                                    <motion.div
-                                        animate={shouldReduce ? {} : {
-                                            boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 8px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)']
-                                        }}
-                                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                                        style={{ borderRadius: '4px' }}
-                                    >
-                                        <Box sx={{ background: '#10B981', color: '#FFF', px: 1.2, py: 0.3, borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                            10 mins
-                                        </Box>
-                                    </motion.div>
-                                </Box>
-                            </motion.div>
-
-                            {/* Staggered word-by-word headline */}
-                            <Box sx={{ mb: 1 }}>
-                                {['Expert', 'TV', 'Repair', 'at'].map((word, i) => (
-                                    <motion.span
-                                        key={word + i}
-                                        initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: isFirstVisit ? 0.35 + i * 0.08 : 0 }}
-                                        style={{ display: 'inline-block', marginRight: '8px' }}
-                                    >
-                                        <Typography component="span" sx={{ color: '#FFF', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
-                                            {word}
-                                        </Typography>
-                                    </motion.span>
-                                ))}
-                                <motion.span
-                                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.7 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ type: 'spring', stiffness: 400, damping: 15, delay: isFirstVisit ? 0.7 : 0 }}
-                                    style={{ display: 'inline-block' }}
-                                >
-                                    <Typography component="span" sx={{ color: '#FCD34D', fontWeight: 800, fontSize: { xs: '1.8rem', sm: '2.2rem' }, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
-                                        ₹249*
-                                    </Typography>
-                                </motion.span>
-                            </Box>
-
-                            <motion.div
-                                initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: isFirstVisit ? 0.85 : 0, duration: 0.3 }}
-                            >
-                                <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 500 }}>
-                                    * Valid for first 3 bookings • Zero visitation fee
-                                </Typography>
-                            </motion.div>
-                        </Box>
+            {/* ════ DYNAMIC ANIMATED HERO BANNER ════ */}
+            <AnimatedHeroBanner
+                banner={heroBanner}
+                isFirstVisit={isFirstVisit}
+                onLocationTap={handleLocationTap}
+                locationArea={displayArea}
+                locationCity={displayCity}
+                onProfileTap={() => navigate('/my-tickets')}
+            >
+                {/* Search Bar */}
+                <Box 
+                    onClick={() => navigate('/book')}
+                    sx={{
+                        background: '#FFF', borderRadius: 4, mb: 4, p: 0.5,
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                        display: 'flex', alignItems: 'center', cursor: 'text'
+                    }}
+                >
+                    <Box sx={{ pl: 2, display: 'flex', alignItems: 'center', flex: 1 }}>
+                        <SearchIcon sx={{ color: '#9CA3AF', fontSize: 22, mr: 1.5 }} />
+                        <Typography sx={{ color: '#6B7280', fontSize: '1rem', fontWeight: 500, py: 1.5 }}>
+                            Search for 'TV Repair'
+                        </Typography>
                     </Box>
                 </Box>
-            </Box>
+            </AnimatedHeroBanner>
 
             {/* ════ EXPLORE SERVICES GRID — STAGGERED POP ENTRANCE ════ */}
             <Container maxWidth="sm" sx={{ mt: 5 }}>
