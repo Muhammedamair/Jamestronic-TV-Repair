@@ -40,6 +40,101 @@ import tvRepairImg from '../../assets/tvp.png';
 import tvInstallationImg from '../../assets/install.png';
 import tvUninstallationImg from '../../assets/removal.png';
 
+// Typewriter search suggestions — cycles through service names
+const SEARCH_SUGGESTIONS = [
+    'No Display',
+    'TV Installation',
+    'Flickering Screen',
+    'No Sound',
+    'Power Issue',
+    'Lines on Screen',
+    'Screen Repair',
+    'TV Uninstallation',
+    'TV Check-up',
+    'Not Sure? We\'ll Diagnose!',
+];
+
+const TypewriterSearch: React.FC = () => {
+    const [displayText, setDisplayText] = useState('');
+    const [isTyping, setIsTyping] = useState(true);
+    const indexRef = useRef(0);
+    const charRef = useRef(0);
+    const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+    useEffect(() => {
+        const tick = () => {
+            const currentWord = SEARCH_SUGGESTIONS[indexRef.current];
+
+            if (isTyping) {
+                // Typing phase
+                if (charRef.current <= currentWord.length) {
+                    setDisplayText(currentWord.slice(0, charRef.current));
+                    charRef.current++;
+                    timerRef.current = setTimeout(tick, 55 + Math.random() * 30); // Natural typing speed
+                } else {
+                    // Word complete — pause, then start erasing
+                    timerRef.current = setTimeout(() => {
+                        setIsTyping(false);
+                        timerRef.current = setTimeout(tick, 30);
+                    }, 2200); // 2.2s pause on each complete word
+                }
+            } else {
+                // Erasing phase
+                if (charRef.current > 0) {
+                    charRef.current--;
+                    setDisplayText(currentWord.slice(0, charRef.current));
+                    timerRef.current = setTimeout(tick, 25); // Fast erase
+                } else {
+                    // Move to next word
+                    indexRef.current = (indexRef.current + 1) % SEARCH_SUGGESTIONS.length;
+                    setIsTyping(true);
+                    timerRef.current = setTimeout(tick, 400); // Brief pause before next word
+                }
+            }
+        };
+
+        timerRef.current = setTimeout(tick, 800); // Initial delay
+        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }, [isTyping]);
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, overflow: 'hidden' }}>
+            <Typography
+                component="span"
+                sx={{ color: '#9CA3AF', fontSize: '0.95rem', fontWeight: 500, whiteSpace: 'nowrap' }}
+            >
+                Search for &lsquo;
+            </Typography>
+            <Typography
+                component="span"
+                sx={{ color: '#374151', fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+            >
+                {displayText}
+            </Typography>
+            <Box
+                component="span"
+                sx={{
+                    display: 'inline-block',
+                    width: '2px', height: '18px',
+                    background: '#D97706',
+                    ml: '1px',
+                    animation: 'cursorBlink 1s step-end infinite',
+                    '@keyframes cursorBlink': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0 },
+                    }
+                }}
+            />
+            <Typography
+                component="span"
+                sx={{ color: '#9CA3AF', fontSize: '0.95rem', fontWeight: 500 }}
+            >
+                &rsquo;
+            </Typography>
+        </Box>
+    );
+};
+
 const SERVICES = [
     // Repair Issues — using existing 3D icons
     { id: 'no_display', label: 'No Display', image: '/services/issues/black_screen.png', route: '/book?service=repair&issue=no_display' },
@@ -777,7 +872,7 @@ const CustomerLandingPage: React.FC = () => {
                         boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
                         overflow: 'hidden',
                     }}>
-                        {/* Search Bar — Top Section */}
+                        {/* Search Bar — Top Section with Auto-Typing */}
                         <Box 
                             onClick={() => navigate('/book')}
                             sx={{
@@ -790,10 +885,8 @@ const CustomerLandingPage: React.FC = () => {
                             }}
                         >
                             <SearchIcon sx={{ color: '#9CA3AF', fontSize: 22, mr: 1.5 }} />
-                            <Typography sx={{ color: '#6B7280', fontSize: '0.95rem', fontWeight: 500, flex: 1 }}>
-                                Search for 'TV Repair'
-                            </Typography>
-                            <Box sx={{ background: '#111827', borderRadius: '12px', px: 2, py: 0.8 }}>
+                            <TypewriterSearch />
+                            <Box sx={{ background: '#111827', borderRadius: '12px', px: 2, py: 0.8, ml: 1, flexShrink: 0 }}>
                                 <Typography sx={{ color: '#FFF', fontSize: '0.75rem', fontWeight: 700 }}>Search</Typography>
                             </Box>
                         </Box>
