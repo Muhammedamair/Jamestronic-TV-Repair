@@ -799,9 +799,9 @@ const CustomerLandingPage: React.FC = () => {
                     display: 'grid', 
                     gridTemplateRows: 'repeat(2, 1fr)', 
                     gridAutoFlow: 'column',
-                    gridAutoColumns: { xs: 'calc(50% - 12px)', sm: 'calc(33.33% - 16px)', md: 'calc(25% - 20px)' }, // Exactly 2 per row on mobile
+                    gridAutoColumns: { xs: 'calc(50% - 12px)', sm: 'calc(33.33% - 16px)', md: 'calc(25% - 20px)' },
                     columnGap: { xs: 1.5, sm: 2.5 }, 
-                    rowGap: { xs: 2.5, sm: 3 },
+                    rowGap: { xs: 3, sm: 4 },
                     px: 1,
                     pb: 3, 
                     overflowX: 'auto', 
@@ -826,33 +826,33 @@ const CustomerLandingPage: React.FC = () => {
                                 sx={{
                                     display: 'flex', flexDirection: 'column',
                                     p: 0, transition: 'all 0.25s cubic-bezier(0.2, 0, 0, 1)',
-                                    '&:hover': { transform: 'translateY(-4px)' },
+                                    '&:hover': { transform: 'translateY(-6px)' },
                                     '&:active': { transform: 'scale(0.98)' },
-                                    borderRadius: '24px',
+                                    borderRadius: '28px',
                                 }}
                             >
                                 <Box sx={{
                                     width: '100%',
-                                    height: { xs: '150px', sm: '180px' }, // Tall premium card format
-                                    background: 'rgba(255, 255, 255, 0.7)',
-                                    borderRadius: '24px',
+                                    aspectRatio: '1/1.05', // Slightly taller than square for premium feel
+                                    background: '#FFFFFF',
+                                    borderRadius: '28px',
                                     display: 'flex', flexDirection: 'column',
                                     alignItems: 'center', justifyContent: 'center',
-                                    mb: 1.5, p: 2,
-                                    border: '1px solid rgba(255, 255, 255, 0.8)',
-                                    boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
-                                    backdropFilter: 'blur(10px)',
+                                    mb: 1.5, 
+                                    p: 0, // Zero padding to allow icon background to cover edges
+                                    border: '1px solid rgba(0,0,0,0.05)',
+                                    boxShadow: '0 12px 30px rgba(0,0,0,0.07)',
                                     position: 'relative',
                                     overflow: 'hidden'
                                 }}>
-                                    <Box sx={{ width: '100%', height: '85%', position: 'relative' }}>
+                                    <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
                                         <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
                                     </Box>
                                 </Box>
                                 <Typography sx={{
-                                    color: '#111827', fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                    color: '#111827', fontSize: { xs: '0.85rem', sm: '0.95rem' },
                                     fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.3px',
-                                    px: 1
+                                    px: 1, mb: 0.5
                                 }}>
                                     {svc.label}
                                 </Typography>
