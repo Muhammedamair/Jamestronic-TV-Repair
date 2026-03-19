@@ -1291,17 +1291,32 @@ const CustomerLandingPage: React.FC = () => {
                                         transition={{ duration: 0.3, delay: 1.0 + i * 0.08 }}
                                     >
                                         <Box sx={{
-                                            p: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.04)',
-                                            background: '#FAFAFA', // Distinct inner contrast color
-                                            height: '100%',
+                                            p: 2.5, borderRadius: '32px', // Ultra-rounded corners to match screenshot
+                                            background: '#F9FAFB', border: '1px solid rgba(0,0,0,0.03)',
+                                            height: '100%', display: 'flex', flexDirection: 'column',
                                             transition: 'all 0.2s',
                                             '&:active': { transform: 'scale(0.97)' },
                                         }}>
-                                            <Box sx={{ background: item.bg, p: 0.8, borderRadius: 2, color: item.color, display: 'inline-flex', mb: 1 }}>
-                                                {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                                            </Box>
-                                            <Typography sx={{ fontWeight: 800, fontSize: '0.85rem', color: '#111827', mb: 0.3 }}>{item.title}</Typography>
-                                            <Typography sx={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
+                                            {/* Pulsing Icon */}
+                                            <motion.div
+                                                animate={{ 
+                                                    scale: [1, 1.08, 1],
+                                                    boxShadow: ['0 0 0px rgba(0,0,0,0)', `0 0 14px ${item.color}40`, '0 0 0px rgba(0,0,0,0)']
+                                                }}
+                                                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}
+                                                style={{ display: 'inline-flex', marginBottom: '12px', alignSelf: 'flex-start', borderRadius: '50%' }}
+                                            >
+                                                <Box sx={{ 
+                                                    background: item.bg, width: 42, height: 42, 
+                                                    borderRadius: '50%', color: item.color, 
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                                                }}>
+                                                    {React.cloneElement(item.icon, { sx: { fontSize: 22 } })}
+                                                </Box>
+                                            </motion.div>
+                                            
+                                            <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#111827', mb: 0.4, lineHeight: 1.2 }}>{item.title}</Typography>
+                                            <Typography sx={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
                                         </Box>
                                     </motion.div>
                                 ))}
@@ -1315,9 +1330,19 @@ const CustomerLandingPage: React.FC = () => {
                             p: { xs: 2.5, sm: 3 },
                             display: 'flex', alignItems: 'center', gap: 2.5
                         }}>
-                            <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
-                                <VerifiedIcon fontSize="medium" />
-                            </Box>
+                            {/* The 5th Pulsing Icon - Warranty */}
+                            <motion.div
+                                animate={{ 
+                                    scale: [1, 1.05, 1],
+                                    boxShadow: ['0 4px 12px rgba(16,185,129,0.3)', '0 4px 24px rgba(16,185,129,0.6)', '0 4px 12px rgba(16,185,129,0.3)']
+                                }}
+                                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                style={{ borderRadius: '50%', flexShrink: 0 }}
+                            >
+                                <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex' }}>
+                                    <VerifiedIcon fontSize="medium" />
+                                </Box>
+                            </motion.div>
                             <Box>
                                 <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
                                 <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
