@@ -1114,14 +1114,16 @@ const CustomerLandingPage: React.FC = () => {
             </Dialog>
             
             {/* ════ DYNAMIC ANIMATED HERO BANNER CAROUSEL ════ */}
-            <AnimatedHeroBanner
-                banner={heroBanners[activeBannerIdx] || null}
-                isFirstVisit={isFirstVisit}
-                onLocationTap={handleLocationTap}
-                locationArea={displayArea}
-                locationCity={displayCity}
-                onProfileTap={() => navigate('/my-tickets')}
-            />
+            <Box sx={{ position: 'relative', zIndex: 10 }}>
+                <AnimatedHeroBanner
+                    banner={heroBanners[activeBannerIdx] || null}
+                    isFirstVisit={isFirstVisit}
+                    onLocationTap={handleLocationTap}
+                    locationArea={displayArea}
+                    locationCity={displayCity}
+                    onProfileTap={() => navigate('/my-tickets')}
+                />
+            </Box>
 
             {/* Carousel Dot Indicators */}
             {heroBanners.length > 1 && (
@@ -1144,19 +1146,22 @@ const CustomerLandingPage: React.FC = () => {
             )}
 
             {/* ════ 2. SEARCH + TRUST STRIP — Combined Section ════ */}
-            <Container maxWidth="sm" sx={{ mt: 2, mb: 2 }}>
+            <Container maxWidth="sm" disableGutters sx={{ mt: { xs: -4, sm: 2 }, mb: 2, position: 'relative', zIndex: 1 }}>
                 <motion.div
                     initial={shouldReduce ? false : { opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.3 }}
                 >
-                    <Card sx={{
-                        background: '#FFFFFF',
-                        borderRadius: '32px', // Matches the 32px curve of the Hero Banner
-                        border: '1px solid rgba(0,0,0,0.06)',
-                        boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-                        overflow: 'hidden',
-                    }}>
+                    <Box sx={{ px: { xs: 0, sm: 2 } }}>
+                        <Card sx={{
+                            background: '#FFFFFF',
+                            borderRadius: { xs: '0 0 32px 32px', sm: '32px' }, // Nested perfectly under banner on mobile
+                            border: '1px solid rgba(0,0,0,0.06)',
+                            borderTop: 'none',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                            overflow: 'hidden',
+                            pt: { xs: 4, sm: 0 }, // Extra padding on mobile to account for the overlap
+                        }}>
                         {/* Search Bar — Top Section with Auto-Typing */}
                         <Box 
                             onClick={() => setSearchOpen(true)}
@@ -1182,6 +1187,7 @@ const CustomerLandingPage: React.FC = () => {
                         {/* Trust Stats — Bottom Section (Animated) */}
                         <AnimatedTrustStrip />
                     </Card>
+                    </Box>
                 </motion.div>
             </Container>
 
