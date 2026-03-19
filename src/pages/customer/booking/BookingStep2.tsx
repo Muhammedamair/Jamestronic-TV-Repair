@@ -30,6 +30,7 @@ const COMMON_ISSUES = [
     { label: 'No sound', image: '/services/issues/no_sound.png' },
     { label: 'Power issue', image: '/services/issues/power.png' },
     { label: 'Lines on screen', image: '/services/issues/lines.png' },
+    { label: 'Screen Repair', image: '/services/tv_screen_repair.png' },
     { label: 'Not sure', image: '/services/issues/unknown.png' }
 ];
 
@@ -338,7 +339,11 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                         WebkitOverflowScrolling: 'touch',
                         '&::-webkit-scrollbar': { display: 'none' } 
                     }}>
-                        {COMMON_ISSUES.map(issue => {
+                        {[...COMMON_ISSUES].sort((a, b) => {
+                            if (a.label === form.issueDescription) return -1;
+                            if (b.label === form.issueDescription) return 1;
+                            return 0;
+                        }).map(issue => {
                             const isSelected = form.issueDescription === issue.label;
                             return (
                                 <motion.div
