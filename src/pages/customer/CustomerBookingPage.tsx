@@ -229,66 +229,69 @@ const CustomerBookingPage: React.FC = () => {
                     </Alert>
                 )}
 
-                {/* Progress Indicators */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 5 }}>
-                    {[0, 1, 2].map((num) => (
-                        <React.Fragment key={num}>
-                            <Box sx={{
-                                width: 32, height: 32, borderRadius: '50%',
-                                background: step >= num ? '#5B4CF2' : '#E5E7EB',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: step >= num ? '#FFF' : '#9CA3AF', fontWeight: 700, fontSize: '0.85rem'
-                            }}>
-                                {step > num ? <CheckIcon sx={{ fontSize: 18 }} /> : (num + 1)}
-                            </Box>
-                            {num < 2 && (
-                                <Box sx={{ width: 40, height: 2, background: step > num ? '#5B4CF2' : '#E5E7EB', mx: 1 }} />
-                            )}
-                        </React.Fragment>
-                    ))}
-                </Box>
-
-                <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.4rem', textAlign: 'center', mb: 0.5, letterSpacing: '-0.3px' }}>
-                    {STEPS_CONFIG[step].label}
-                </Typography>
-                <Typography sx={{ color: '#6B7280', textAlign: 'center', fontSize: '0.9rem', mb: 4 }}>
-                    {STEPS_CONFIG[step].desc}
-                </Typography>
-
                 {isCheckingSession ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 10 }}>
-                        <CircularProgress sx={{ color: '#5B4CF2' }} />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', my: 12, opacity: 0.7 }}>
+                        <CircularProgress sx={{ color: '#5B4CF2', mb: 2 }} size={32} thickness={5} />
+                        <Typography sx={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 500 }}>Preparing your booking...</Typography>
                     </Box>
                 ) : (
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={step} 
-                            initial={shouldReduce ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={shouldReduce ? { opacity: 0, x: 0 } : { opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25, ease: 'easeOut' }}
-                            style={{ width: '100%' }}
-                        >
-                            <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
-                                {step === 0 && (
-                                    <BookingStep1 form={form} updateField={updateField} />
-                                )}
-                                {step === 1 && (
-                                    <BookingStep2
-                                        form={form}
-                                        updateField={updateField}
-                                        showBrandPicker={showBrandPicker}
-                                        setShowBrandPicker={setShowBrandPicker}
-                                        showSizePicker={showSizePicker}
-                                        setShowSizePicker={setShowSizePicker}
-                                    />
-                                )}
-                                {step === 2 && (
-                                    <BookingStep3 form={form} updateField={updateField} handleGetCurrentLocation={handleGetCurrentLocation} />
-                                )}
-                            </Box>
-                        </motion.div>
-                    </AnimatePresence>
+                    <>
+                        {/* Progress Indicators */}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 5 }}>
+                            {[0, 1, 2].map((num) => (
+                                <React.Fragment key={num}>
+                                    <Box sx={{
+                                        width: 32, height: 32, borderRadius: '50%',
+                                        background: step >= num ? '#5B4CF2' : '#E5E7EB',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: step >= num ? '#FFF' : '#9CA3AF', fontWeight: 700, fontSize: '0.85rem'
+                                    }}>
+                                        {step > num ? <CheckIcon sx={{ fontSize: 18 }} /> : (num + 1)}
+                                    </Box>
+                                    {num < 2 && (
+                                        <Box sx={{ width: 40, height: 2, background: step > num ? '#5B4CF2' : '#E5E7EB', mx: 1 }} />
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </Box>
+
+                        <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.4rem', textAlign: 'center', mb: 0.5, letterSpacing: '-0.3px' }}>
+                            {STEPS_CONFIG[step].label}
+                        </Typography>
+                        <Typography sx={{ color: '#6B7280', textAlign: 'center', fontSize: '0.9rem', mb: 4 }}>
+                            {STEPS_CONFIG[step].desc}
+                        </Typography>
+
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={step} 
+                                initial={shouldReduce ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={shouldReduce ? { opacity: 0, x: 0 } : { opacity: 0, x: -20 }}
+                                transition={{ duration: 0.25, ease: 'easeOut' }}
+                                style={{ width: '100%' }}
+                            >
+                                <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
+                                    {step === 0 && (
+                                        <BookingStep1 form={form} updateField={updateField} />
+                                    )}
+                                    {step === 1 && (
+                                        <BookingStep2
+                                            form={form}
+                                            updateField={updateField}
+                                            showBrandPicker={showBrandPicker}
+                                            setShowBrandPicker={setShowBrandPicker}
+                                            showSizePicker={showSizePicker}
+                                            setShowSizePicker={setShowSizePicker}
+                                        />
+                                    )}
+                                    {step === 2 && (
+                                        <BookingStep3 form={form} updateField={updateField} handleGetCurrentLocation={handleGetCurrentLocation} />
+                                    )}
+                                </Box>
+                            </motion.div>
+                        </AnimatePresence>
+                    </>
                 )}
 
                 <Typography sx={{ color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center', mt: 4, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
