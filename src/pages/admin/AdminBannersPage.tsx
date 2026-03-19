@@ -26,6 +26,10 @@ const FESTIVAL_PRESETS: Record<string, {
     gradient_start: string; gradient_end: string;
     emoji_set: string[]; tag_text: string;
     animation_style: string;
+    title?: string;
+    subtitle?: string;
+    highlight_text?: string;
+    offer_text?: string;
 }> = {
     eid: {
         label: 'Eid / Ramzan', icon: '🌙',
@@ -86,6 +90,16 @@ const FESTIVAL_PRESETS: Record<string, {
         gradient_start: '#000000', gradient_end: '#DC2626',
         emoji_set: ['⚡', '🔥', '⏳'], tag_text: 'FLASH SALE',
         animation_style: 'minimal',
+    },
+    ayen: {
+        label: 'For AYEN ❤️', icon: '❤️',
+        gradient_start: '#E11D48', gradient_end: '#9333EA', // romantic cherry/magenta/purple
+        emoji_set: ['❤️', '✨', '🌹', '👨‍👩‍👦‍👦'], tag_text: 'MY LIFELINE',
+        animation_style: 'pulse', // Heartbeat effect
+        title: 'For Waseem Fatima (AYEN) ✨',
+        subtitle: 'I love you so much ❤️',
+        highlight_text: 'Zohan, Zabi & Zahid',
+        offer_text: 'You are my entire world, today and forever.',
     },
     default: {
         label: 'JamesTronic', icon: '💜',
@@ -183,6 +197,10 @@ export const AdminBannersPage: React.FC = () => {
         setDraft(prev => ({
             ...prev, gradient_start: p.gradient_start, gradient_end: p.gradient_end,
             emoji_set: p.emoji_set, tag_text: p.tag_text, animation_style: p.animation_style,
+            ...(p.title ? { title: p.title } : {}),
+            ...(p.subtitle ? { subtitle: p.subtitle } : {}),
+            ...(p.highlight_text ? { highlight_text: p.highlight_text } : {}),
+            ...(p.offer_text ? { offer_text: p.offer_text } : {}),
         }));
     };
 
