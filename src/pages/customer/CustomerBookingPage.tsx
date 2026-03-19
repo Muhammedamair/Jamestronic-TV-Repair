@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 
 // Sub-components (split for maintainability & animation readiness)
 import BookingStep1 from './booking/BookingStep1';
@@ -36,6 +36,7 @@ const CustomerBookingPage: React.FC = () => {
     const initialIssue = initialIssueKey ? (ISSUE_MAP[initialIssueKey] || '') : '';
 
     const [step, setStep] = useState(0);
+    const [isCheckingSession, setIsCheckingSession] = useState(!!localStorage.getItem('jamestronic_customer_token'));
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<{ ticketNumber: string } | null>(null);
@@ -77,6 +78,7 @@ const CustomerBookingPage: React.FC = () => {
                         setStep(prev => prev === 0 ? 1 : prev);
                     }
                 }
+                setIsCheckingSession(false);
             });
         }
     }, []);
@@ -253,31 +255,41 @@ const CustomerBookingPage: React.FC = () => {
                     {STEPS_CONFIG[step].desc}
                 </Typography>
 
-                <motion.div
-                    key={step} // Force re-animation on step change
-                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                >
-                    <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
-                        {step === 0 && (
-                            <BookingStep1 form={form} updateField={updateField} />
-                        )}
-                    {step === 1 && (
-                        <BookingStep2
-                            form={form}
-                            updateField={updateField}
-                            showBrandPicker={showBrandPicker}
-                            setShowBrandPicker={setShowBrandPicker}
-                            showSizePicker={showSizePicker}
-                            setShowSizePicker={setShowSizePicker}
-                        />
-                    )}
-                    {step === 2 && (
-                        <BookingStep3 form={form} updateField={updateField} handleGetCurrentLocation={handleGetCurrentLocation} />
-                    )}
-                </Box>
-                </motion.div>
+                {isCheckingSession ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 10 }}>
+                        <CircularProgress sx={{ color: '#5B4CF2' }} />
+                    </Box>
+                ) : (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={step} 
+                            initial={shouldReduce ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={shouldReduce ? { opacity: 0, x: 0 } : { opacity: 0, x: -20 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            style={{ width: '100%' }}
+                        >
+                            <Box sx={{ background: '#FFF', borderRadius: 5, p: { xs: 3, sm: 4 }, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
+                                {step === 0 && (
+                                    <BookingStep1 form={form} updateField={updateField} />
+                                )}
+                                {step === 1 && (
+                                    <BookingStep2
+                                        form={form}
+                                        updateField={updateField}
+                                        showBrandPicker={showBrandPicker}
+                                        setShowBrandPicker={setShowBrandPicker}
+                                        showSizePicker={showSizePicker}
+                                        setShowSizePicker={setShowSizePicker}
+                                    />
+                                )}
+                                {step === 2 && (
+                                    <BookingStep3 form={form} updateField={updateField} handleGetCurrentLocation={handleGetCurrentLocation} />
+                                )}
+                            </Box>
+                        </motion.div>
+                    </AnimatePresence>
+                )}
 
                 <Typography sx={{ color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center', mt: 4, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                     <span style={{ fontSize: '1rem' }}>🔒</span> Your information is secure.
