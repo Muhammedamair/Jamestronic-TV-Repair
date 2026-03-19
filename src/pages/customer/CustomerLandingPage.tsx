@@ -1352,19 +1352,27 @@ const CustomerLandingPage: React.FC = () => {
                 </motion.div>
             </Container>
 
-            {/* ════ SERVICE UPDATES FEED — Google Business Profile Style ════ */}
-            {serviceUpdates.length > 0 && (
-                <Container maxWidth="sm" sx={{ mt: 5 }}>
-                    <Box sx={{ px: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                            <Box>
-                                <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', letterSpacing: '-0.3px' }}>Recent Work & Updates</Typography>
-                                <Typography sx={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 500 }}>Real work from our verified technicians</Typography>
+            {/* ════ 6. PUZZLE BLOCK: UPDATES + SERVICE AREAS ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 12 }}>
+                <Card sx={{
+                    background: '#FFFFFF', // Forces light mode surface, fixing dark mode bug
+                    borderRadius: '32px',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+                    overflow: 'hidden',
+                }}>
+                    {/* Top Half: Service Updates Feed */}
+                    {serviceUpdates.length > 0 && (
+                        <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                                <Box>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', letterSpacing: '-0.3px' }}>Recent Work & Updates</Typography>
+                                    <Typography sx={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 500 }}>Real work from our verified technicians</Typography>
+                                </Box>
+                                <Chip label="Live" size="small" sx={{ background: '#D1FAE5', color: '#065F46', fontWeight: 700, fontSize: '0.65rem' }} icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', ml: 1, animation: 'livePulse 2s infinite', '@keyframes livePulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />} />
                             </Box>
-                            <Chip label="Live" size="small" sx={{ background: '#D1FAE5', color: '#065F46', fontWeight: 700, fontSize: '0.65rem' }} icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', ml: 1, animation: 'livePulse 2s infinite', '@keyframes livePulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />} />
-                        </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {serviceUpdates.map((post, i) => (
                                 <motion.div key={post.id}
                                     initial={shouldReduce ? false : { opacity: 0, y: 20 }}
@@ -1372,8 +1380,9 @@ const CustomerLandingPage: React.FC = () => {
                                     transition={{ duration: 0.35, delay: i * 0.08 }}
                                 >
                                     <Card sx={{
-                                        borderRadius: 3, overflow: 'hidden', border: '1px solid #F3F4F6',
-                                        boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
+                                            background: '#F9FAFB', // Explicit light color for inner cards
+                                            borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)',
+                                            boxShadow: 'none',
                                         transition: 'all 0.2s',
                                         '&:active': { transform: 'scale(0.99)' },
                                     }}>
@@ -1460,27 +1469,31 @@ const CustomerLandingPage: React.FC = () => {
                                     </Card>
                                 </motion.div>
                             ))}
+                            </Box>
+                        </Box>
+                    )}
+
+                    {/* Bottom Half: Service Areas */}
+                    <Box sx={{
+                        background: 'linear-gradient(135deg, #F9FAFB 0%, #F4F5F7 100%)',
+                        borderTop: '1px solid rgba(0,0,0,0.04)',
+                        p: { xs: 2.5, sm: 3 },
+                    }}>
+                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>📍 We serve across Hyderabad</Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+                            {SERVICE_AREAS.map(area => (
+                                <Chip key={area} label={area} size="small"
+                                    sx={{
+                                        fontWeight: 600, fontSize: '0.75rem', height: 28,
+                                        background: '#FFFFFF', color: '#111827',
+                                        border: '1px solid rgba(0,0,0,0.05)',
+                                        '&:hover': { background: '#F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
+                                    }}
+                                />
+                            ))}
                         </Box>
                     </Box>
-                </Container>
-            )}
-
-            {/* ════ SERVICE AREAS ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4, mb: 12 }}>
-                <Box sx={{ px: 1 }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>📍 We serve across Hyderabad</Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
-                        {SERVICE_AREAS.map(area => (
-                            <Chip key={area} label={area} size="small"
-                                sx={{
-                                    fontWeight: 600, fontSize: '0.7rem', height: 28,
-                                    background: '#F3F4F6', color: '#374151',
-                                    '&:hover': { background: '#E5E7EB' },
-                                }}
-                            />
-                        ))}
-                    </Box>
-                </Box>
+                </Card>
             </Container>
 
             {/* ════ BOTTOM NAVIGATION BAR — FIXED ════ */}
