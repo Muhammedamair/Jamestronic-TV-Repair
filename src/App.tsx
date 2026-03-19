@@ -25,6 +25,7 @@ import TransporterDashboardPage from './pages/transporter/TransporterDashboardPa
 import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationLogsPage from './pages/NotificationLogsPage';
 import { AdminBannersPage } from './pages/admin/AdminBannersPage';
+import { AdminServiceUpdatesPage } from './pages/admin/AdminServiceUpdatesPage';
 import AnimatedRoutes from './components/customer/AnimatedRoutes';
 import { Box, CircularProgress } from '@mui/material';
 
@@ -82,6 +83,7 @@ const App: React.FC = () => (
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="notifications" element={<NotificationLogsPage />} />
               <Route path="banners" element={<AdminBannersPage />} />
+              <Route path="service-updates" element={<AdminServiceUpdatesPage />} />
             </Route>
 
             {/* ═══ Dealer Routes ═══ */}

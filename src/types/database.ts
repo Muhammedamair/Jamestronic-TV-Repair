@@ -125,6 +125,24 @@ export interface PromotionalBanner {
     updated_at: string;
 }
 
+// -----------------------------------------------------
+// 📰 Service Updates (Google Business Profile Posts Replica)
+// -----------------------------------------------------
+export interface ServiceUpdate {
+    id: string;
+    title: string;
+    description: string;
+    post_type: 'update' | 'offer' | 'event';
+    images: string[];
+    service_area: string;
+    area_tags: string[];
+    cta_type: 'call_now' | 'book_now' | 'learn_more';
+    cta_link: string;
+    is_published: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export type TicketServiceType = 'REPAIR' | 'INSTALLATION';
 
 export interface Customer {

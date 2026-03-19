@@ -12,7 +12,8 @@ import {
     Logout as LogoutIcon, Build as BuildIcon, Store as StoreIcon,
     BarChart as AnalyticsIcon, Engineering as TechIcon,
     LocalShipping as TransportIcon, Notifications as NotificationsIcon,
-    ViewCarousel as ViewCarouselIcon
+    ViewCarousel as ViewCarouselIcon,
+    Article as ArticleIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -24,6 +25,7 @@ const navItems = [
     { label: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
     { label: 'Tickets', icon: <TicketIcon />, path: '/admin/tickets' },
     { label: 'Banners', icon: <ViewCarouselIcon />, path: '/admin/banners' },
+    { label: 'Service Updates', icon: <ArticleIcon />, path: '/admin/service-updates' },
     { label: 'Customers', icon: <PeopleIcon />, path: '/admin/customers' },
     { label: 'Tech Network', icon: <TechIcon />, path: '/admin/technicians' },
     { label: 'Transporters', icon: <TransportIcon />, path: '/admin/transporters' },

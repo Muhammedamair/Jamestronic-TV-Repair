@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, IconButton, TextField, CircularProgress, Container, Card, CardActionArea, Dialog, InputAdornment, Divider } from '@mui/material';
+import { Box, Typography, Button, IconButton, TextField, CircularProgress, Container, Card, CardActionArea, Dialog, InputAdornment, Divider, Chip, Avatar } from '@mui/material';
 import {
     LocationOn as LocationIcon,
     Search as SearchIcon,
@@ -19,14 +19,21 @@ import {
     Delete as DeleteIcon,
     MoreVert as MoreIcon,
     LocalShippingOutlined as TrackIcon,
-    NavigationOutlined as NavIcon
+    NavigationOutlined as NavIcon,
+    Build as BuildIcon,
+    Speed as SpeedIcon,
+    Visibility as VisibilityIcon,
+    CurrencyRupee as RupeeIcon,
+    CalendarMonth as CalendarIcon,
+    ArrowForward as ArrowForwardIcon,
+    Phone as PhoneIcon
 } from '@mui/icons-material';
 import { motion, useReducedMotion } from 'framer-motion';
 
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 import AnimatedHeroBanner from '../../components/customer/AnimatedHeroBanner';
 import { supabase } from '../../supabaseClient';
-import { PromotionalBanner } from '../../types/database';
+import { PromotionalBanner, ServiceUpdate } from '../../types/database';
 
 // Static local assets
 import tvRepairImg from '../../assets/tvp.png';
@@ -38,6 +45,19 @@ const SERVICES = [
     { id: 'installation', label: 'TV Installation', image: '/services/tv_installation.png', route: '/book?service=installation' },
     { id: 'uninstallation', label: 'TV Uninstallation', image: '/services/tv_uninstallation.png', route: '/book?service=uninstallation' },
     { id: 'screen_repair', label: 'Screen Repair', image: '/services/tv_screen_repair.png', route: '/book?service=repair' }
+];
+
+const WHY_CHOOSE_US = [
+    { icon: <CheckCircleIcon />, title: 'Verified Techs', desc: 'Background checked & brand certified', color: '#2563EB', bg: '#DBEAFE' },
+    { icon: <SpeedIcon />, title: 'Same-Day Service', desc: '40-minute response time', color: '#059669', bg: '#D1FAE5' },
+    { icon: <BuildIcon />, title: 'Chip-Level Repair', desc: 'Advanced motherboard & IC work', color: '#D97706', bg: '#FEF3C7' },
+    { icon: <RupeeIcon />, title: 'Transparent Pricing', desc: 'No hidden charges, honest quotes', color: '#7C3AED', bg: '#EDE9FE' },
+];
+
+const SERVICE_AREAS = [
+    'Manikonda', 'Narsingi', 'Kokapet', 'Puppalguda', 'Financial District',
+    'Gachibowli', 'HITEC City', 'Tolichowki', 'Jubilee Hills', 'Madhapur',
+    'Suncity', 'Bandlaguda', 'Shaikpet', 'Raidurgam', 'Tellapur',
 ];
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
@@ -211,6 +231,35 @@ const CustomerLandingPage: React.FC = () => {
         }, 5000);
         return () => clearInterval(timer);
     }, [heroBanners.length]);
+
+    // Service Updates (Google Business Profile Posts)
+    const [serviceUpdates, setServiceUpdates] = useState<ServiceUpdate[]>([]);
+    useEffect(() => {
+        const fetchUpdates = async () => {
+            const { data } = await supabase
+                .from('service_updates')
+                .select('*')
+                .eq('is_published', true)
+                .order('created_at', { ascending: false })
+                .limit(6);
+            if (data) setServiceUpdates(data as ServiceUpdate[]);
+        };
+        fetchUpdates();
+    }, []);
+
+    // Relative time helper
+    const relativeTime = (dateStr: string) => {
+        const diff = Date.now() - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        if (days < 7) return `${days}d ago`;
+        const weeks = Math.floor(days / 7);
+        if (weeks < 4) return `${weeks}w ago`;
+        return `${Math.floor(days / 30)}mo ago`;
+    };
 
     // Search
     const [searchQuery, setSearchQuery] = useState('');
@@ -651,14 +700,14 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             )}
 
-            {/* ════ EXPLORE SERVICES GRID — STAGGERED POP ENTRANCE ════ */}
-            <Container maxWidth="sm" sx={{ mt: 5 }}>
+            {/* ════ EXPLORE SERVICES GRID — PREMIUM CARDS ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4 }}>
                 <motion.div
                     initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
                 >
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 3, letterSpacing: '-0.3px', px: 1 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 2.5, letterSpacing: '-0.3px', px: 1 }}>
                         Explore all services
                     </Typography>
                 </motion.div>
@@ -671,40 +720,33 @@ const CustomerLandingPage: React.FC = () => {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.5 + i * 0.1 : 0 }}
                         >
-                            <CardActionArea 
+                            <CardActionArea
                                 onClick={() => navigate(svc.route)}
                                 disableRipple
-                                sx={{ 
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                                sx={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
                                     p: 0, transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                                     '&:hover': { transform: 'scale(1.05) translateY(-2px)' },
                                     '&:active': { transform: 'scale(0.95)' }
                                 }}
                             >
-                                <Box sx={{ 
-                                    width: { xs: '85px', sm: '110px' }, 
-                                    height: { xs: '85px', sm: '110px' }, 
-                                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)', 
+                                <Box sx={{
+                                    width: { xs: '85px', sm: '110px' },
+                                    height: { xs: '85px', sm: '110px' },
+                                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
                                     borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     mb: 1.5, p: 2,
                                     border: '1.5px solid #FFFFFF',
                                     boxShadow: '0 8px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.04)'
                                 }}>
-                                    <img 
-                                        src={svc.image} 
-                                        alt={svc.label} 
-                                        style={{ 
-                                            width: '100%', 
-                                            height: '100%', 
-                                            objectFit: 'contain', 
-                                            filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' 
-                                        }} 
+                                    <img src={svc.image} alt={svc.label}
+                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' }}
                                     />
                                 </Box>
-                                <Typography sx={{ 
-                                    color: '#374151', fontSize: { xs: '0.75rem', sm: '0.85rem' }, 
-                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.2px' 
+                                <Typography sx={{
+                                    color: '#374151', fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.2px'
                                 }}>
                                     {svc.label}
                                 </Typography>
@@ -714,56 +756,223 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             </Container>
 
-            {/* ════ BRAND PROMISES / TRUST — FADE IN ════ */}
-            <Container maxWidth="sm" sx={{ mt: 6 }}>
-                <Box sx={{ px: 1 }}>
-                    <motion.div
-                        initial={shouldReduce ? false : { opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.95 }}
-                    >
-                        <Card sx={{ background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', border: '1px solid #D1FAE5', borderRadius: 4, mb: 3, boxShadow: 'none' }}>
-                            <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                                <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
-                                    <VerifiedIcon fontSize="medium" />
+            {/* ════ TRUST STRIP — Google Rating + Stats ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4 }}>
+                <motion.div
+                    initial={shouldReduce ? false : { opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.8 }}
+                >
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
+                        border: '1px solid #FDE68A', borderRadius: 4, mx: 1,
+                        boxShadow: '0 4px 20px rgba(217,119,6,0.08)',
+                    }}>
+                        <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+                            {/* Google Rating */}
+                            <Box sx={{ textAlign: 'center', minWidth: 65 }}>
+                                <Typography sx={{ fontWeight: 900, fontSize: '2rem', color: '#D97706', lineHeight: 1 }}>4.9</Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.5 }}>
+                                    {[1,2,3,4,5].map(s => <StarIcon key={s} sx={{ fontSize: 14, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />)}
                                 </Box>
-                                <Box>
-                                    <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
-                                    <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
+                                <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 600 }}>Google Rating</Typography>
+                            </Box>
+                            <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A' }} />
+                            {/* Stats Row */}
+                            <Box sx={{ display: 'flex', gap: 2.5, flex: 1, justifyContent: 'space-around' }}>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>268</Typography>
+                                    <Typography sx={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: 600 }}>Reviews</Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>2.5K+</Typography>
+                                    <Typography sx={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: 600 }}>Interactions</Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>180</Typography>
+                                    <Typography sx={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: 600 }}>Day Warranty</Typography>
                                 </Box>
                             </Box>
-                        </Card>
-                    </motion.div>
+                        </Box>
+                    </Card>
+                </motion.div>
+            </Container>
 
-                    <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2, px: 0.5, mx: -0.5, '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-                        <motion.div
-                            initial={shouldReduce ? false : { opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.35, delay: 1.05 }}
-                            style={{ minWidth: 220, flexShrink: 0 }}
+            {/* ════ WHY CHOOSE US ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2, px: 1 }}>Why choose JamesTronic?</Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, px: 1 }}>
+                    {WHY_CHOOSE_US.map((item, i) => (
+                        <motion.div key={item.title}
+                            initial={shouldReduce ? false : { opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.9 + i * 0.08 }}
                         >
-                            <Card sx={{ p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                                    <Box sx={{ background: '#FEF3C7', p: 0.8, borderRadius: 2, color: '#D97706', display: 'flex' }}><StarIcon sx={{ fontSize: 20 }} /></Box>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>4.8/5 Rating</Typography>
+                            <Card sx={{
+                                p: 2, borderRadius: 3, border: '1px solid #F3F4F6',
+                                boxShadow: '0 2px 12px rgba(0,0,0,0.04)', height: '100%',
+                                transition: 'all 0.2s',
+                                '&:active': { transform: 'scale(0.97)' },
+                            }}>
+                                <Box sx={{ background: item.bg, p: 0.8, borderRadius: 2, color: item.color, display: 'inline-flex', mb: 1 }}>
+                                    {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                                 </Box>
-                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>Trusted by over 1.1M customers in Hyderabad.</Typography>
+                                <Typography sx={{ fontWeight: 800, fontSize: '0.85rem', color: '#111827', mb: 0.3 }}>{item.title}</Typography>
+                                <Typography sx={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
                             </Card>
                         </motion.div>
-                        <motion.div
-                            initial={shouldReduce ? false : { opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.35, delay: 1.15 }}
-                            style={{ minWidth: 220, flexShrink: 0 }}
-                        >
-                            <Card sx={{ p: 2.5, borderRadius: 4, border: '1px solid #E5E7EB', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#FFF', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                                    <Box sx={{ background: '#DBEAFE', p: 0.8, borderRadius: 2, color: '#2563EB', display: 'flex' }}><CheckCircleIcon sx={{ fontSize: 20 }} /></Box>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#111827' }}>Verified Techs</Typography>
-                                </Box>
-                                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500, lineHeight: 1.4 }}>100% background checked & brand certified experts.</Typography>
-                            </Card>
-                        </motion.div>
+                    ))}
+                </Box>
+            </Container>
+
+            {/* ════ WARRANTY CARD ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4 }}>
+                <motion.div
+                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.95 }}
+                >
+                    <Card sx={{ background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', border: '1px solid #D1FAE5', borderRadius: 4, mx: 1, boxShadow: 'none' }}>
+                        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                            <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                                <VerifiedIcon fontSize="medium" />
+                            </Box>
+                            <Box>
+                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
+                                <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
+                            </Box>
+                        </Box>
+                    </Card>
+                </motion.div>
+            </Container>
+
+            {/* ════ SERVICE UPDATES FEED — Google Business Profile Style ════ */}
+            {serviceUpdates.length > 0 && (
+                <Container maxWidth="sm" sx={{ mt: 5 }}>
+                    <Box sx={{ px: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                            <Box>
+                                <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', letterSpacing: '-0.3px' }}>Recent Work & Updates</Typography>
+                                <Typography sx={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 500 }}>Real work from our verified technicians</Typography>
+                            </Box>
+                            <Chip label="Live" size="small" sx={{ background: '#D1FAE5', color: '#065F46', fontWeight: 700, fontSize: '0.65rem' }} icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', ml: 1, animation: 'livePulse 2s infinite', '@keyframes livePulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />} />
+                        </Box>
+
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {serviceUpdates.map((post, i) => (
+                                <motion.div key={post.id}
+                                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, delay: i * 0.08 }}
+                                >
+                                    <Card sx={{
+                                        borderRadius: 3, overflow: 'hidden', border: '1px solid #F3F4F6',
+                                        boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
+                                        transition: 'all 0.2s',
+                                        '&:active': { transform: 'scale(0.99)' },
+                                    }}>
+                                        {/* Post Image */}
+                                        {post.images && post.images.length > 0 && (
+                                            <Box sx={{ position: 'relative', height: 180, overflow: 'hidden' }}>
+                                                <img src={post.images[0]} alt={post.title}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <Box sx={{
+                                                    position: 'absolute', top: 8, left: 8,
+                                                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+                                                    color: '#FFF', px: 1, py: 0.3, borderRadius: 1.5,
+                                                    fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+                                                }}>
+                                                    📍 {post.service_area || 'Hyderabad'}
+                                                </Box>
+                                                <Box sx={{
+                                                    position: 'absolute', top: 8, right: 8,
+                                                    background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(6px)',
+                                                    px: 1, py: 0.3, borderRadius: 1.5,
+                                                    fontSize: '0.6rem', fontWeight: 700, color: '#6B7280',
+                                                }}>
+                                                    {relativeTime(post.created_at)}
+                                                </Box>
+                                            </Box>
+                                        )}
+                                        {/* Post Content */}
+                                        <Box sx={{ p: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                                <Avatar sx={{ width: 28, height: 28, background: '#000', fontSize: '0.65rem', fontWeight: 900 }}>JT</Avatar>
+                                                <Box>
+                                                    <Typography sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#111827', lineHeight: 1 }}>JamesTronic</Typography>
+                                                    <Typography sx={{ fontSize: '0.6rem', color: '#9CA3AF' }}>
+                                                        {!post.images?.length && relativeTime(post.created_at)}
+                                                        {post.images?.length ? 'Verified Service' : ''}
+                                                    </Typography>
+                                                </Box>
+                                                <Chip label={post.post_type === 'offer' ? 'Offer' : post.post_type === 'event' ? 'Event' : 'Update'}
+                                                    size="small" sx={{
+                                                        ml: 'auto', height: 20, fontSize: '0.6rem', fontWeight: 700,
+                                                        background: post.post_type === 'offer' ? '#FEF3C7' : post.post_type === 'event' ? '#EDE9FE' : '#DBEAFE',
+                                                        color: post.post_type === 'offer' ? '#92400E' : post.post_type === 'event' ? '#5B21B6' : '#1E40AF',
+                                                    }} />
+                                            </Box>
+                                            <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#111827', mb: 0.5, lineHeight: 1.3 }}>
+                                                {post.title}
+                                            </Typography>
+                                            <Typography sx={{
+                                                fontSize: '0.78rem', color: '#4B5563', fontWeight: 500, lineHeight: 1.5,
+                                                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                            }}>
+                                                {post.description}
+                                            </Typography>
+                                            {/* Area Tags */}
+                                            {post.area_tags && post.area_tags.length > 0 && (
+                                                <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
+                                                    {post.area_tags.slice(0, 4).map(tag => (
+                                                        <Chip key={tag} label={tag} size="small" sx={{
+                                                            height: 20, fontSize: '0.55rem', fontWeight: 600,
+                                                            background: '#F3F4F6', color: '#6B7280'
+                                                        }} />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                            {/* CTA */}
+                                            {post.cta_type && (
+                                                <Button
+                                                    size="small"
+                                                    onClick={() => {
+                                                        if (post.cta_type === 'call_now') window.location.href = 'tel:09052222901';
+                                                        else navigate(post.cta_link || '/book');
+                                                    }}
+                                                    startIcon={post.cta_type === 'call_now' ? <PhoneIcon sx={{ fontSize: 14 }} /> : <ArrowForwardIcon sx={{ fontSize: 14 }} />}
+                                                    sx={{
+                                                        mt: 1.5, textTransform: 'none', fontWeight: 700, fontSize: '0.75rem',
+                                                        color: '#2563EB', borderRadius: 2,
+                                                        '&:hover': { background: '#EFF6FF' },
+                                                    }}
+                                                >
+                                                    {post.cta_type === 'call_now' ? 'Call Now' : post.cta_type === 'book_now' ? 'Book Now' : 'Learn More'}
+                                                </Button>
+                                            )}
+                                        </Box>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </Box>
+                    </Box>
+                </Container>
+            )}
+
+            {/* ════ SERVICE AREAS ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 12 }}>
+                <Box sx={{ px: 1 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>📍 We serve across Hyderabad</Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+                        {SERVICE_AREAS.map(area => (
+                            <Chip key={area} label={area} size="small"
+                                sx={{
+                                    fontWeight: 600, fontSize: '0.7rem', height: 28,
+                                    background: '#F3F4F6', color: '#374151',
+                                    '&:hover': { background: '#E5E7EB' },
+                                }}
+                            />
+                        ))}
                     </Box>
                 </Box>
             </Container>
