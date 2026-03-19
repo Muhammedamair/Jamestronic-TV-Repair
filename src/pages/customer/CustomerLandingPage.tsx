@@ -156,10 +156,12 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
             open={open}
             onClose={onClose}
             fullScreen
+            sx={{ zIndex: 99999 }} // Ensures it covers the bottom navigation bar even when the keyboard opens
             PaperProps={{
                 sx: {
                     background: '#F9FAFB',
                     display: 'flex', flexDirection: 'column',
+                    minHeight: '100dvh', // Ensures it stretches correctly on mobile
                 }
             }}
             TransitionProps={{ timeout: 250 }}
