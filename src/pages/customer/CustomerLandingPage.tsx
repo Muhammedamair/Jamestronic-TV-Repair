@@ -1160,7 +1160,7 @@ const CustomerLandingPage: React.FC = () => {
                             borderTop: 'none',
                             boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
                             overflow: 'hidden',
-                            pt: { xs: 4, sm: 0 }, // Extra padding on mobile to account for the overlap
+                            pt: { xs: 6, sm: 0 }, // Increased padding (from 4 to 6) to give search bar breathing room below banner curve
                         }}>
                         {/* Search Bar — Top Section with Auto-Typing */}
                         <Box 
