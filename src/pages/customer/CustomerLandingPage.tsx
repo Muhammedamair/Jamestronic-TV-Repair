@@ -40,21 +40,19 @@ import tvRepairImg from '../../assets/tvp.png';
 import tvInstallationImg from '../../assets/install.png';
 import tvUninstallationImg from '../../assets/removal.png';
 
-const REPAIR_SERVICES = [
-    { id: 'no_display', emoji: '🖥️', label: 'No Display', desc: 'Black screen, backlight issue', route: '/book?service=repair&issue=no_display' },
-    { id: 'flickering', emoji: '⚡', label: 'Flickering', desc: 'Screen flashing or blinking', route: '/book?service=repair&issue=flickering' },
-    { id: 'no_sound', emoji: '🔇', label: 'No Sound', desc: 'Audio not working', route: '/book?service=repair&issue=no_sound' },
-    { id: 'power_issue', emoji: '🔌', label: 'Power Issue', desc: 'TV not turning on', route: '/book?service=repair&issue=power_issue' },
-    { id: 'lines', emoji: '📊', label: 'Lines on Screen', desc: 'Vertical or horizontal lines', route: '/book?service=repair&issue=lines' },
-    { id: 'screen_repair', emoji: '🔧', label: 'Screen Repair', desc: 'Panel crack, display damage', route: '/book?service=repair&issue=screen_repair' },
-    { id: 'not_sure', emoji: '🤔', label: 'Not Sure', desc: 'Let our expert diagnose', route: '/book?service=repair' },
-];
-
-const INSTALL_SERVICES = [
-    { id: 'fixed_mount', emoji: '🔩', label: 'Fixed Bracket', desc: 'Non-movable wall mount', route: '/book?service=installation&type=fixed' },
-    { id: 'movable_mount', emoji: '🔄', label: 'Movable Bracket', desc: 'Full motion swivel mount', route: '/book?service=installation&type=movable' },
-    { id: 'tv_setup', emoji: '📺', label: 'TV Setup', desc: 'Smart TV configuration', route: '/book?service=installation&type=setup' },
-    { id: 'uninstallation', emoji: '📦', label: 'Uninstallation', desc: 'Safe TV removal', route: '/book?service=uninstallation' },
+const SERVICES = [
+    // Repair Issues — using existing 3D icons
+    { id: 'no_display', label: 'No Display', image: '/services/issues/black_screen.png', route: '/book?service=repair&issue=no_display' },
+    { id: 'flickering', label: 'Flickering', image: '/services/issues/flickering.png', route: '/book?service=repair&issue=flickering' },
+    { id: 'no_sound', label: 'No Sound', image: '/services/issues/no_sound.png', route: '/book?service=repair&issue=no_sound' },
+    { id: 'power_issue', label: 'Power Issue', image: '/services/issues/power.png', route: '/book?service=repair&issue=power_issue' },
+    { id: 'lines', label: 'Lines on Screen', image: '/services/issues/lines.png', route: '/book?service=repair&issue=lines' },
+    { id: 'screen_repair', label: 'Screen Repair', image: '/services/tv_screen_repair.png', route: '/book?service=repair&issue=screen_repair' },
+    { id: 'not_sure', label: 'Not Sure', image: '/services/issues/unknown.png', route: '/book?service=repair' },
+    // Installation & Setup — using existing 3D icons
+    { id: 'installation', label: 'TV Installation', image: '/services/tv_installation.png', route: '/book?service=installation' },
+    { id: 'uninstallation', label: 'TV Uninstallation', image: '/services/tv_uninstallation.png', route: '/book?service=uninstallation' },
+    { id: 'checkup', label: 'TV Check-up', image: '/services/tv_checkup.png', route: '/book?service=repair' },
 ];
 
 const WHY_CHOOSE_US = [
@@ -710,88 +708,55 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             )}
 
-            {/* ════ EXPLORE SERVICES — ISSUE-BASED PREMIUM GRID ════ */}
+            {/* ════ EXPLORE ALL SERVICES — ORIGINAL 3D ICON GRID ════ */}
             <Container maxWidth="sm" sx={{ mt: 4 }}>
                 <motion.div
                     initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
                 >
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: '#111827', mb: 0.5, letterSpacing: '-0.3px', px: 1 }}>
-                        Describe your issue
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 500, mb: 2, px: 1 }}>
-                        Tap to book — our expert will be at your doorstep
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 2.5, letterSpacing: '-0.3px', px: 1 }}>
+                        Explore all services
                     </Typography>
                 </motion.div>
 
-                {/* Repair Issues */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5, px: 1, mb: 2 }}>
-                    {REPAIR_SERVICES.map((svc, i) => (
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1.5, sm: 3 }, px: 1 }}>
+                    {SERVICES.map((svc, i) => (
                         <motion.div
                             key={svc.id}
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 20, scale: 0.9 }}
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 25, scale: 0.85 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.5 + i * 0.06 : 0 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.5 + i * 0.08 : 0 }}
                         >
                             <CardActionArea
                                 onClick={() => navigate(svc.route)}
+                                disableRipple
                                 sx={{
-                                    p: 1.5, borderRadius: 3, textAlign: 'center',
-                                    background: '#FFF', border: '1px solid #F3F4F6',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
-                                    transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                    '&:hover': { transform: 'scale(1.04) translateY(-2px)', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' },
-                                    '&:active': { transform: 'scale(0.96)' },
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    p: 0, transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                    '&:hover': { transform: 'scale(1.05) translateY(-2px)' },
+                                    '&:active': { transform: 'scale(0.95)' }
                                 }}
                             >
-                                <Typography sx={{ fontSize: '1.5rem', mb: 0.6 }}>{svc.emoji}</Typography>
-                                <Typography sx={{ fontWeight: 700, fontSize: '0.75rem', color: '#111827', lineHeight: 1.2, mb: 0.3 }}>
+                                <Box sx={{
+                                    width: { xs: '85px', sm: '110px' },
+                                    height: { xs: '85px', sm: '110px' },
+                                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    mb: 1.5, p: 2,
+                                    border: '1.5px solid #FFFFFF',
+                                    boxShadow: '0 8px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.04)'
+                                }}>
+                                    <img src={svc.image} alt={svc.label}
+                                        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.08))' }}
+                                    />
+                                </Box>
+                                <Typography sx={{
+                                    color: '#374151', fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.2px'
+                                }}>
                                     {svc.label}
-                                </Typography>
-                                <Typography sx={{ fontSize: '0.6rem', color: '#9CA3AF', fontWeight: 500, lineHeight: 1.2 }}>
-                                    {svc.desc}
-                                </Typography>
-                            </CardActionArea>
-                        </motion.div>
-                    ))}
-                </Box>
-
-                {/* Installation & Setup */}
-                <motion.div
-                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.8 }}
-                >
-                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#6B7280', mb: 1.5, px: 1, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Installation & Setup
-                    </Typography>
-                </motion.div>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, px: 1 }}>
-                    {INSTALL_SERVICES.map((svc, i) => (
-                        <motion.div
-                            key={svc.id}
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 20, delay: isFirstVisit ? 0.9 + i * 0.06 : 0 }}
-                        >
-                            <CardActionArea
-                                onClick={() => navigate(svc.route)}
-                                sx={{
-                                    p: 1.2, borderRadius: 2.5, textAlign: 'center',
-                                    background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
-                                    border: '1px solid #E2E8F0',
-                                    transition: 'all 0.2s',
-                                    '&:hover': { background: '#EFF6FF', borderColor: '#BFDBFE' },
-                                    '&:active': { transform: 'scale(0.96)' },
-                                }}
-                            >
-                                <Typography sx={{ fontSize: '1.3rem', mb: 0.4 }}>{svc.emoji}</Typography>
-                                <Typography sx={{ fontWeight: 700, fontSize: '0.65rem', color: '#374151', lineHeight: 1.2, mb: 0.2 }}>
-                                    {svc.label}
-                                </Typography>
-                                <Typography sx={{ fontSize: '0.55rem', color: '#9CA3AF', fontWeight: 500, lineHeight: 1.2 }}>
-                                    {svc.desc}
                                 </Typography>
                             </CardActionArea>
                         </motion.div>
