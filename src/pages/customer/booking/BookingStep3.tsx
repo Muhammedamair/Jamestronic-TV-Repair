@@ -22,6 +22,11 @@ interface BookingStep3Props {
         address: string;
         lat: number;
         lng: number;
+        serviceType: string;
+        tvBrand: string;
+        tvSize: string;
+        issueDescription: string;
+        bracketStatus: string;
     };
     updateField: (field: string, value: any) => void;
     handleGetCurrentLocation: () => void;
@@ -32,6 +37,57 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ form, updateField, handleGe
 
     return (
         <>
+            {/* ═══ BOOKING SUMMARY ═══ */}
+            <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: -10 }}
+                animate={shouldReduce ? {} : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+            >
+                <Box sx={{ p: 2, background: '#F8FAFC', borderRadius: 3, mb: 4, border: '1px solid #E2E8F0', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#1E293B', mb: 1.5, letterSpacing: '-0.2px' }}>
+                        Booking Summary
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box>
+                            <Typography sx={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, mb: 0.2 }}>Service</Typography>
+                            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#334155', textTransform: 'capitalize' }}>
+                                {form.serviceType}
+                            </Typography>
+                        </Box>
+                        {form.serviceType === 'repair' && form.issueDescription && (
+                            <Box>
+                                <Typography sx={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, mb: 0.2 }}>Issue</Typography>
+                                <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#334155', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                    {form.issueDescription}
+                                </Typography>
+                            </Box>
+                        )}
+                        {form.serviceType === 'installation' && form.bracketStatus && (
+                            <Box>
+                                <Typography sx={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, mb: 0.2 }}>Bracket</Typography>
+                                <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#334155', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                    {form.bracketStatus}
+                                </Typography>
+                            </Box>
+                        )}
+                        <Box>
+                            <Typography sx={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, mb: 0.2 }}>TV Brand</Typography>
+                            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#334155' }}>
+                                {form.tvBrand || 'Not provided'}
+                            </Typography>
+                        </Box>
+                        {form.tvSize && (
+                            <Box>
+                                <Typography sx={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, mb: 0.2 }}>Size</Typography>
+                                <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#334155' }}>
+                                    {form.tvSize}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+            </motion.div>
+
             {/* Show pre-filled location if available */}
             <AnimatePresence>
                 {form.address && (

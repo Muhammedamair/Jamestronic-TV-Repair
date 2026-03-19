@@ -29,7 +29,7 @@ const SofaRelaxAnimation: React.FC = () => (
                 transition={{ duration: 0.8, ease: "easeOut" }}
             />
             {/* TV Stand */}
-            <motion.path d="M 55 35 L 55 40 M 50 40 L 60 40" stroke="#111827" strokeWidth="2" strokeLinecap="round" 
+            <motion.path d="M 60 35 L 60 40 M 50 40 L 70 40" stroke="#111827" strokeWidth="2" strokeLinecap="round" 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} />
             
             {/* TV Success Checkmark */}

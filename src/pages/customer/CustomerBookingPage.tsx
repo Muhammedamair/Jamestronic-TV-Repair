@@ -21,6 +21,19 @@ const CustomerBookingPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const initialMobile = searchParams.get('mobile') || '';
     const initialService = searchParams.get('service') || 'repair';
+    const initialIssueKey = searchParams.get('issue');
+
+    // Map URL keys to EXACT labels used in BookingStep2
+    const ISSUE_MAP: Record<string, string> = {
+        'no_display': 'No display',
+        'flickering': 'Flickering',
+        'no_sound': 'No sound',
+        'power_issue': 'Power issue',
+        'lines': 'Lines on screen',
+        'screen_repair': 'Screen Repair', // Using 'Screen Repair' since it wasn't in COMMON_ISSUES but matches textfield 
+        'not_sure': 'Not sure'
+    };
+    const initialIssue = initialIssueKey ? (ISSUE_MAP[initialIssueKey] || '') : '';
 
     const [step, setStep] = useState(0);
     const [submitting, setSubmitting] = useState(false);
@@ -39,7 +52,7 @@ const CustomerBookingPage: React.FC = () => {
         tvBrand: '',
         tvModel: '',
         tvSize: '',
-        issueDescription: '',
+        issueDescription: initialIssue,
         address: '',
         lat: 0,
         lng: 0,
@@ -58,6 +71,11 @@ const CustomerBookingPage: React.FC = () => {
                         customerName: data.name || prev.customerName,
                         address: data.address || prev.address,
                     }));
+                    
+                    // Skip Step 1 if we successfully loaded the mobile number and name
+                    if (data.mobile && data.name) {
+                        setStep(prev => prev === 0 ? 1 : prev);
+                    }
                 }
             });
         }
