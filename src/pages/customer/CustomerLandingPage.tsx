@@ -75,32 +75,29 @@ const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }
     }
 
     return (
-        <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-            <Box style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.06))' }} />
+        <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+            {/* 3D Icon — contained with breathing room */}
+            <Box sx={{ width: '100%', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: badgeText ? 1 : 0 }}>
+                <img src={image} alt={label} style={{ width: '90%', height: '90%', objectFit: 'contain', filter: 'drop-shadow(0px 6px 16px rgba(0,0,0,0.08))' }} />
             </Box>
 
-            {/* Premium Glassmorphic Badge with Animated Wave */}
+            {/* Premium Glassmorphic Badge — positioned inside the card */}
             {badgeText && (
                 <Box
                     sx={{
-                        position: 'absolute',
-                        bottom: -10,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
                         background: 'rgba(255, 255, 255, 0.95)',
                         border: '1px solid rgba(255, 255, 255, 1)',
                         color: badgeColor,
-                        padding: '3px 12px',
+                        padding: '4px 14px',
                         borderRadius: '24px',
                         fontSize: '0.65rem',
                         fontWeight: 900,
-                        letterSpacing: '0.3px',
-                        zIndex: 10,
+                        letterSpacing: '0.5px',
                         whiteSpace: 'nowrap',
                         backdropFilter: 'blur(12px)',
                         fontFamily: "'Inter', sans-serif",
                         overflow: 'hidden',
+                        position: 'relative',
                         animation: `shadowPulse_${id} 3s ease-in-out infinite`,
                         '&::after': {
                             content: '""',
@@ -833,26 +830,22 @@ const CustomerLandingPage: React.FC = () => {
                             >
                                 <Box sx={{
                                     width: '100%',
-                                    aspectRatio: '1/1.05', // Slightly taller than square for premium feel
-                                    background: '#FFFFFF',
-                                    borderRadius: '28px',
+                                    aspectRatio: '1/1.15', // Taller card for icon + badge
+                                    background: 'linear-gradient(160deg, #FAFAFA 0%, #F3F4F6 100%)',
+                                    borderRadius: '24px',
                                     display: 'flex', flexDirection: 'column',
                                     alignItems: 'center', justifyContent: 'center',
-                                    mb: 1.5, 
-                                    p: 0, // Zero padding to allow icon background to cover edges
-                                    border: '1px solid rgba(0,0,0,0.05)',
-                                    boxShadow: '0 12px 30px rgba(0,0,0,0.07)',
+                                    mb: 1.5,
+                                    border: '1px solid rgba(0,0,0,0.06)',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
                                     position: 'relative',
-                                    overflow: 'hidden'
                                 }}>
-                                    <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
-                                        <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
-                                    </Box>
+                                    <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
                                 </Box>
                                 <Typography sx={{
                                     color: '#111827', fontSize: { xs: '0.85rem', sm: '0.95rem' },
                                     fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.3px',
-                                    px: 1, mb: 0.5
+                                    px: 0.5
                                 }}>
                                     {svc.label}
                                 </Typography>
