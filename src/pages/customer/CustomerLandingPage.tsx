@@ -795,13 +795,30 @@ const CustomerLandingPage: React.FC = () => {
                     </Typography>
                 </motion.div>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1.5, sm: 3 }, px: 1 }}>
+                <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateRows: 'repeat(2, 1fr)', 
+                    gridAutoFlow: 'column',
+                    gridAutoColumns: { xs: '88px', sm: '110px' }, // Force compact column width
+                    columnGap: { xs: 2, sm: 3 }, 
+                    rowGap: { xs: 2.5, sm: 3 },
+                    px: 1,
+                    pb: 3, 
+                    overflowX: 'auto', 
+                    scrollSnapType: 'x mandatory',
+                    scrollPaddingLeft: '8px',
+                    WebkitOverflowScrolling: 'touch',
+                    '&::-webkit-scrollbar': { display: 'none' }, // Safari & Chrome
+                    msOverflowStyle: 'none', // IE & Edge
+                    scrollbarWidth: 'none', // Firefox
+                }}>
                     {SERVICES.map((svc, i) => (
                         <motion.div
                             key={svc.id}
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 25, scale: 0.85 }}
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, y: 15, scale: 0.9 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.5 + i * 0.08 : 0 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 22, delay: isFirstVisit ? 0.3 + (i % 5) * 0.08 : 0 }}
+                            style={{ scrollSnapAlign: 'start' }}
                         >
                             <CardActionArea
                                 onClick={() => navigate(svc.route)}
@@ -814,21 +831,22 @@ const CustomerLandingPage: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{
-                                    width: { xs: '85px', sm: '110px' },
-                                    height: { xs: '85px', sm: '110px' },
+                                    width: { xs: '76px', sm: '100px' },
+                                    height: { xs: '76px', sm: '100px' },
                                     background: 'linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%)',
                                     borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    mb: 1.5, p: 2,
+                                    mb: 1.5, p: 1.5,
                                     border: '2px solid #FFFFFF',
-                                    boxShadow: '0 8px 20px rgba(0,0,0,0.05), inset 0px -4px 10px rgba(0,0,0,0.03)',
+                                    boxShadow: '0 6px 16px rgba(0,0,0,0.06), inset 0px -4px 10px rgba(0,0,0,0.02)',
                                     position: 'relative'
                                 }}>
                                     <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
                                 </Box>
                                 <Typography sx={{
-                                    color: '#374151', fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.25, letterSpacing: '-0.2px'
+                                    color: '#374151', fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.2px',
+                                    wordWrap: 'break-word', width: '100%'
                                 }}>
                                     {svc.label}
                                 </Typography>
