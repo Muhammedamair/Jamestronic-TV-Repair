@@ -135,6 +135,84 @@ const TypewriterSearch: React.FC = () => {
     );
 };
 
+// ─── Animated Trust Strip ───
+const AnimatedTrustStrip: React.FC = () => {
+    return (
+        <Box sx={{ 
+            background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
+            position: 'relative', overflow: 'hidden',
+            p: 2, display: 'flex', alignItems: 'center', gap: 1.5 
+        }}>
+            {/* Shimmer Effect */}
+            <motion.div
+                animate={{ x: ['-200%', '300%'] }}
+                transition={{ duration: 3, repeat: Infinity, repeatDelay: 4, ease: 'linear' }}
+                style={{
+                    position: 'absolute', top: 0, left: '-20%', bottom: 0, width: '40%',
+                    background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%)',
+                    transform: 'skewX(-20deg)', pointerEvents: 'none', zIndex: 1
+                }}
+            />
+
+            {/* Google Rating */}
+            <Box sx={{ textAlign: 'center', minWidth: 65, position: 'relative', zIndex: 2 }}>
+                {/* Floating Animated Badge */}
+                <motion.div
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{ position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
+                >
+                    <Box sx={{ background: '#EF4444', color: '#FFF', fontSize: '0.55rem', fontWeight: 800, px: 0.8, py: 0.25, borderRadius: 4, boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)' }}>
+                        TOP RATED
+                    </Box>
+                </motion.div>
+
+                <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1, mt: 0.8 }}>
+                    4.9
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.4 }}>
+                    {[1,2,3,4,5].map((s, i) => (
+                        <motion.div
+                            key={s}
+                            animate={{ scale: [1, 1.25, 1], rotate: [0, 8, -8, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 + i * 0.1, delay: i * 0.1 }}
+                        >
+                            <StarIcon sx={{ fontSize: 13, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />
+                        </motion.div>
+                    ))}
+                </Box>
+                <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 800 }}>Google</Typography>
+            </Box>
+            
+            <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A', zIndex: 2 }} />
+            
+            {/* Stats */}
+            <Box sx={{ display: 'flex', flex: 1, justifyContent: 'space-around', zIndex: 2 }}>
+                {[
+                    { val: '268', label: 'Reviews' },
+                    { val: '2.5K+', label: 'Interactions' },
+                    { val: '180', label: 'Days Warranty' }
+                ].map((stat) => (
+                    <motion.div 
+                        key={stat.label}
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                        style={{ textAlign: 'center', cursor: 'default' }}
+                    >
+                        <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>
+                            {stat.val}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 700 }}>
+                            {stat.label}
+                        </Typography>
+                    </motion.div>
+                ))}
+            </Box>
+        </Box>
+    );
+};
+
 // ─── Search Overlay ───
 const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (route: string) => void }> = ({ open, onClose, onSelect }) => {
     const [query, setQuery] = useState('');
@@ -1094,36 +1172,8 @@ const CustomerLandingPage: React.FC = () => {
                         {/* Divider */}
                         <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
 
-                        {/* Trust Stats — Bottom Section */}
-                        <Box sx={{ 
-                            background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
-                            p: 2, display: 'flex', alignItems: 'center', gap: 1.5 
-                        }}>
-                            {/* Google Rating */}
-                            <Box sx={{ textAlign: 'center', minWidth: 58 }}>
-                                <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1 }}>4.9</Typography>
-                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.4 }}>
-                                    {[1,2,3,4,5].map(s => <StarIcon key={s} sx={{ fontSize: 12, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />)}
-                                </Box>
-                                <Typography sx={{ fontSize: '0.55rem', color: '#92400E', fontWeight: 700 }}>Google</Typography>
-                            </Box>
-                            <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A' }} />
-                            {/* Stats */}
-                            <Box sx={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>268</Typography>
-                                    <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 600 }}>Reviews</Typography>
-                                </Box>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>2.5K+</Typography>
-                                    <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 600 }}>Interactions</Typography>
-                                </Box>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>180</Typography>
-                                    <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 600 }}>Day Warranty</Typography>
-                                </Box>
-                            </Box>
-                        </Box>
+                        {/* Trust Stats — Bottom Section (Animated) */}
+                        <AnimatedTrustStrip />
                     </Card>
                 </motion.div>
             </Container>
