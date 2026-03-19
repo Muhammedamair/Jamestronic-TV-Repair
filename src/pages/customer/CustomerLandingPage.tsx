@@ -763,76 +763,71 @@ const CustomerLandingPage: React.FC = () => {
                 </Box>
             )}
 
-            {/* ════ 2. MASTER SEARCH BAR ════ */}
+            {/* ════ 2. SEARCH + TRUST STRIP — Combined Section ════ */}
             <Container maxWidth="sm" sx={{ mt: 3, mb: 2 }}>
                 <motion.div
-                    initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                    initial={shouldReduce ? false : { opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
+                    transition={{ duration: 0.35, delay: 0.3 }}
                 >
-                    <Box 
-                        onClick={() => navigate('/book')}
-                        sx={{
-                            background: '#FFF', borderRadius: '16px', p: '2px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                            border: '1px solid rgba(0,0,0,0.06)',
-                            display: 'flex', alignItems: 'center', cursor: 'pointer',
-                            mx: 1,
-                            transition: 'all 0.2s ease',
-                            '&:hover': { boxShadow: '0 6px 24px rgba(0,0,0,0.12)' },
-                            '&:active': { transform: 'scale(0.99)' }
-                        }}
-                    >
-                        <Box sx={{ pl: 2, display: 'flex', alignItems: 'center', flex: 1 }}>
+                    <Card sx={{
+                        background: '#FFFFFF',
+                        borderRadius: '20px', mx: 1,
+                        border: '1px solid rgba(0,0,0,0.06)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+                        overflow: 'hidden',
+                    }}>
+                        {/* Search Bar — Top Section */}
+                        <Box 
+                            onClick={() => navigate('/book')}
+                            sx={{
+                                display: 'flex', alignItems: 'center',
+                                p: '10px 12px 10px 16px',
+                                cursor: 'pointer',
+                                transition: 'background 0.2s',
+                                '&:hover': { background: 'rgba(0,0,0,0.02)' },
+                                '&:active': { background: 'rgba(0,0,0,0.04)' },
+                            }}
+                        >
                             <SearchIcon sx={{ color: '#9CA3AF', fontSize: 22, mr: 1.5 }} />
-                            <Typography sx={{ color: '#6B7280', fontSize: '1rem', fontWeight: 500, py: 1.5 }}>
+                            <Typography sx={{ color: '#6B7280', fontSize: '0.95rem', fontWeight: 500, flex: 1 }}>
                                 Search for 'TV Repair'
                             </Typography>
-                        </Box>
-                        <Box sx={{ pr: 1.5 }}>
-                            <Box sx={{ background: '#111827', borderRadius: '12px', px: 2, py: 1 }}>
+                            <Box sx={{ background: '#111827', borderRadius: '12px', px: 2, py: 0.8 }}>
                                 <Typography sx={{ color: '#FFF', fontSize: '0.75rem', fontWeight: 700 }}>Search</Typography>
                             </Box>
                         </Box>
-                    </Box>
-                </motion.div>
-            </Container>
 
-            {/* ════ 3. TRUST STRIP — Google Rating + Stats ════ */}
-            <Container maxWidth="sm" sx={{ mt: 2 }}>
-                <motion.div
-                    initial={shouldReduce ? false : { opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.5 }}
-                >
-                    <Card sx={{
-                        background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
-                        border: '1px solid #FDE68A', borderRadius: 4, mx: 1,
-                        boxShadow: '0 4px 20px rgba(217,119,6,0.08)',
-                    }}>
-                        <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {/* Divider */}
+                        <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
+
+                        {/* Trust Stats — Bottom Section */}
+                        <Box sx={{ 
+                            background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
+                            p: 2, display: 'flex', alignItems: 'center', gap: 1.5 
+                        }}>
                             {/* Google Rating */}
-                            <Box sx={{ textAlign: 'center', minWidth: 65 }}>
-                                <Typography sx={{ fontWeight: 900, fontSize: '2rem', color: '#D97706', lineHeight: 1 }}>4.9</Typography>
-                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.5 }}>
-                                    {[1,2,3,4,5].map(s => <StarIcon key={s} sx={{ fontSize: 14, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />)}
+                            <Box sx={{ textAlign: 'center', minWidth: 58 }}>
+                                <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1 }}>4.9</Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.4 }}>
+                                    {[1,2,3,4,5].map(s => <StarIcon key={s} sx={{ fontSize: 12, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />)}
                                 </Box>
-                                <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 600 }}>Google Rating</Typography>
+                                <Typography sx={{ fontSize: '0.55rem', color: '#92400E', fontWeight: 700 }}>Google</Typography>
                             </Box>
                             <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A' }} />
-                            {/* Stats Row */}
-                            <Box sx={{ display: 'flex', gap: 2.5, flex: 1, justifyContent: 'space-around' }}>
+                            {/* Stats */}
+                            <Box sx={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>268</Typography>
-                                    <Typography sx={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: 600 }}>Reviews</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>268</Typography>
+                                    <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 600 }}>Reviews</Typography>
                                 </Box>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>2.5K+</Typography>
-                                    <Typography sx={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: 600 }}>Interactions</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>2.5K+</Typography>
+                                    <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 600 }}>Interactions</Typography>
                                 </Box>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>180</Typography>
-                                    <Typography sx={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: 600 }}>Day Warranty</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>180</Typography>
+                                    <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 600 }}>Day Warranty</Typography>
                                 </Box>
                             </Box>
                         </Box>
