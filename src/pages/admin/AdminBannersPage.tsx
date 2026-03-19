@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
     Box, Typography, Button, IconButton, TextField,
-    CircularProgress, Switch, Card, Alert, Divider, Chip,
-    Select, MenuItem, FormControl, InputLabel
+    CircularProgress, Switch, Card, CardContent, Alert, Divider, Chip,
+    Select, MenuItem, FormControl, InputLabel, Grid, Avatar,
+    Dialog, DialogTitle, DialogContent, DialogActions, Collapse, Tooltip,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import SaveIcon from '@mui/icons-material/Save';
-import PreviewIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import CelebrationIcon from '@mui/icons-material/Celebration';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import TimerIcon from '@mui/icons-material/Timer';
+import {
+    Delete, Add, Save, Edit, Celebration, AutoAwesome, Timer,
+    Visibility, VisibilityOff, ExpandMore, ExpandLess,
+    Campaign, Schedule, TouchApp, Palette, EmojiEmotions,
+    ViewCarousel, TrendingUp, Close,
+} from '@mui/icons-material';
 import { useBanners } from '../../hooks/useBanners';
 import { PromotionalBanner } from '../../types/database';
 
@@ -22,49 +21,57 @@ const FESTIVAL_PRESETS: Record<string, {
     label: string; icon: string;
     gradient_start: string; gradient_end: string;
     emoji_set: string[]; tag_text: string;
+    animation_style: string;
 }> = {
     eid: {
-        label: '🌙 Eid / Ramzan', icon: '🌙',
+        label: 'Eid / Ramzan', icon: '🌙',
         gradient_start: '#065F46', gradient_end: '#047857',
         emoji_set: ['🌙', '✨', '🕌'], tag_text: 'EID SPECIAL',
+        animation_style: 'celebration',
     },
     diwali: {
-        label: '🪔 Diwali', icon: '🪔',
+        label: 'Diwali', icon: '🪔',
         gradient_start: '#B45309', gradient_end: '#D97706',
         emoji_set: ['🪔', '✨', '🎆'], tag_text: 'DIWALI SALE',
+        animation_style: 'celebration',
     },
     independence: {
-        label: '🇮🇳 Independence Day', icon: '🇮🇳',
+        label: 'Independence Day', icon: '🇮🇳',
         gradient_start: '#C2410C', gradient_end: '#059669',
         emoji_set: ['🇮🇳', '✨', '🎆'], tag_text: '15 AUG SPECIAL',
+        animation_style: 'celebration',
     },
     christmas: {
-        label: '🎄 Christmas / New Year', icon: '🎄',
+        label: 'Christmas', icon: '🎄',
         gradient_start: '#991B1B', gradient_end: '#166534',
         emoji_set: ['🎄', '🎅', '❄️'], tag_text: 'NEW YEAR OFFER',
+        animation_style: 'celebration',
     },
     ugadi: {
-        label: '🌼 Ugadi / Navratri', icon: '🌼',
+        label: 'Ugadi / Navratri', icon: '🌼',
         gradient_start: '#9333EA', gradient_end: '#DB2777',
         emoji_set: ['🌼', '🎉', '✨'], tag_text: 'FESTIVAL OFFER',
+        animation_style: 'celebration',
     },
     summer: {
-        label: '☀️ Summer Sale', icon: '☀️',
+        label: 'Summer Sale', icon: '☀️',
         gradient_start: '#EA580C', gradient_end: '#EAB308',
         emoji_set: ['☀️', '🔥', '⚡'], tag_text: 'SUMMER SALE',
+        animation_style: 'aurora',
     },
     default: {
-        label: '💜 Default (JamesTronic)', icon: '💜',
+        label: 'JamesTronic', icon: '💜',
         gradient_start: '#5B4CF2', gradient_end: '#7C3AED',
         emoji_set: [], tag_text: '10 MINS',
+        animation_style: 'particles',
     },
 };
 
 const ANIMATION_STYLES = [
-    { value: 'particles', label: 'Particles ✨', desc: 'Floating luminous dots' },
-    { value: 'celebration', label: 'Celebration 🎉', desc: 'Confetti + sparkles' },
-    { value: 'aurora', label: 'Aurora 🌌', desc: 'Flowing color waves' },
-    { value: 'minimal', label: 'Minimal ⚡', desc: 'Clean gradient only' },
+    { value: 'particles', label: 'Particles', icon: '✨', color: '#6C63FF', desc: 'Floating luminous dots — premium default' },
+    { value: 'celebration', label: 'Celebration', icon: '🎉', color: '#F59E0B', desc: 'Confetti + sparkles — for festivals' },
+    { value: 'aurora', label: 'Aurora', icon: '🌌', color: '#06B6D4', desc: 'Flowing color waves — luxury feel' },
+    { value: 'minimal', label: 'Minimal', icon: '⚡', color: '#10B981', desc: 'Clean gradient only — fastest load' },
 ];
 
 export const AdminBannersPage: React.FC = () => {
@@ -72,9 +79,11 @@ export const AdminBannersPage: React.FC = () => {
     const { fetchBanners, createBanner, updateBanner, deleteBanner, loading } = useBanners();
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [draft, setDraft] = useState<Partial<PromotionalBanner>>({});
+    const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const loadBanners = useCallback(async () => {
         const { data, error: err } = await fetchBanners();
@@ -84,57 +93,68 @@ export const AdminBannersPage: React.FC = () => {
 
     useEffect(() => { loadBanners(); }, []);
 
-    const startEditing = (banner: PromotionalBanner) => {
-        setEditingId(banner.id);
-        setDraft({
-            title: banner.title || '',
-            subtitle: banner.subtitle || '',
-            highlight_text: banner.highlight_text || '',
-            tag_text: banner.tag_text || '',
-            offer_text: banner.offer_text || '',
-            gradient_start: banner.gradient_start || '#5B4CF2',
-            gradient_end: banner.gradient_end || '#7C3AED',
-            animation_style: banner.animation_style || 'particles',
-            cta_text: banner.cta_text || '',
-            cta_link: banner.cta_link || '/book',
-            schedule_start: banner.schedule_start || '',
-            schedule_end: banner.schedule_end || '',
-            countdown_end: banner.countdown_end || '',
-            emoji_set: banner.emoji_set || [],
-        });
+    // ─── KPI Metrics ───
+    const totalBanners = banners.length;
+    const liveBanners = banners.filter(b => b.is_active).length;
+    const scheduledBanners = banners.filter(b => b.schedule_start || b.schedule_end).length;
+    const withCTA = banners.filter(b => b.cta_text).length;
+
+    const openEditDialog = (banner?: PromotionalBanner) => {
+        if (banner) {
+            setEditingBannerId(banner.id);
+            setDraft({
+                title: banner.title || '', subtitle: banner.subtitle || '',
+                highlight_text: banner.highlight_text || '', tag_text: banner.tag_text || '',
+                offer_text: banner.offer_text || '', gradient_start: banner.gradient_start || '#5B4CF2',
+                gradient_end: banner.gradient_end || '#7C3AED', animation_style: banner.animation_style || 'particles',
+                cta_text: banner.cta_text || '', cta_link: banner.cta_link || '/book',
+                schedule_start: banner.schedule_start || '', schedule_end: banner.schedule_end || '',
+                countdown_end: banner.countdown_end || '', emoji_set: banner.emoji_set || [],
+            });
+        } else {
+            setEditingBannerId(null);
+            setDraft({
+                title: 'JamesTronic Care', subtitle: 'Expert TV Repair at',
+                highlight_text: '₹249*', tag_text: '10 MINS',
+                offer_text: '* Valid for first 3 bookings • Zero visitation fee',
+                gradient_start: '#5B4CF2', gradient_end: '#7C3AED',
+                animation_style: 'particles', cta_text: '', cta_link: '/book',
+                schedule_start: '', schedule_end: '', countdown_end: '', emoji_set: [],
+            });
+        }
+        setEditDialogOpen(true);
     };
 
     const applyPreset = (key: string) => {
-        const preset = FESTIVAL_PRESETS[key];
-        if (!preset) return;
+        const p = FESTIVAL_PRESETS[key];
+        if (!p) return;
         setDraft(prev => ({
-            ...prev,
-            gradient_start: preset.gradient_start,
-            gradient_end: preset.gradient_end,
-            emoji_set: preset.emoji_set,
-            tag_text: preset.tag_text,
-            animation_style: key === 'default' ? 'particles' : 'celebration',
+            ...prev, gradient_start: p.gradient_start, gradient_end: p.gradient_end,
+            emoji_set: p.emoji_set, tag_text: p.tag_text, animation_style: p.animation_style,
         }));
     };
 
-    const saveBanner = async (id: string) => {
+    const handleSave = async () => {
         setSaving(true); setError(null);
-        // Clean empty schedule fields to null
         const payload = { ...draft };
         if (!payload.schedule_start) payload.schedule_start = undefined;
         if (!payload.schedule_end) payload.schedule_end = undefined;
         if (!payload.countdown_end) payload.countdown_end = undefined;
 
-        const { error: err } = await updateBanner(id, payload);
-        if (err) {
-            setError('Failed to save banner.');
+        if (editingBannerId) {
+            const { error: err } = await updateBanner(editingBannerId, payload);
+            if (err) { setError('Failed to save.'); }
+            else { setSuccess('✅ Banner updated! Changes are live.'); setEditDialogOpen(false); loadBanners(); }
         } else {
-            setSuccess('✅ Banner saved! Changes are live.');
-            setEditingId(null);
-            loadBanners();
-            setTimeout(() => setSuccess(null), 3000);
+            const { error: err } = await createBanner({
+                ...payload, banner_type: 'hero', is_active: false,
+                order_index: banners.length, image_url: '',
+            } as any);
+            if (err) { setError('Failed to create.'); }
+            else { setSuccess('✅ New banner created!'); setEditDialogOpen(false); loadBanners(); }
         }
         setSaving(false);
+        setTimeout(() => setSuccess(null), 3000);
     };
 
     const toggleActive = async (banner: PromotionalBanner) => {
@@ -142,354 +162,501 @@ export const AdminBannersPage: React.FC = () => {
         if (!err) setBanners(prev => prev.map(b => b.id === banner.id ? { ...b, is_active: !banner.is_active } : b));
     };
 
-    const addNewBanner = async () => {
-        const { error: err } = await createBanner({
-            title: 'New Banner', subtitle: 'Your headline here',
-            highlight_text: '₹999', tag_text: 'NEW',
-            offer_text: 'Special offer details',
-            gradient_start: '#667EEA', gradient_end: '#764BA2',
-            banner_type: 'hero', animation_style: 'particles',
-            is_active: false, order_index: banners.length,
-            image_url: '',
-        });
-        if (!err) { loadBanners(); setSuccess('New banner created!'); setTimeout(() => setSuccess(null), 3000); }
-    };
-
     const removeBanner = async (id: string) => {
-        if (!window.confirm('Delete this banner? This cannot be undone.')) return;
+        if (!window.confirm('Delete this banner permanently?')) return;
         const { error: err } = await deleteBanner(id);
-        if (!err) {
-            setBanners(prev => prev.filter(b => b.id !== id));
-            if (editingId === id) setEditingId(null);
-        }
+        if (!err) setBanners(prev => prev.filter(b => b.id !== id));
     };
 
     // ─── Live Preview ───
-    const renderPreview = (banner: PromotionalBanner) => {
-        const b = editingId === banner.id ? { ...banner, ...draft } : banner;
-        const gradStart = b.gradient_start || '#5B4CF2';
-        const gradEnd = b.gradient_end || '#7C3AED';
-        const titleParts = (b.title || '').split(' ');
-        const brand = titleParts.length > 1 ? titleParts.slice(0, -1).join(' ') : b.title;
+    const renderPreview = (data: Partial<PromotionalBanner>, compact = false) => {
+        const gradStart = data.gradient_start || '#5B4CF2';
+        const gradEnd = data.gradient_end || '#7C3AED';
+        const titleParts = (data.title || '').split(' ');
+        const brand = titleParts.length > 1 ? titleParts.slice(0, -1).join(' ') : data.title;
         const accent = titleParts.length > 1 ? titleParts[titleParts.length - 1] : '';
-        const emojis = b.emoji_set || [];
+        const emojis = data.emoji_set || [];
 
         return (
             <Box sx={{
                 background: `linear-gradient(135deg, ${gradStart} 0%, ${gradEnd} 100%)`,
-                borderRadius: 4, p: 3, position: 'relative', overflow: 'hidden', minHeight: 170,
+                borderRadius: 3, p: compact ? 2.5 : 3, position: 'relative', overflow: 'hidden',
+                minHeight: compact ? 130 : 170,
             }}>
-                {/* Decorative orb */}
+                {/* Decorative orbs */}
                 <Box sx={{
-                    position: 'absolute', top: -30, right: -20, width: 120, height: 120,
+                    position: 'absolute', top: -40, right: -30, width: 140, height: 140,
                     borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
+                    pointerEvents: 'none',
                 }} />
-                {/* Floating emojis preview */}
+                <Box sx={{
+                    position: 'absolute', bottom: -25, left: -20, width: 100, height: 100,
+                    borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
+                    pointerEvents: 'none',
+                }} />
+                {/* Floating emojis */}
                 {emojis.length > 0 && (
-                    <Box sx={{ position: 'absolute', top: 12, right: 16, display: 'flex', gap: 0.5, opacity: 0.5 }}>
-                        {emojis.map((e, i) => <span key={i} style={{ fontSize: 18 }}>{e}</span>)}
+                    <Box sx={{ position: 'absolute', top: 12, right: 16, display: 'flex', gap: 0.8, opacity: 0.5 }}>
+                        {emojis.map((e, i) => <span key={i} style={{ fontSize: compact ? 16 : 20 }}>{e}</span>)}
                     </Box>
                 )}
                 <Box sx={{ position: 'relative', zIndex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                        <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: '1.1rem' }}>
-                            {brand} {accent && <span style={{ color: '#A78BFA' }}>{accent}</span>}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+                        <Typography sx={{ color: '#FFF', fontStyle: 'italic', fontWeight: 900, fontSize: compact ? '1rem' : '1.2rem', letterSpacing: '-0.3px' }}>
+                            {brand}{' '}{accent && <span style={{ color: '#A78BFA' }}>{accent}</span>}
                         </Typography>
-                        {b.tag_text && (
+                        {data.tag_text && (
                             <Box sx={{
                                 background: 'linear-gradient(135deg, #10B981, #059669)',
-                                color: '#FFF', px: 1, py: 0.2, borderRadius: '4px',
-                                fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase',
+                                color: '#FFF', px: 1, py: 0.2, borderRadius: '5px',
+                                fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px',
                             }}>
-                                {b.tag_text}
+                                {data.tag_text}
                             </Box>
                         )}
                     </Box>
-                    <Box sx={{ mb: 0.5 }}>
-                        <Typography component="span" sx={{ color: '#FFF', fontWeight: 800, fontSize: '1.4rem', lineHeight: 1.2 }}>
-                            {b.subtitle}{' '}
-                        </Typography>
-                        <Typography component="span" sx={{ color: '#FCD34D', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1.2 }}>
-                            {b.highlight_text}
-                        </Typography>
-                    </Box>
-                    {b.offer_text && (
-                        <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem', fontWeight: 500, mt: 0.5 }}>
-                            {b.offer_text}
+                    <Typography sx={{ color: '#FFF', fontWeight: 800, fontSize: compact ? '1.2rem' : '1.5rem', lineHeight: 1.2, mb: 0.5 }}>
+                        {data.subtitle}{' '}
+                        <span style={{ color: '#FCD34D' }}>{data.highlight_text}</span>
+                    </Typography>
+                    {data.offer_text && (
+                        <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: compact ? '0.7rem' : '0.8rem', fontWeight: 500 }}>
+                            {data.offer_text}
                         </Typography>
                     )}
-                    {/* CTA preview */}
-                    {b.cta_text && (
+                    {data.cta_text && (
                         <Box sx={{
-                            display: 'inline-block', mt: 1.5, background: 'rgba(255,255,255,0.9)',
+                            display: 'inline-block', mt: 1.5, background: 'rgba(255,255,255,0.92)',
                             color: gradStart, fontWeight: 800, fontSize: '0.8rem',
                             px: 2, py: 0.8, borderRadius: '10px',
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
                         }}>
-                            {b.cta_text} →
+                            {data.cta_text} →
                         </Box>
                     )}
-                    {/* Schedule/Countdown indicators */}
-                    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                        {b.countdown_end && (
-                            <Chip icon={<TimerIcon sx={{ fontSize: 14 }} />} label="Countdown Active"
-                                size="small" sx={{ height: 22, fontSize: '0.65rem', background: 'rgba(255,255,255,0.2)', color: '#FFF' }} />
-                        )}
-                        {(b.schedule_start || b.schedule_end) && (
-                            <Chip label="📅 Scheduled" size="small"
-                                sx={{ height: 22, fontSize: '0.65rem', background: 'rgba(255,255,255,0.2)', color: '#FFF' }} />
-                        )}
-                    </Box>
                 </Box>
             </Box>
         );
     };
 
-    // ─── Edit Form ───
-    const renderEditForm = (banner: PromotionalBanner) => (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 3 }}>
-            {/* ─ SECTION: Festival Theme Presets ─ */}
-            <Box>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <CelebrationIcon sx={{ fontSize: 18 }} /> Festival Theme Presets
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {Object.entries(FESTIVAL_PRESETS).map(([key, preset]) => (
-                        <Button
-                            key={key}
-                            size="small"
-                            onClick={() => applyPreset(key)}
-                            sx={{
-                                borderRadius: 3, textTransform: 'none', fontWeight: 600,
-                                fontSize: '0.75rem', px: 1.5, py: 0.5,
-                                background: `linear-gradient(135deg, ${preset.gradient_start}, ${preset.gradient_end})`,
-                                color: '#FFF', border: '2px solid transparent',
-                                '&:hover': { opacity: 0.9, border: '2px solid rgba(255,255,255,0.5)' },
-                            }}
-                        >
-                            {preset.icon} {key.charAt(0).toUpperCase() + key.slice(1)}
-                        </Button>
-                    ))}
-                </Box>
-            </Box>
-
-            <Divider />
-
-            {/* ─ SECTION: Content ─ */}
-            <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>📝 Content</Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField label="Brand Title" size="small" fullWidth
-                    value={draft.title ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="JamesTronic Care" helperText="Last word = accent color" />
-                <TextField label="Tag Badge" size="small" sx={{ minWidth: 140 }}
-                    value={draft.tag_text ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, tag_text: e.target.value }))}
-                    placeholder="10 MINS" />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField label="Headline" size="small" fullWidth
-                    value={draft.subtitle ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, subtitle: e.target.value }))}
-                    placeholder="Expert TV Repair at" />
-                <TextField label="Price / Highlight" size="small" sx={{ minWidth: 140 }}
-                    value={draft.highlight_text ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, highlight_text: e.target.value }))}
-                    placeholder="₹249*" />
-            </Box>
-            <TextField label="Offer Details" size="small" fullWidth
-                value={draft.offer_text ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, offer_text: e.target.value }))}
-                placeholder="* Valid for first 3 bookings • Zero visitation fee" />
-
-            <Divider />
-
-            {/* ─ SECTION: CTA Button ─ */}
-            <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>🔘 CTA Button (Optional)</Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField label="Button Text" size="small" fullWidth
-                    value={draft.cta_text ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, cta_text: e.target.value }))}
-                    placeholder="Book Now" helperText='Leave empty to hide button' />
-                <TextField label="Button Link" size="small" fullWidth
-                    value={draft.cta_link ?? ''} onChange={(e) => setDraft(prev => ({ ...prev, cta_link: e.target.value }))}
-                    placeholder="/book" />
-            </Box>
-
-            <Divider />
-
-            {/* ─ SECTION: Animation & Colors ─ */}
-            <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AutoAwesomeIcon sx={{ fontSize: 18 }} /> Animation & Colors
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                <FormControl size="small" sx={{ minWidth: 200 }}>
-                    <InputLabel>Animation Style</InputLabel>
-                    <Select
-                        value={draft.animation_style ?? 'particles'}
-                        label="Animation Style"
-                        onChange={(e) => setDraft(prev => ({ ...prev, animation_style: e.target.value }))}
-                    >
-                        {ANIMATION_STYLES.map(s => (
-                            <MenuItem key={s.value} value={s.value}>
-                                {s.label} — <span style={{ color: '#6B7280', fontSize: '0.8rem' }}>{s.desc}</span>
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#6B7280', mb: 0.5 }}>Floating Emojis</Typography>
-                    <TextField size="small" fullWidth
-                        value={(draft.emoji_set || []).join(' ')}
-                        onChange={(e) => {
-                            const emojis = e.target.value.split(/\s+/).filter(Boolean);
-                            setDraft(prev => ({ ...prev, emoji_set: emojis }));
-                        }}
-                        placeholder="🌙 ✨ 🕌"
-                        helperText="Space-separated emojis" />
-                </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                <Box>
-                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#6B7280', mb: 0.5 }}>Gradient Start</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <input type="color" value={draft.gradient_start ?? '#5B4CF2'}
-                            onChange={(e) => setDraft(prev => ({ ...prev, gradient_start: e.target.value }))}
-                            style={{ width: 40, height: 32, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
-                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#6B7280' }}>
-                            {draft.gradient_start}
-                        </Typography>
-                    </Box>
-                </Box>
-                <Box>
-                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#6B7280', mb: 0.5 }}>Gradient End</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <input type="color" value={draft.gradient_end ?? '#7C3AED'}
-                            onChange={(e) => setDraft(prev => ({ ...prev, gradient_end: e.target.value }))}
-                            style={{ width: 40, height: 32, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
-                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#6B7280' }}>
-                            {draft.gradient_end}
-                        </Typography>
-                    </Box>
-                </Box>
-            </Box>
-
-            <Divider />
-
-            {/* ─ SECTION: Scheduling & Countdown ─ */}
-            <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <TimerIcon sx={{ fontSize: 18 }} /> Schedule & Countdown
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField label="Auto-Publish Date" type="datetime-local" size="small" fullWidth
-                    value={draft.schedule_start ? new Date(draft.schedule_start).toISOString().slice(0, 16) : ''}
-                    onChange={(e) => setDraft(prev => ({ ...prev, schedule_start: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                    InputLabelProps={{ shrink: true }} helperText="Banner shows automatically" />
-                <TextField label="Auto-Hide Date" type="datetime-local" size="small" fullWidth
-                    value={draft.schedule_end ? new Date(draft.schedule_end).toISOString().slice(0, 16) : ''}
-                    onChange={(e) => setDraft(prev => ({ ...prev, schedule_end: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                    InputLabelProps={{ shrink: true }} helperText="Banner hides automatically" />
-            </Box>
-            <TextField label="Countdown Timer End" type="datetime-local" size="small" fullWidth
-                value={draft.countdown_end ? new Date(draft.countdown_end).toISOString().slice(0, 16) : ''}
-                onChange={(e) => setDraft(prev => ({ ...prev, countdown_end: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                InputLabelProps={{ shrink: true }}
-                helperText='Shows "Offer ends in X days Y hrs" on the banner. Leave empty to disable.' />
-
-            {/* ─ SAVE / CANCEL ─ */}
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 1 }}>
-                <Button variant="outlined" onClick={() => setEditingId(null)}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
-                <Button variant="contained"
-                    startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
-                    disabled={saving} onClick={() => saveBanner(banner.id)}
-                    sx={{
-                        background: '#10B981', '&:hover': { background: '#059669' },
-                        borderRadius: 2, textTransform: 'none', fontWeight: 700, px: 3,
-                    }}>
-                    {saving ? 'Saving...' : 'Save & Publish'}
-                </Button>
-            </Box>
-        </Box>
-    );
-
+    // ─── MAIN RENDER ───
     return (
-        <Box sx={{ p: { xs: 2, sm: 4 }, maxWidth: 900, mx: 'auto' }}>
-            {/* Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+            {/* ═══ Header ═══ */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={800} color="#111827">Banner Manager</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.9rem', mt: 0.5 }}>
-                        Create promotional banners with animations, festivals themes & countdown timers. Changes go live instantly.
+                    <Typography variant="h4" fontWeight="bold">Promotional Command Center</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Design, schedule and manage promotional banners with animated themes
                     </Typography>
                 </Box>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={addNewBanner}
-                    sx={{ background: '#5B4CF2', '&:hover': { background: '#4F46E5' }, borderRadius: 3, textTransform: 'none', fontWeight: 700, px: 3, py: 1.2 }}>
-                    New Banner
+                <Button variant="contained" startIcon={<Add />} onClick={() => openEditDialog()}
+                    sx={{
+                        borderRadius: 2, px: 3, py: 1,
+                        background: 'linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)',
+                        '&:hover': { background: 'linear-gradient(135deg, #5A52E0 0%, #7A74FF 100%)' },
+                    }}>
+                    Create Banner
                 </Button>
             </Box>
 
             {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
             {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>{success}</Alert>}
 
-            <Divider sx={{ my: 3 }} />
+            {/* ═══ KPI Cards ═══ */}
+            <Grid container spacing={2} sx={{ mb: 4 }}>
+                {[
+                    { label: 'TOTAL BANNERS', value: totalBanners, icon: <ViewCarousel fontSize="small" />, color: '#6C63FF', sub: 'In your library' },
+                    { label: 'LIVE NOW', value: liveBanners, icon: <Campaign fontSize="small" />, color: '#10B981', sub: 'Active on customer page' },
+                    { label: 'SCHEDULED', value: scheduledBanners, icon: <Schedule fontSize="small" />, color: '#F59E0B', sub: 'Auto-publish campaigns' },
+                    { label: 'WITH CTA', value: withCTA, icon: <TouchApp fontSize="small" />, color: '#06B6D4', sub: 'Banners with action button' },
+                ].map(kpi => (
+                    <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
+                        <Card sx={{
+                            background: `linear-gradient(135deg, ${kpi.color}1F 0%, ${kpi.color}0A 100%)`,
+                            border: `1px solid ${kpi.color}26`,
+                        }}>
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                                    <Avatar sx={{ width: 36, height: 36, bgcolor: `${kpi.color}26`, color: kpi.color }}>
+                                        {kpi.icon}
+                                    </Avatar>
+                                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
+                                        {kpi.label}
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h4" fontWeight={800} sx={{ color: kpi.color }}>
+                                    {kpi.value}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748B' }}>{kpi.sub}</Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
 
+            {/* ═══ Banner Cards ═══ */}
             {loading && !banners.length ? (
-                <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
             ) : banners.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 8, background: '#F9FAFB', borderRadius: 4, border: '2px dashed #E5E7EB' }}>
-                    <PreviewIcon sx={{ fontSize: 64, color: '#D1D5DB', mb: 2 }} />
-                    <Typography sx={{ fontWeight: 700, color: '#374151' }}>No banners yet</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.9rem' }}>
-                        Click "New Banner" to create your first hero banner with animations!
+                <Box sx={{ textAlign: 'center', py: 10 }}>
+                    <ViewCarousel sx={{ fontSize: 64, color: '#334155', mb: 2 }} />
+                    <Typography color="text.secondary" sx={{ mb: 2 }}>
+                        No banners yet. Click "Create Banner" to design your first promotional hero banner.
                     </Typography>
                 </Box>
             ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {banners.map((banner) => (
+                banners.map(banner => {
+                    const isExpanded = expandedId === banner.id;
+                    const animInfo = ANIMATION_STYLES.find(s => s.value === banner.animation_style);
+
+                    return (
                         <Card key={banner.id} sx={{
-                            p: 3, borderRadius: 4,
-                            border: editingId === banner.id ? '2px solid #5B4CF2' : '1px solid #E5E7EB',
-                            boxShadow: editingId === banner.id ? '0 8px 25px rgba(91,76,242,0.15)' : '0 4px 6px -1px rgba(0,0,0,0.05)',
-                            transition: 'all 0.2s',
+                            mb: 2,
+                            border: isExpanded ? '1px solid rgba(108,99,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': { border: '1px solid rgba(108,99,255,0.2)' },
                         }}>
-                            {/* Status bar */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Chip label={banner.is_active ? '🟢 LIVE' : '⚫ Hidden'} size="small"
-                                        sx={{ fontWeight: 700, fontSize: '0.75rem', background: banner.is_active ? '#D1FAE5' : '#F3F4F6', color: banner.is_active ? '#065F46' : '#6B7280' }} />
-                                    <Chip label={`🎯 ${banner.banner_type === 'hero' ? 'Hero' : 'Promo'}`} size="small"
-                                        sx={{ fontWeight: 600, fontSize: '0.75rem', background: '#EEF2FF', color: '#4338CA' }} />
-                                    {banner.animation_style && (
-                                        <Chip label={ANIMATION_STYLES.find(s => s.value === banner.animation_style)?.label || banner.animation_style}
-                                            size="small" sx={{ fontWeight: 600, fontSize: '0.7rem', background: '#FEF3C7', color: '#92400E' }} />
-                                    )}
-                                    {banner.countdown_end && (
-                                        <Chip icon={<TimerIcon sx={{ fontSize: 14 }} />} label="Countdown" size="small"
-                                            sx={{ fontWeight: 600, fontSize: '0.7rem', background: '#FEE2E2', color: '#991B1B' }} />
-                                    )}
-                                    {(banner.schedule_start || banner.schedule_end) && (
-                                        <Chip label="📅" size="small"
-                                            sx={{ fontWeight: 600, fontSize: '0.7rem', background: '#DBEAFE', color: '#1E40AF' }} />
-                                    )}
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                {/* Banner Header */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                    {/* Gradient avatar showing banner color */}
+                                    <Avatar sx={{
+                                        width: 48, height: 48,
+                                        background: `linear-gradient(135deg, ${banner.gradient_start || '#5B4CF2'}, ${banner.gradient_end || '#7C3AED'})`,
+                                        fontWeight: 700, fontSize: '1.2rem',
+                                    }}>
+                                        {(banner.emoji_set && banner.emoji_set.length > 0) ? banner.emoji_set[0] : '🎯'}
+                                    </Avatar>
+                                    <Box sx={{ flexGrow: 1 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                                                {banner.title || 'Untitled Banner'}
+                                            </Typography>
+                                            <Chip
+                                                label={banner.is_active ? 'LIVE' : 'HIDDEN'}
+                                                size="small"
+                                                icon={banner.is_active ? <Visibility sx={{ fontSize: 14 }} /> : <VisibilityOff sx={{ fontSize: 14 }} />}
+                                                color={banner.is_active ? 'success' : 'default'}
+                                                sx={{ fontWeight: 'bold', cursor: 'pointer', height: 22, fontSize: '0.65rem' }}
+                                                onClick={() => toggleActive(banner)}
+                                            />
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.5, flexWrap: 'wrap' }}>
+                                            <Chip label={animInfo?.label || 'Particles'} size="small"
+                                                icon={<span style={{ fontSize: 12 }}>{animInfo?.icon || '✨'}</span>}
+                                                sx={{ height: 20, fontSize: '0.6rem', fontWeight: 600, bgcolor: `${animInfo?.color || '#6C63FF'}15`, color: animInfo?.color || '#6C63FF' }} />
+                                            {banner.cta_text && (
+                                                <Chip label={`CTA: ${banner.cta_text}`} size="small" icon={<TouchApp sx={{ fontSize: 12 }} />}
+                                                    sx={{ height: 20, fontSize: '0.6rem', fontWeight: 600, bgcolor: 'rgba(6,182,212,0.1)', color: '#06B6D4' }} />
+                                            )}
+                                            {banner.countdown_end && (
+                                                <Chip label="Countdown" size="small" icon={<Timer sx={{ fontSize: 12 }} />}
+                                                    sx={{ height: 20, fontSize: '0.6rem', fontWeight: 600, bgcolor: 'rgba(239,68,68,0.1)', color: '#EF4444' }} />
+                                            )}
+                                            {(banner.schedule_start || banner.schedule_end) && (
+                                                <Chip label="Scheduled" size="small" icon={<Schedule sx={{ fontSize: 12 }} />}
+                                                    sx={{ height: 20, fontSize: '0.6rem', fontWeight: 600, bgcolor: 'rgba(245,158,11,0.1)', color: '#F59E0B' }} />
+                                            )}
+                                            <Typography variant="caption" sx={{ color: '#475569' }}>
+                                                Created {new Date(banner.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Tooltip title="Live / Hidden">
+                                            <Switch checked={banner.is_active} onChange={() => toggleActive(banner)} size="small" color="success" />
+                                        </Tooltip>
+                                        <Tooltip title="Edit Banner">
+                                            <IconButton size="small" onClick={() => openEditDialog(banner)}
+                                                sx={{ color: '#94A3B8', '&:hover': { color: '#6C63FF', bgcolor: 'rgba(108,99,255,0.08)' } }}>
+                                                <Edit fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Delete">
+                                            <IconButton size="small" onClick={() => removeBanner(banner.id)}
+                                                sx={{ color: '#94A3B8', '&:hover': { color: '#EF4444', bgcolor: 'rgba(239,68,68,0.08)' } }}>
+                                                <Delete fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={isExpanded ? 'Collapse' : 'Preview'}>
+                                            <IconButton size="small"
+                                                onClick={() => setExpandedId(isExpanded ? null : banner.id)}
+                                                sx={{
+                                                    color: isExpanded ? '#6C63FF' : '#94A3B8',
+                                                    bgcolor: isExpanded ? 'rgba(108,99,255,0.1)' : 'transparent',
+                                                    '&:hover': { color: '#6C63FF', bgcolor: 'rgba(108,99,255,0.08)' },
+                                                }}>
+                                                {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
                                 </Box>
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Switch checked={banner.is_active} onChange={() => toggleActive(banner)} size="small" color="success" />
-                                    {editingId !== banner.id && (
-                                        <IconButton size="small" onClick={() => startEditing(banner)}
-                                            sx={{ color: '#5B4CF2', background: '#EEF2FF', '&:hover': { background: '#E0E7FF' } }}>
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                    )}
-                                    <IconButton size="small" onClick={() => removeBanner(banner.id)}
-                                        sx={{ color: '#EF4444', background: '#FEF2F2', '&:hover': { background: '#FEE2E2' } }}>
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                            </Box>
 
-                            {/* Preview */}
-                            {renderPreview(banner)}
+                                {/* Banner Details Grid (always visible compact stats) */}
+                                <Grid container spacing={1.5}>
+                                    {[
+                                        { label: 'Headline', value: banner.subtitle || '—', color: '#6C63FF' },
+                                        { label: 'Price/Highlight', value: banner.highlight_text || '—', color: '#FCD34D' },
+                                        { label: 'Tag', value: banner.tag_text || '—', color: '#10B981' },
+                                        { label: 'Offer', value: banner.offer_text ? (banner.offer_text.length > 30 ? banner.offer_text.slice(0, 30) + '…' : banner.offer_text) : '—', color: '#94A3B8' },
+                                    ].map(stat => (
+                                        <Grid size={{ xs: 6, sm: 3 }} key={stat.label}>
+                                            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${stat.color}08`, border: `1px solid ${stat.color}15`, textAlign: 'center' }}>
+                                                <Typography variant="body2" fontWeight={700} sx={{ color: stat.color, lineHeight: 1.2, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {stat.value}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.6rem' }}>
+                                                    {stat.label}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                                </Grid>
 
-                            {/* Edit Form */}
-                            {editingId === banner.id && renderEditForm(banner)}
+                                {/* Expandable Preview */}
+                                <Collapse in={isExpanded} timeout="auto">
+                                    <Box sx={{ mt: 3 }}>
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Visibility fontSize="small" sx={{ color: '#6C63FF' }} />
+                                            Live Preview
+                                        </Typography>
+                                        {renderPreview(banner)}
+
+                                        {/* Schedule info */}
+                                        {(banner.schedule_start || banner.schedule_end || banner.countdown_end) && (
+                                            <Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)' }}>
+                                                <Typography variant="caption" sx={{ color: '#F59E0B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                                                    <Schedule sx={{ fontSize: 14 }} /> Schedule Info
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                                                    {banner.schedule_start && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Publishes: {new Date(banner.schedule_start).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                        </Typography>
+                                                    )}
+                                                    {banner.schedule_end && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Hides: {new Date(banner.schedule_end).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                        </Typography>
+                                                    )}
+                                                    {banner.countdown_end && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Countdown until: {new Date(banner.countdown_end).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Collapse>
+                            </CardContent>
                         </Card>
-                    ))}
-                </Box>
+                    );
+                })
             )}
+
+            {/* ═══ EDIT / CREATE DIALOG ═══ */}
+            <Dialog
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                maxWidth="md" fullWidth
+                PaperProps={{ sx: { bgcolor: '#1A2235', borderRadius: 3, maxHeight: '90vh' } }}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+                    <Box>
+                        <Typography variant="h6" fontWeight={800}>
+                            {editingBannerId ? 'Edit Banner' : 'Create New Banner'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Design your promotional banner with animations and scheduling
+                        </Typography>
+                    </Box>
+                    <IconButton onClick={() => setEditDialogOpen(false)} sx={{ color: '#94A3B8' }}>
+                        <Close />
+                    </IconButton>
+                </DialogTitle>
+
+                <DialogContent dividers sx={{ pt: 3 }}>
+                    {/* Live Preview */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Visibility sx={{ fontSize: 18 }} /> Live Preview
+                    </Typography>
+                    {renderPreview(draft)}
+
+                    {/* ─── Festival Theme Presets ─── */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mt: 3, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Celebration sx={{ fontSize: 18 }} /> Festival Theme Presets
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+                        {Object.entries(FESTIVAL_PRESETS).map(([key, preset]) => (
+                            <Button key={key} size="small" onClick={() => applyPreset(key)}
+                                sx={{
+                                    borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
+                                    px: 2, py: 0.7,
+                                    background: `linear-gradient(135deg, ${preset.gradient_start}, ${preset.gradient_end})`,
+                                    color: '#FFF', border: '2px solid transparent',
+                                    '&:hover': { opacity: 0.9, transform: 'scale(1.03)', border: '2px solid rgba(255,255,255,0.3)' },
+                                    transition: 'all 0.2s ease',
+                                }}>
+                                {preset.icon} {preset.label}
+                            </Button>
+                        ))}
+                    </Box>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* ─── Content Section ─── */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Edit sx={{ fontSize: 18 }} /> Banner Content
+                    </Typography>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid size={{ xs: 12, md: 8 }}>
+                            <TextField label="Brand Title" size="small" fullWidth
+                                value={draft.title ?? ''} onChange={e => setDraft(p => ({ ...p, title: e.target.value }))}
+                                placeholder="JamesTronic Care" helperText="Last word gets accent color" />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField label="Tag Badge" size="small" fullWidth
+                                value={draft.tag_text ?? ''} onChange={e => setDraft(p => ({ ...p, tag_text: e.target.value }))}
+                                placeholder="10 MINS" />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 8 }}>
+                            <TextField label="Headline" size="small" fullWidth
+                                value={draft.subtitle ?? ''} onChange={e => setDraft(p => ({ ...p, subtitle: e.target.value }))}
+                                placeholder="Expert TV Repair at" />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField label="Price / Highlight" size="small" fullWidth
+                                value={draft.highlight_text ?? ''} onChange={e => setDraft(p => ({ ...p, highlight_text: e.target.value }))}
+                                placeholder="₹249*" />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField label="Offer Details" size="small" fullWidth
+                                value={draft.offer_text ?? ''} onChange={e => setDraft(p => ({ ...p, offer_text: e.target.value }))}
+                                placeholder="* Valid for first 3 bookings • Zero visitation fee" />
+                        </Grid>
+                    </Grid>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* ─── CTA Button ─── */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TouchApp sx={{ fontSize: 18 }} /> Call-to-Action Button
+                    </Typography>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField label="Button Text" size="small" fullWidth
+                                value={draft.cta_text ?? ''} onChange={e => setDraft(p => ({ ...p, cta_text: e.target.value }))}
+                                placeholder="Book Now" helperText="Leave empty to hide" />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField label="Button Link" size="small" fullWidth
+                                value={draft.cta_link ?? ''} onChange={e => setDraft(p => ({ ...p, cta_link: e.target.value }))}
+                                placeholder="/book" />
+                        </Grid>
+                    </Grid>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* ─── Animation & Colors ─── */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Palette sx={{ fontSize: 18 }} /> Animation & Colors
+                    </Typography>
+
+                    {/* Animation Style Visual Picker */}
+                    <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5, flexWrap: 'wrap' }}>
+                        {ANIMATION_STYLES.map(s => (
+                            <Box key={s.value} onClick={() => setDraft(p => ({ ...p, animation_style: s.value }))}
+                                sx={{
+                                    flex: '1 1 130px', p: 1.5, borderRadius: 2, cursor: 'pointer',
+                                    border: draft.animation_style === s.value ? `2px solid ${s.color}` : '2px solid rgba(255,255,255,0.06)',
+                                    bgcolor: draft.animation_style === s.value ? `${s.color}15` : 'rgba(15,23,42,0.5)',
+                                    transition: 'all 0.2s', textAlign: 'center',
+                                    '&:hover': { border: `2px solid ${s.color}80` },
+                                }}>
+                                <Typography sx={{ fontSize: 24, mb: 0.5 }}>{s.icon}</Typography>
+                                <Typography variant="body2" fontWeight={700} sx={{ color: draft.animation_style === s.value ? s.color : '#E2E8F0' }}>
+                                    {s.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.6rem' }}>{s.desc}</Typography>
+                            </Box>
+                        ))}
+                    </Box>
+
+                    {/* Emoji + Gradients */}
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField label="Floating Emojis" size="small" fullWidth
+                                value={(draft.emoji_set || []).join(' ')}
+                                onChange={e => setDraft(p => ({ ...p, emoji_set: e.target.value.split(/\s+/).filter(Boolean) }))}
+                                placeholder="🌙 ✨ 🕌" helperText="Space-separated" InputProps={{
+                                    startAdornment: <EmojiEmotions sx={{ color: '#94A3B8', mr: 1, fontSize: 20 }} />,
+                                }} />
+                        </Grid>
+                        <Grid size={{ xs: 6, md: 3 }}>
+                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, mb: 0.5, display: 'block' }}>Gradient Start</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', bgcolor: 'rgba(15,23,42,0.5)' }}>
+                                <input type="color" value={draft.gradient_start ?? '#5B4CF2'}
+                                    onChange={e => setDraft(p => ({ ...p, gradient_start: e.target.value }))}
+                                    style={{ width: 36, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
+                                <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#94A3B8' }}>{draft.gradient_start}</Typography>
+                            </Box>
+                        </Grid>
+                        <Grid size={{ xs: 6, md: 3 }}>
+                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, mb: 0.5, display: 'block' }}>Gradient End</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', bgcolor: 'rgba(15,23,42,0.5)' }}>
+                                <input type="color" value={draft.gradient_end ?? '#7C3AED'}
+                                    onChange={e => setDraft(p => ({ ...p, gradient_end: e.target.value }))}
+                                    style={{ width: 36, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
+                                <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#94A3B8' }}>{draft.gradient_end}</Typography>
+                            </Box>
+                        </Grid>
+                    </Grid>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* ─── Schedule & Countdown ─── */}
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Schedule sx={{ fontSize: 18 }} /> Schedule & Countdown
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField label="Auto-Publish" type="datetime-local" size="small" fullWidth
+                                value={draft.schedule_start ? new Date(draft.schedule_start).toISOString().slice(0, 16) : ''}
+                                onChange={e => setDraft(p => ({ ...p, schedule_start: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
+                                InputLabelProps={{ shrink: true }} helperText="Shows automatically" />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField label="Auto-Hide" type="datetime-local" size="small" fullWidth
+                                value={draft.schedule_end ? new Date(draft.schedule_end).toISOString().slice(0, 16) : ''}
+                                onChange={e => setDraft(p => ({ ...p, schedule_end: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
+                                InputLabelProps={{ shrink: true }} helperText="Hides automatically" />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField label="Countdown End" type="datetime-local" size="small" fullWidth
+                                value={draft.countdown_end ? new Date(draft.countdown_end).toISOString().slice(0, 16) : ''}
+                                onChange={e => setDraft(p => ({ ...p, countdown_end: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
+                                InputLabelProps={{ shrink: true }} helperText='"Offer ends in 2d 5h"' />
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+
+                <DialogActions sx={{ p: 2, pt: 1.5, gap: 1 }}>
+                    <Button onClick={() => setEditDialogOpen(false)} sx={{ color: 'text.secondary', textTransform: 'none' }}>
+                        Cancel
+                    </Button>
+                    <Button variant="contained" onClick={handleSave} disabled={saving}
+                        startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <Save />}
+                        sx={{
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' },
+                            borderRadius: 2, textTransform: 'none', fontWeight: 700, px: 3,
+                        }}>
+                        {saving ? 'Saving...' : editingBannerId ? 'Save Changes' : 'Create Banner'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
