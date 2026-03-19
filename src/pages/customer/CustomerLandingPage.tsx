@@ -80,7 +80,7 @@ const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }
                 <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.06))' }} />
             </Box>
 
-            {/* Premium Glassmorphic Badge */}
+            {/* Premium Glassmorphic Badge with Animated Wave */}
             {badgeText && (
                 <Box
                     sx={{
@@ -96,11 +96,31 @@ const AnimatedServiceIcon: React.FC<{ id: string; image: string; label: string }
                         fontSize: '0.65rem',
                         fontWeight: 900,
                         letterSpacing: '0.3px',
-                        boxShadow: `0 4px 12px ${shadowColor}, 0 2px 4px rgba(0,0,0,0.04)`,
                         zIndex: 10,
                         whiteSpace: 'nowrap',
                         backdropFilter: 'blur(12px)',
-                        fontFamily: "'Inter', sans-serif"
+                        fontFamily: "'Inter', sans-serif",
+                        overflow: 'hidden',
+                        animation: `shadowPulse_${id} 3s ease-in-out infinite`,
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: '-100%',
+                            width: '50%',
+                            height: '100%',
+                            background: `linear-gradient(90deg, transparent, ${shadowColor.replace('0.15', '0.5')}, transparent)`,
+                            transform: 'skewX(-20deg)',
+                            animation: `badgeWave_${id} 3s ease-in-out infinite`,
+                        },
+                        [`@keyframes shadowPulse_${id}`]: {
+                            '0%, 100%': { boxShadow: `0 4px 12px ${shadowColor}, 0 2px 4px rgba(0,0,0,0.04)` },
+                            '50%': { boxShadow: `0 6px 16px ${shadowColor.replace('0.15', '0.4')}, 0 2px 4px rgba(0,0,0,0.04)` }
+                        },
+                        [`@keyframes badgeWave_${id}`]: {
+                            '0%': { left: '-100%' },
+                            '25%, 100%': { left: '250%' }
+                        }
                     }}
                 >
                     {badgeText}
