@@ -28,7 +28,7 @@ import {
     ArrowForward as ArrowForwardIcon,
     Phone as PhoneIcon
 } from '@mui/icons-material';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 import AnimatedHeroBanner from '../../components/customer/AnimatedHeroBanner';
@@ -152,21 +152,23 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
     }, [open]);
 
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            fullScreen
-            sx={{ zIndex: 99999, '& .MuiDialog-container': { background: '#F9FAFB' } }} // Fills backdrop to prevent overscroll bleed
-            PaperProps={{
-                sx: {
-                    background: '#F9FAFB',
-                    display: 'flex', flexDirection: 'column',
-                    minHeight: '100dvh',
-                    overscrollBehavior: 'none', // Prevents iOS rubber-banding effect
-                }
-            }}
-            TransitionProps={{ timeout: 250 }}
-        >
+        <AnimatePresence>
+            {open && (
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 30 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    style={{
+                        position: 'fixed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        zIndex: 999999,
+                        background: '#F9FAFB',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overscrollBehavior: 'none',
+                    }}
+                >
             {/* Top Bar — Search Input with Dynamic Island Padding */}
             <Box sx={{ 
                 background: '#FFFFFF', px: 2, 
@@ -317,7 +319,9 @@ const SearchOverlay: React.FC<{ open: boolean; onClose: () => void; onSelect: (r
                     </Box>
                 )}
             </Box>
-        </Dialog>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 };
 
@@ -996,7 +1000,15 @@ const CustomerLandingPage: React.FC = () => {
     );
 
     return (
-        <Box sx={{ minHeight: '100dvh', background: '#FFFFFF', pb: '110px', overflowX: 'hidden', width: '100%', boxSizing: 'border-box', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
+        <Box sx={{ 
+            minHeight: '100dvh', background: '#FFFFFF', pb: '110px', 
+            overflowX: 'hidden', width: '100%', boxSizing: 'border-box', 
+            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+            ...(searchOpen && {
+                height: '100dvh',
+                overflow: 'hidden'
+            })
+        }}>
             <PWAInstallPrompt />
             <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} onSelect={(route) => navigate(route)} />
 
