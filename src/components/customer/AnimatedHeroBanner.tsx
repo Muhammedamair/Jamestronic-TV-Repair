@@ -243,6 +243,37 @@ const CountdownTimer: React.FC<{ endDate: string }> = ({ endDate }) => {
     );
 };
 
+// ─── Pulse Heartbeat ───
+const PulseHeartbeat: React.FC<{ color?: string }> = ({ color = 'rgba(255,255,255,0.15)' }) => (
+    <Box sx={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        background: `radial-gradient(circle at center, ${color} 0%, transparent 70%)`,
+        animation: 'heartPulse 2.5s ease-in-out infinite',
+        pointerEvents: 'none', mixBlendMode: 'screen',
+        '@keyframes heartPulse': {
+            '0%,100%': { transform: 'scale(1)', opacity: 0.5 },
+            '50%': { transform: 'scale(1.2)', opacity: 0.9 },
+            '70%': { transform: 'scale(1.05)', opacity: 0.7 },
+            '85%': { transform: 'scale(1.15)', opacity: 0.8 },
+        },
+    }} />
+);
+
+// ─── Premium Shimmer ───
+const PremiumShimmer: React.FC = () => (
+    <Box sx={{
+        position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+        transform: 'skewX(-20deg)',
+        animation: 'shimmerSweepAlt 4s infinite ease-in-out',
+        pointerEvents: 'none', mixBlendMode: 'overlay',
+        '@keyframes shimmerSweepAlt': {
+            '0%': { left: '-100%' },
+            '50%,100%': { left: '250%' },
+        },
+    }} />
+);
+
 
 // ═══════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -294,6 +325,8 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
         switch (animStyle) {
             case 'celebration': return <><CelebrationConfetti /><GlowingOrbs /><FloatingEmojis emojis={emojis} /></>;
             case 'aurora': return <><AuroraWaves /><FloatingEmojis emojis={emojis} /></>;
+            case 'pulse': return <><PulseHeartbeat /><FloatingEmojis emojis={emojis} /></>;
+            case 'shimmer': return <><PremiumShimmer /><FloatingEmojis emojis={emojis} /></>;
             case 'minimal': return <FloatingEmojis emojis={emojis} />;
             case 'particles':
             default: return <><FloatingParticles /><GlowingOrbs /><FloatingEmojis emojis={emojis} /></>;

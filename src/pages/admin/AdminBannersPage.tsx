@@ -9,8 +9,12 @@ import {
     Delete, Add, Save, Edit, Celebration, AutoAwesome, Timer,
     Visibility, VisibilityOff, ExpandMore, ExpandLess,
     Campaign, Schedule, TouchApp, Palette, EmojiEmotions,
-    ViewCarousel, TrendingUp, Close,
+    ViewCarousel, TrendingUp, Close, CheckCircle,
 } from '@mui/icons-material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import dayjs from 'dayjs';
 import { useBanners } from '../../hooks/useBanners';
 import { PromotionalBanner } from '../../types/database';
 
@@ -59,6 +63,30 @@ const FESTIVAL_PRESETS: Record<string, {
         emoji_set: ['☀️', '🔥', '⚡'], tag_text: 'SUMMER SALE',
         animation_style: 'aurora',
     },
+    holi: {
+        label: 'Holi', icon: '🎨',
+        gradient_start: '#EC4899', gradient_end: '#8B5CF6',
+        emoji_set: ['🎨', '✨', '🎉'], tag_text: 'HOLI SPL',
+        animation_style: 'celebration',
+    },
+    onam: {
+        label: 'Onam', icon: '🌸',
+        gradient_start: '#F59E0B', gradient_end: '#10B981',
+        emoji_set: ['🌸', '✨', '🌼'], tag_text: 'ONAM OFFER',
+        animation_style: 'celebration',
+    },
+    dussehra: {
+        label: 'Dussehra', icon: '🏹',
+        gradient_start: '#DC2626', gradient_end: '#F59E0B',
+        emoji_set: ['🏹', '✨', '🔥'], tag_text: 'DUSSEHRA SPL',
+        animation_style: 'celebration',
+    },
+    flash: {
+        label: 'Flash Sale', icon: '⚡',
+        gradient_start: '#000000', gradient_end: '#DC2626',
+        emoji_set: ['⚡', '🔥', '⏳'], tag_text: 'FLASH SALE',
+        animation_style: 'minimal',
+    },
     default: {
         label: 'JamesTronic', icon: '💜',
         gradient_start: '#5B4CF2', gradient_end: '#7C3AED',
@@ -71,7 +99,31 @@ const ANIMATION_STYLES = [
     { value: 'particles', label: 'Particles', icon: '✨', color: '#6C63FF', desc: 'Floating luminous dots — premium default' },
     { value: 'celebration', label: 'Celebration', icon: '🎉', color: '#F59E0B', desc: 'Confetti + sparkles — for festivals' },
     { value: 'aurora', label: 'Aurora', icon: '🌌', color: '#06B6D4', desc: 'Flowing color waves — luxury feel' },
+    { value: 'pulse', label: 'Pulse', icon: '💓', color: '#EC4899', desc: 'Gentle heartbeat breathing effect' },
+    { value: 'shimmer', label: 'Shimmer', icon: '🪄', color: '#8B5CF6', desc: 'Premium metallic diagonal light sweep' },
     { value: 'minimal', label: 'Minimal', icon: '⚡', color: '#10B981', desc: 'Clean gradient only — fastest load' },
+];
+
+const EMOJI_SUGGESTIONS = [
+    { label: 'Festive', emojis: '🎉 ✨ 🎊 🎈' },
+    { label: 'Urgent', emojis: '⚡ 🔥 ⏳ 🚨' },
+    { label: 'Premium', emojis: '⭐ 🌟 ✨ 💎' },
+    { label: 'Tools', emojis: '🔧 📺 🛠️ ⚙️' },
+    { label: 'Nature', emojis: '🌙 ☀️ 🌸 🌼' },
+    { label: 'Clear', emojis: '' },
+];
+
+const PREMIUM_GRADIENTS = [
+    { start: '#5B4CF2', end: '#7C3AED' }, // JamesTronic Default
+    { start: '#065F46', end: '#047857' }, // Emerald
+    { start: '#B45309', end: '#D97706' }, // Gold
+    { start: '#991B1B', end: '#166534' }, // Red/Green
+    { start: '#C2410C', end: '#059669' }, // Saffron/Green
+    { start: '#9333EA', end: '#DB2777' }, // Purple/Pink
+    { start: '#EC4899', end: '#8B5CF6' }, // Pink/Purple
+    { start: '#0EA5E9', end: '#3B82F6' }, // Ocean
+    { start: '#000000', end: '#434343' }, // Midnight Slate
+    { start: '#000000', end: '#DC2626' }, // Flash Red
 ];
 
 export const AdminBannersPage: React.FC = () => {
@@ -585,31 +637,78 @@ export const AdminBannersPage: React.FC = () => {
                     </Box>
 
                     {/* Emoji + Gradients */}
-                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid container spacing={3} sx={{ mb: 2 }}>
+                        {/* Left Column: Emojis */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField label="Floating Emojis" size="small" fullWidth
                                 value={(draft.emoji_set || []).join(' ')}
                                 onChange={e => setDraft(p => ({ ...p, emoji_set: e.target.value.split(/\s+/).filter(Boolean) }))}
-                                placeholder="🌙 ✨ 🕌" helperText="Space-separated" InputProps={{
+                                placeholder="🌙 ✨ 🕌" helperText="Space-separated emojis" InputProps={{
                                     startAdornment: <EmojiEmotions sx={{ color: '#94A3B8', mr: 1, fontSize: 20 }} />,
                                 }} />
-                        </Grid>
-                        <Grid size={{ xs: 6, md: 3 }}>
-                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, mb: 0.5, display: 'block' }}>Gradient Start</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', bgcolor: 'rgba(15,23,42,0.5)' }}>
-                                <input type="color" value={draft.gradient_start ?? '#5B4CF2'}
-                                    onChange={e => setDraft(p => ({ ...p, gradient_start: e.target.value }))}
-                                    style={{ width: 36, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
-                                <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#94A3B8' }}>{draft.gradient_start}</Typography>
+                            
+                            {/* Emoji Suggestions Array */}
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                                {EMOJI_SUGGESTIONS.map(sug => (
+                                    <Chip 
+                                        key={sug.label} 
+                                        label={sug.label === 'Clear' ? 'Clear' : sug.emojis} 
+                                        size="small" 
+                                        onClick={() => setDraft(p => ({ ...p, emoji_set: sug.emojis.split(' ').filter(Boolean) }))}
+                                        sx={{ 
+                                            bgcolor: 'rgba(255,255,255,0.05)', 
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: sug.label === 'Clear' ? '#94A3B8' : '#FFF',
+                                            cursor: 'pointer',
+                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                                        }}
+                                    />
+                                ))}
                             </Box>
                         </Grid>
-                        <Grid size={{ xs: 6, md: 3 }}>
-                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, mb: 0.5, display: 'block' }}>Gradient End</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', bgcolor: 'rgba(15,23,42,0.5)' }}>
-                                <input type="color" value={draft.gradient_end ?? '#7C3AED'}
-                                    onChange={e => setDraft(p => ({ ...p, gradient_end: e.target.value }))}
-                                    style={{ width: 36, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
-                                <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#94A3B8' }}>{draft.gradient_end}</Typography>
+
+                        {/* Right Column: Premium Gradients Array */}
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, mb: 1, display: 'block' }}>
+                                Premium Gradients Background
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 2 }}>
+                                {PREMIUM_GRADIENTS.map((grad, idx) => {
+                                    const isSelected = draft.gradient_start === grad.start && draft.gradient_end === grad.end;
+                                    return (
+                                        <Box 
+                                            key={idx}
+                                            onClick={() => setDraft(p => ({ ...p, gradient_start: grad.start, gradient_end: grad.end }))}
+                                            sx={{
+                                                width: 36, height: 36, borderRadius: '50%', cursor: 'pointer',
+                                                background: `linear-gradient(135deg, ${grad.start}, ${grad.end})`,
+                                                border: isSelected ? '2px solid #FFF' : '2px solid transparent',
+                                                boxShadow: isSelected ? '0 0 0 2px rgba(255,255,255,0.2)' : 'none',
+                                                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                                transition: 'transform 0.2s',
+                                                '&:hover': { transform: 'scale(1.15)' }
+                                            }}
+                                        >
+                                            {isSelected && <CheckCircle sx={{ color: '#FFF', fontSize: 18 }} />}
+                                        </Box>
+                                    );
+                                })}
+                            </Box>
+
+                            {/* Hex Fallback */}
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1, p: 0.5, borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', bgcolor: 'rgba(15,23,42,0.5)' }}>
+                                    <input type="color" value={draft.gradient_start ?? '#5B4CF2'}
+                                        onChange={e => setDraft(p => ({ ...p, gradient_start: e.target.value }))}
+                                        style={{ width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+                                    <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#94A3B8' }}>{draft.gradient_start}</Typography>
+                                </Box>
+                                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1, p: 0.5, borderRadius: 2, border: '1px solid rgba(255,255,255,0.06)', bgcolor: 'rgba(15,23,42,0.5)' }}>
+                                    <input type="color" value={draft.gradient_end ?? '#7C3AED'}
+                                        onChange={e => setDraft(p => ({ ...p, gradient_end: e.target.value }))}
+                                        style={{ width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }} />
+                                    <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#94A3B8' }}>{draft.gradient_end}</Typography>
+                                </Box>
                             </Box>
                         </Grid>
                     </Grid>
@@ -620,26 +719,41 @@ export const AdminBannersPage: React.FC = () => {
                     <Typography variant="subtitle2" color="primary" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Schedule sx={{ fontSize: 18 }} /> Schedule & Countdown
                     </Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <TextField label="Auto-Publish" type="datetime-local" size="small" fullWidth
-                                value={draft.schedule_start ? new Date(draft.schedule_start).toISOString().slice(0, 16) : ''}
-                                onChange={e => setDraft(p => ({ ...p, schedule_start: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                                InputLabelProps={{ shrink: true }} helperText="Shows automatically" />
+                    
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                                <DateTimePicker
+                                    label="Auto-Publish Date & Time"
+                                    value={draft.schedule_start ? dayjs(draft.schedule_start) : null}
+                                    onChange={(newValue) => setDraft(p => ({ ...p, schedule_start: newValue ? newValue.toISOString() : '' }))}
+                                    slotProps={{
+                                        textField: { size: "small", fullWidth: true, helperText: "Shows automatically" }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                                <DateTimePicker
+                                    label="Auto-Hide Date & Time"
+                                    value={draft.schedule_end ? dayjs(draft.schedule_end) : null}
+                                    onChange={(newValue) => setDraft(p => ({ ...p, schedule_end: newValue ? newValue.toISOString() : '' }))}
+                                    slotProps={{
+                                        textField: { size: "small", fullWidth: true, helperText: "Hides automatically" }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                                <DateTimePicker
+                                    label="Countdown Timer End"
+                                    value={draft.countdown_end ? dayjs(draft.countdown_end) : null}
+                                    onChange={(newValue) => setDraft(p => ({ ...p, countdown_end: newValue ? newValue.toISOString() : '' }))}
+                                    slotProps={{
+                                        textField: { size: "small", fullWidth: true, helperText: "\"Offer ends in 2d 5h\"" }
+                                    }}
+                                />
+                            </Grid>
                         </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <TextField label="Auto-Hide" type="datetime-local" size="small" fullWidth
-                                value={draft.schedule_end ? new Date(draft.schedule_end).toISOString().slice(0, 16) : ''}
-                                onChange={e => setDraft(p => ({ ...p, schedule_end: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                                InputLabelProps={{ shrink: true }} helperText="Hides automatically" />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <TextField label="Countdown End" type="datetime-local" size="small" fullWidth
-                                value={draft.countdown_end ? new Date(draft.countdown_end).toISOString().slice(0, 16) : ''}
-                                onChange={e => setDraft(p => ({ ...p, countdown_end: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                                InputLabelProps={{ shrink: true }} helperText='"Offer ends in 2d 5h"' />
-                        </Grid>
-                    </Grid>
+                    </LocalizationProvider>
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5, gap: 1 }}>
