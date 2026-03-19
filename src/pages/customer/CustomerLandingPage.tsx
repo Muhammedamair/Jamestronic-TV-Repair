@@ -799,9 +799,9 @@ const CustomerLandingPage: React.FC = () => {
                     display: 'grid', 
                     gridTemplateRows: 'repeat(2, 1fr)', 
                     gridAutoFlow: 'column',
-                    gridAutoColumns: { xs: '88px', sm: '110px' }, // Force compact column width
-                    columnGap: { xs: 2, sm: 3 }, 
-                    rowGap: { xs: 2.5, sm: 3 },
+                    gridAutoColumns: { xs: '115px', sm: '135px' }, // Scale up columns
+                    columnGap: { xs: 2.5, sm: 3 }, 
+                    rowGap: { xs: 3.5, sm: 4 },
                     px: 1,
                     pb: 3, 
                     overflowX: 'auto', 
@@ -831,8 +831,8 @@ const CustomerLandingPage: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{
-                                    width: { xs: '76px', sm: '100px' },
-                                    height: { xs: '76px', sm: '100px' },
+                                    width: { xs: '105px', sm: '125px' }, // Scaled up premium icons
+                                    height: { xs: '105px', sm: '125px' }, // Scaled up premium icons
                                     background: 'linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%)',
                                     borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -844,8 +844,8 @@ const CustomerLandingPage: React.FC = () => {
                                     <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
                                 </Box>
                                 <Typography sx={{
-                                    color: '#374151', fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                                    fontWeight: 700, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.2px',
+                                    color: '#374151', fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                    fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.2px',
                                     wordWrap: 'break-word', width: '100%'
                                 }}>
                                     {svc.label}
