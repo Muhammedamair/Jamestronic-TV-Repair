@@ -45,6 +45,7 @@ export const AdminServiceUpdatesPage: React.FC = () => {
     const [draft, setDraft] = useState<Partial<ServiceUpdate>>({});
     const [imageUrl, setImageUrl] = useState('');
     const [areaInput, setAreaInput] = useState('');
+    const [uploading, setUploading] = useState(false);
 
     const loadPosts = useCallback(async () => {
         setLoading(true);
@@ -112,10 +113,32 @@ export const AdminServiceUpdatesPage: React.FC = () => {
         loadPosts();
     };
 
-    const addImage = () => {
-        if (!imageUrl.trim()) return;
-        setDraft(p => ({ ...p, images: [...(p.images || []), imageUrl.trim()] }));
-        setImageUrl('');
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        setUploading(true);
+        try {
+            const file = e.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+            const filePath = `updates/${fileName}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('service-updates')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('service-updates')
+                .getPublicUrl(filePath);
+
+            setDraft(p => ({ ...p, images: [...(p.images || []), data.publicUrl] }));
+        } catch (err: any) {
+            setError(err.message || 'Error uploading image');
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
     };
 
     const removeImage = (idx: number) => {
@@ -300,8 +323,9 @@ export const AdminServiceUpdatesPage: React.FC = () => {
                     <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
 
                     {/* Images */}
+                    {/* Images */}
                     <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, mb: 1, display: 'block' }}>📸 Images</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                         {(draft.images || []).map((img, i) => (
                             <Box key={i} sx={{ position: 'relative', width: 80, height: 60, borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
                                 <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -312,13 +336,14 @@ export const AdminServiceUpdatesPage: React.FC = () => {
                             </Box>
                         ))}
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                        <TextField size="small" fullWidth placeholder="Paste image URL"
-                            value={imageUrl} onChange={e => setImageUrl(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && addImage()}
-                            sx={{ '& .MuiOutlinedInput-root': { color: '#E2E8F0', fontSize: '0.85rem' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' } }} />
-                        <Button variant="outlined" size="small" onClick={addImage} sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'rgba(108,99,255,0.3)', color: '#6C63FF' }}>
-                            Add
+                    <Box sx={{ mb: 2 }}>
+                        <Button
+                            variant="outlined" component="label" disabled={uploading}
+                            sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'rgba(108,99,255,0.3)', color: '#6C63FF', borderStyle: 'dashed' }}
+                        >
+                            {uploading ? <CircularProgress size={20} sx={{ mr: 1, color: '#6C63FF' }} /> : <ImageIcon sx={{ mr: 1, fontSize: 18 }} />}
+                            {uploading ? 'Uploading...' : 'Upload Image'}
+                            <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
                         </Button>
                     </Box>
 

@@ -10,6 +10,7 @@ import {
     CheckCircle as CheckCircleIcon,
     ShoppingBag as ShopIcon,
     Close as CloseIcon,
+    Image as ImageIcon,
     MyLocation as MyLocationIcon,
     AddLocationAlt as AddLocationIcon,
     Home as HomeIcon,
@@ -1191,17 +1192,25 @@ const CustomerLandingPage: React.FC = () => {
                 </motion.div>
             </Container>
 
-            {/* ════ 4. EXPLORE ALL SERVICES — PREMIUM SLIDABLE CARDS ════ */}
+            {/* ════ 4. EXPLORE ALL SERVICES — PREMIUM PUZZLE BLOCK ════ */}
             <Container maxWidth="sm" sx={{ mt: 4 }}>
-                <motion.div
-                    initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
-                >
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#111827', mb: 2.5, letterSpacing: '-0.3px', px: 1 }}>
-                        Explore all services
-                    </Typography>
-                </motion.div>
+                <Card sx={{
+                    background: '#FFFFFF', // Forces light mode surface
+                    borderRadius: '32px',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+                    overflow: 'hidden',
+                }}>
+                    <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+                        <motion.div
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
+                        >
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2, letterSpacing: '-0.3px' }}>
+                                Explore all services
+                            </Typography>
+                        </motion.div>
 
                 <Box sx={{ 
                     display: 'grid', 
@@ -1211,7 +1220,7 @@ const CustomerLandingPage: React.FC = () => {
                     columnGap: { xs: 1.5, sm: 2.5 }, 
                     rowGap: { xs: 3, sm: 4 },
                     px: 1,
-                    pb: 3, 
+                    pb: 1, 
                     overflowX: 'auto', 
                     scrollSnapType: 'x mandatory',
                     scrollPaddingLeft: '8px',
@@ -1264,7 +1273,9 @@ const CustomerLandingPage: React.FC = () => {
                         </motion.div>
                     ))}
                 </Box>
-            </Container>
+            </Box>
+        </Card>
+    </Container>
 
             {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
             <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
@@ -1372,103 +1383,91 @@ const CustomerLandingPage: React.FC = () => {
                                 <Chip label="Live" size="small" sx={{ background: '#D1FAE5', color: '#065F46', fontWeight: 700, fontSize: '0.65rem' }} icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', ml: 1, animation: 'livePulse 2s infinite', '@keyframes livePulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />} />
                             </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {serviceUpdates.map((post, i) => (
-                                <motion.div key={post.id}
-                                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.35, delay: i * 0.08 }}
-                                >
-                                    <Card sx={{
-                                            background: '#F9FAFB', // Explicit light color for inner cards
-                                            borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)',
-                                            boxShadow: 'none',
-                                        transition: 'all 0.2s',
-                                        '&:active': { transform: 'scale(0.99)' },
-                                    }}>
-                                        {/* Post Image */}
-                                        {post.images && post.images.length > 0 && (
-                                            <Box sx={{ position: 'relative', height: 180, overflow: 'hidden' }}>
-                                                <img src={post.images[0]} alt={post.title}
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <Box sx={{
-                                                    position: 'absolute', top: 8, left: 8,
-                                                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
-                                                    color: '#FFF', px: 1, py: 0.3, borderRadius: 1.5,
-                                                    fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                                                }}>
-                                                    📍 {post.service_area || 'Hyderabad'}
+                            <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+                                {serviceUpdates.map((post, i) => (
+                                    <motion.div key={post.id}
+                                        initial={shouldReduce ? false : { opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.35, delay: i * 0.08 }}
+                                        style={{ minWidth: 260, maxWidth: 280, flexShrink: 0 }}
+                                    >
+                                        <Card sx={{
+                                            background: '#202124', // Perfect Google Dark Theme Gray
+                                            borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)',
+                                            display: 'flex', flexDirection: 'column', height: '100%',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                            color: '#E8EAED',
+                                            transition: 'all 0.2s',
+                                            '&:active': { transform: 'scale(0.99)' },
+                                        }}>
+                                            {/* Post Image */}
+                                            {post.images && post.images.length > 0 ? (
+                                                <Box sx={{ position: 'relative', height: 160, width: '100%', overflow: 'hidden' }}>
+                                                    <img src={post.images[0]} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <Box sx={{ 
+                                                        position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                                                        borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                                                    }}>
+                                                        <ImageIcon sx={{ fontSize: 13, color: '#FFF' }} />
+                                                    </Box>
                                                 </Box>
-                                                <Box sx={{
-                                                    position: 'absolute', top: 8, right: 8,
-                                                    background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(6px)',
-                                                    px: 1, py: 0.3, borderRadius: 1.5,
-                                                    fontSize: '0.6rem', fontWeight: 700, color: '#6B7280',
-                                                }}>
-                                                    {relativeTime(post.created_at)}
-                                                </Box>
-                                            </Box>
-                                        )}
-                                        {/* Post Content */}
-                                        <Box sx={{ p: 2 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                                <Avatar sx={{ width: 28, height: 28, background: '#000', fontSize: '0.65rem', fontWeight: 900 }}>JT</Avatar>
-                                                <Box>
-                                                    <Typography sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#111827', lineHeight: 1 }}>JamesTronic</Typography>
-                                                    <Typography sx={{ fontSize: '0.6rem', color: '#9CA3AF' }}>
-                                                        {!post.images?.length && relativeTime(post.created_at)}
-                                                        {post.images?.length ? 'Verified Service' : ''}
-                                                    </Typography>
-                                                </Box>
-                                                <Chip label={post.post_type === 'offer' ? 'Offer' : post.post_type === 'event' ? 'Event' : 'Update'}
-                                                    size="small" sx={{
-                                                        ml: 'auto', height: 20, fontSize: '0.6rem', fontWeight: 700,
-                                                        background: post.post_type === 'offer' ? '#FEF3C7' : post.post_type === 'event' ? '#EDE9FE' : '#DBEAFE',
-                                                        color: post.post_type === 'offer' ? '#92400E' : post.post_type === 'event' ? '#5B21B6' : '#1E40AF',
-                                                    }} />
-                                            </Box>
-                                            <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#111827', mb: 0.5, lineHeight: 1.3 }}>
-                                                {post.title}
-                                            </Typography>
-                                            <Typography sx={{
-                                                fontSize: '0.78rem', color: '#4B5563', fontWeight: 500, lineHeight: 1.5,
-                                                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                                            }}>
-                                                {post.description}
-                                            </Typography>
-                                            {/* Area Tags */}
-                                            {post.area_tags && post.area_tags.length > 0 && (
-                                                <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
-                                                    {post.area_tags.slice(0, 4).map(tag => (
-                                                        <Chip key={tag} label={tag} size="small" sx={{
-                                                            height: 20, fontSize: '0.55rem', fontWeight: 600,
-                                                            background: '#F3F4F6', color: '#6B7280'
-                                                        }} />
-                                                    ))}
+                                            ) : (
+                                                <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1, background: '#303134', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <Avatar sx={{ width: 32, height: 32, background: '#000', fontSize: '0.7rem', fontWeight: 900 }}>JT</Avatar>
+                                                    <Box>
+                                                        <Typography sx={{ fontWeight: 700, fontSize: '0.8rem', color: '#E8EAED', lineHeight: 1 }}>JamesTronic</Typography>
+                                                        <Typography sx={{ fontSize: '0.65rem', color: '#9AA0A6' }}>{relativeTime(post.created_at)}</Typography>
+                                                    </Box>
+                                                    <Chip label="Update" size="small" sx={{ ml: 'auto', height: 20, fontSize: '0.6rem', fontWeight: 700, background: '#D2E3FC', color: '#174EA6' }} />
                                                 </Box>
                                             )}
-                                            {/* CTA */}
-                                            {post.cta_type && (
-                                                <Button
-                                                    size="small"
-                                                    onClick={() => {
-                                                        if (post.cta_type === 'call_now') window.location.href = 'tel:09052222901';
-                                                        else navigate(post.cta_link || '/book');
-                                                    }}
-                                                    startIcon={post.cta_type === 'call_now' ? <PhoneIcon sx={{ fontSize: 14 }} /> : <ArrowForwardIcon sx={{ fontSize: 14 }} />}
-                                                    sx={{
-                                                        mt: 1.5, textTransform: 'none', fontWeight: 700, fontSize: '0.75rem',
-                                                        color: '#2563EB', borderRadius: 2,
-                                                        '&:hover': { background: '#EFF6FF' },
-                                                    }}
-                                                >
-                                                    {post.cta_type === 'call_now' ? 'Call Now' : post.cta_type === 'book_now' ? 'Book Now' : 'Learn More'}
-                                                </Button>
-                                            )}
-                                        </Box>
-                                    </Card>
-                                </motion.div>
-                            ))}
+
+                                            {/* Post Content */}
+                                            <Box sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                                <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#E8EAED', mb: 0.5, lineHeight: 1.3 }}>
+                                                    📍 {post.title}
+                                                </Typography>
+                                                <Typography sx={{
+                                                    fontSize: '0.8rem', color: '#9AA0A6', lineHeight: 1.5, mb: 1,
+                                                    display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                                }}>
+                                                    {post.description}
+                                                </Typography>
+                                                
+                                                {/* Area Tags */}
+                                                {post.area_tags && post.area_tags.length > 0 && (
+                                                    <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
+                                                        {post.area_tags.slice(0, 3).map(tag => (
+                                                            <Chip key={tag} label={tag} size="small" sx={{ height: 18, fontSize: '0.55rem', fontWeight: 600, background: '#303134', color: '#9AA0A6' }} />
+                                                        ))}
+                                                    </Box>
+                                                )}
+
+                                                <Typography sx={{ fontSize: '0.7rem', color: '#9AA0A6', mb: 1, fontWeight: 500 }}>
+                                                    {post.images && post.images.length > 0 ? relativeTime(post.created_at) : ''}
+                                                </Typography>
+
+                                                {/* CTA */}
+                                                <Box sx={{ mt: 'auto', pt: 0.5 }}>
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => {
+                                                            if (post.cta_type === 'call_now') window.location.href = 'tel:09052222901';
+                                                            else navigate(post.cta_link || '/book');
+                                                        }}
+                                                        sx={{
+                                                            textTransform: 'none', fontWeight: 700, fontSize: '0.85rem',
+                                                            color: '#8AB4F8', p: 0, minWidth: 'auto',
+                                                            '&:hover': { background: 'transparent', color: '#A8C7FA', textDecoration: 'underline' }
+                                                        }}
+                                                    >
+                                                        {post.cta_type === 'call_now' ? 'Call now' : post.cta_type === 'book_now' ? 'Book Now' : 'Learn more'}
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        </Card>
+                                    </motion.div>
+                                ))}
                             </Box>
                         </Box>
                     )}
