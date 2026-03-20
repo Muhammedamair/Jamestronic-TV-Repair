@@ -1622,20 +1622,50 @@ const CustomerLandingPage: React.FC = () => {
                                 {selectedUpdate.title}
                             </Typography>
                             
-                            {/* Area Tags (Updated styling to pop more) */}
-                            {selectedUpdate.area_tags && selectedUpdate.area_tags.length > 0 && (
-                                <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-                                    {selectedUpdate.area_tags.map((tag, idx) => (
-                                        <Chip key={tag} icon={idx === 0 ? <LocationIcon sx={{ fontSize: '0.9rem !important' }} /> : undefined} label={tag} size="small" sx={{ fontWeight: 600, background: '#202124', color: '#E8EAED', border: '1px solid #303134' }} />
-                                    ))}
-                                </Box>
-                            )}
+                            {/* Fast-Action Top CTA Button (Convenience for readers before scrolling) */}
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    if (selectedUpdate.cta_type === 'call_now') window.location.href = 'tel:09052222901';
+                                    else navigate(selectedUpdate.cta_link || '/book');
+                                }}
+                                startIcon={selectedUpdate.cta_type === 'call_now' ? <PhoneIcon /> : undefined}
+                                sx={{
+                                    mb: 3,
+                                    py: 1, px: 2.5,
+                                    borderRadius: '12px', 
+                                    textTransform: 'none', 
+                                    fontWeight: 700, 
+                                    fontSize: '0.95rem',
+                                    background: 'rgba(66, 133, 244, 0.15)', 
+                                    color: '#8AB4F8',
+                                    border: '1px solid rgba(138, 180, 248, 0.3)',
+                                    '&:hover': { background: 'rgba(66, 133, 244, 0.25)' },
+                                    display: 'inline-flex',
+                                }}
+                            >
+                                {selectedUpdate.cta_type === 'call_now' ? 'Call Now' : selectedUpdate.cta_type === 'book_now' ? 'Book Service' : 'Learn More'}
+                            </Button>
                             
                             <Typography sx={{ fontSize: '1.05rem', color: '#E8EAED', lineHeight: 1.7, whiteSpace: 'pre-wrap', mb: 4, letterSpacing: '0.01em' }}>
                                 {selectedUpdate.description}
                             </Typography>
                             
                             <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 3 }} />
+
+                            {/* Area Tags (Moved to bottom so they don't break the description flow) */}
+                            {selectedUpdate.area_tags && selectedUpdate.area_tags.length > 0 && (
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography sx={{ fontSize: '0.85rem', color: '#9AA0A6', mb: 1.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        Service Areas
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                        {selectedUpdate.area_tags.map((tag, idx) => (
+                                            <Chip key={tag} icon={idx === 0 ? <LocationIcon sx={{ fontSize: '0.9rem !important' }} /> : undefined} label={tag} size="small" sx={{ fontWeight: 600, background: '#202124', color: '#E8EAED', border: '1px solid #303134' }} />
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
 
                             {selectedUpdate.images && selectedUpdate.images.length > 0 && (
                                 <Typography sx={{ fontSize: '0.85rem', color: '#9AA0A6', mb: 3, fontWeight: 500 }}>
