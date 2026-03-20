@@ -1308,27 +1308,46 @@ const CustomerLandingPage: React.FC = () => {
                         </Box>
                     )}
 
-                    {/* Bottom Half: Service Areas */}
-                    <Box sx={{
-                        background: 'linear-gradient(135deg, #F9FAFB 0%, #F4F5F7 100%)',
-                        borderTop: '1px solid rgba(0,0,0,0.04)',
-                        p: { xs: 2.5, sm: 3 },
-                    }}>
-                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>📍 We serve across Hyderabad</Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
-                            {SERVICE_AREAS.map(area => (
-                                <Chip key={area} label={area} size="small"
-                                    sx={{
-                                        fontWeight: 600, fontSize: '0.75rem', height: 28,
-                                        background: '#FFFFFF', color: '#111827',
-                                        border: '1px solid rgba(0,0,0,0.05)',
-                                        '&:hover': { background: '#F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
-                                    }}
-                                />
-                            ))}
-                        </Box>
-                    </Box>
                 </Card>
+            </Container>
+
+            {/* ════ INFINITE SCROLLING SERVICE AREAS MARQUEE ════ */}
+            <Box sx={{ 
+                width: '100%', overflow: 'hidden', pt: 3.5, pb: 4, 
+                background: '#FFFFFF', 
+                position: 'relative',
+                // Adding beautiful fade edges using a CSS mask
+                WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+                maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)'
+            }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#111827', mb: 2, textAlign: 'center', letterSpacing: '-0.3px' }}>
+                    📍 We proudly serve across Hyderabad
+                </Typography>
+
+                {/* ROW 1: Scrolling Left */}
+                <Box sx={{ 
+                    display: 'flex', gap: 1.5, mb: 1.5, width: 'max-content', 
+                    animation: 'scroll-left 40s linear infinite',
+                    '@keyframes scroll-left': { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(calc(-50% - 6px))' } },
+                    '&:hover': { animationPlayState: 'paused' }
+                }}>
+                    {[...SERVICE_AREAS, ...SERVICE_AREAS].map((area, idx) => (
+                        <Chip key={`r1-${idx}`} label={area} size="medium" sx={{ fontWeight: 700, px: 1.5, fontSize: '0.85rem', height: 36, background: '#F8F9FA', color: '#3C4043', border: '1px solid rgba(0,0,0,0.06)' }} />
+                    ))}
+                </Box>
+
+                {/* ROW 2: Scrolling Right */}
+                <Box sx={{ 
+                    display: 'flex', gap: 1.5, width: 'max-content', 
+                    animation: 'scroll-right 35s linear infinite',
+                    '@keyframes scroll-right': { '0%': { transform: 'translateX(calc(-50% - 6px))' }, '100%': { transform: 'translateX(0)' } },
+                    '&:hover': { animationPlayState: 'paused' }
+                }}>
+                    {[...[...SERVICE_AREAS].reverse(), ...[...SERVICE_AREAS].reverse()].map((area, idx) => (
+                        <Chip key={`r2-${idx}`} label={area} icon={<VerifiedIcon sx={{ color: '#34A853 !important', fontSize: '1rem !important' }}/>} size="medium" sx={{ fontWeight: 700, px: 1, fontSize: '0.85rem', height: 36, background: '#FFFFFF', color: '#111827', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }} />
+                    ))}
+                </Box>
+            </Box>
 
             {/* ════ 4. EXPLORE ALL SERVICES — PREMIUM PUZZLE BLOCK ════ */}
             <Container maxWidth="sm" sx={{ mt: 4 }}>
@@ -1499,8 +1518,6 @@ const CustomerLandingPage: React.FC = () => {
                         </Box>
                     </Card>
                 </motion.div>
-            </Container>
-
             </Container>
 
             {/* ════ BOTTOM NAVIGATION BAR — FIXED ════ */}
