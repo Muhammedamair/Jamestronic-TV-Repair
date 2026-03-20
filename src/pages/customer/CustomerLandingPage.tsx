@@ -1596,8 +1596,8 @@ const CustomerLandingPage: React.FC = () => {
                                             filter: 'blur(15px)', opacity: 0.5, zIndex: 0
                                         }} />
                                         
-                                        {/* Actual Image (100% visible, never cropped) */}
-                                        <img src={img} alt={`Update ${idx + 1}`} style={{ position: 'relative', zIndex: 1, maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                        {/* Actual Image (Strict fit to guarantee 100% visibility) */}
+                                        <img src={img} alt={`Update ${idx + 1}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', zIndex: 1 }} />
                                     </Box>
                                 ))}
                             </Box>
