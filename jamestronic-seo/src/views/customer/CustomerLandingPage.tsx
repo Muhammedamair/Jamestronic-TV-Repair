@@ -1257,7 +1257,7 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
                                                     <Avatar sx={{ width: 32, height: 32, background: '#000', fontSize: '0.7rem', fontWeight: 900 }}>JT</Avatar>
                                                     <Box>
                                                         <Typography sx={{ fontWeight: 700, fontSize: '0.8rem', color: '#E8EAED', lineHeight: 1 }}>JamesTronic</Typography>
-                                                        <Typography sx={{ fontSize: '0.65rem', color: '#9AA0A6' }}>{relativeTime(post.created_at)}</Typography>
+                                                        <Typography suppressHydrationWarning sx={{ fontSize: '0.65rem', color: '#9AA0A6' }}>{relativeTime(post.created_at)}</Typography>
                                                     </Box>
                                                     <Chip label="Update" size="small" sx={{ ml: 'auto', height: 20, fontSize: '0.6rem', fontWeight: 700, background: '#D2E3FC', color: '#174EA6' }} />
                                                 </Box>
@@ -1284,7 +1284,7 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
                                                     </Box>
                                                 )}
 
-                                                <Typography sx={{ fontSize: '0.7rem', color: '#9AA0A6', mb: 1, fontWeight: 500 }}>
+                                                <Typography suppressHydrationWarning sx={{ fontSize: '0.7rem', color: '#9AA0A6', mb: 1, fontWeight: 500 }}>
                                                     {post.images && post.images.length > 0 ? relativeTime(post.created_at) : ''}
                                                 </Typography>
 
@@ -1627,7 +1627,7 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
                                     <Avatar sx={{ width: 44, height: 44, background: '#000', fontSize: '1rem', fontWeight: 900 }}>JT</Avatar>
                                     <Box>
                                         <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#E8EAED', lineHeight: 1 }}>JamesTronic</Typography>
-                                        <Typography sx={{ fontSize: '0.8rem', color: '#9AA0A6', mt: 0.5 }}>{relativeTime(selectedUpdate.created_at)}</Typography>
+                                        <Typography suppressHydrationWarning sx={{ fontSize: '0.8rem', color: '#9AA0A6', mt: 0.5 }}>{relativeTime(selectedUpdate.created_at)}</Typography>
                                     </Box>
                                 </Box>
                             )}
