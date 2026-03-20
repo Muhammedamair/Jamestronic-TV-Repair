@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: #111827;
+  background-color: #F9FAFB;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+}
+
+a {
+  color: #00D9FF;
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 99, 255, 0.5);
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(108, 99, 255, 0.3);
+  color: #F1F5F9;
+}
+
+/* Remove autofill background */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #111827 inset !important;
+  -webkit-text-fill-color: #F1F5F9 !important;
+}
+
+/* ========================================================
+   Landing Page Banner Swiper Overrides
+   Makes the pagination dots look modern and premium
+   ======================================================== */
+.swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.4) !important;
+    opacity: 1 !important;
+    width: 6px !important;
+    height: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.swiper-pagination-bullet-active {
+    background: #FFF !important;
+    width: 16px !important;
+    border-radius: 4px !important;
+}
