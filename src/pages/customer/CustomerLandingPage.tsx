@@ -1206,7 +1206,7 @@ const CustomerLandingPage: React.FC = () => {
                 }}>
                     {/* Top Half: Service Updates Feed */}
                     {serviceUpdates.length > 0 && (
-                        <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+                        <Box sx={{ p: { xs: 2.5, sm: 3 }, pb: { xs: 1, sm: 1.5 } }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                                 <Box>
                                     <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', letterSpacing: '-0.3px' }}>Recent Work & Updates</Typography>
@@ -1215,7 +1215,7 @@ const CustomerLandingPage: React.FC = () => {
                                 <Chip label="Live" size="small" sx={{ background: '#D1FAE5', color: '#065F46', fontWeight: 700, fontSize: '0.65rem' }} icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', ml: 1, animation: 'livePulse 2s infinite', '@keyframes livePulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />} />
                             </Box>
 
-                            <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+                            <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
                                 {serviceUpdates.map((post, i) => (
                                     <motion.div key={post.id}
                                         initial={shouldReduce ? false : { opacity: 0, x: 20 }}
@@ -1313,14 +1313,14 @@ const CustomerLandingPage: React.FC = () => {
 
             {/* ════ INFINITE SCROLLING SERVICE AREAS MARQUEE ════ */}
             <Box sx={{ 
-                width: '100%', overflow: 'hidden', pt: 3.5, pb: 4, 
+                width: '100%', overflow: 'hidden', pt: 1, pb: 2, 
                 background: '#FFFFFF', 
                 position: 'relative',
                 // Adding beautiful fade edges using a CSS mask
                 WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
                 maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)'
             }}>
-                <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#111827', mb: 2, textAlign: 'center', letterSpacing: '-0.3px' }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#111827', mb: 1, textAlign: 'center', letterSpacing: '-0.3px' }}>
                     📍 We proudly serve across Hyderabad
                 </Typography>
 
@@ -1350,7 +1350,7 @@ const CustomerLandingPage: React.FC = () => {
             </Box>
 
             {/* ════ 4. EXPLORE ALL SERVICES — PREMIUM PUZZLE BLOCK ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4 }}>
+            <Container maxWidth="sm" sx={{ mt: 1.5 }}>
                 <Card sx={{
                     background: '#FFFFFF', // Forces light mode surface
                     borderRadius: '32px',
@@ -1435,7 +1435,7 @@ const CustomerLandingPage: React.FC = () => {
     </Container>
 
             {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4, mb: 12 }}>
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 10 }}>
                 <motion.div
                     initial={shouldReduce ? false : { opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
