@@ -1584,8 +1584,20 @@ const CustomerLandingPage: React.FC = () => {
                                 '&::-webkit-scrollbar': { display: 'none' } 
                             }}>
                                 {selectedUpdate.images.map((img, idx) => (
-                                    <Box key={idx} sx={{ minWidth: '100%', scrollSnapAlign: 'start', position: 'relative', pt: '75%' }}>
-                                        <img src={img} alt={`Update ${idx + 1}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <Box key={idx} sx={{ 
+                                        minWidth: '100%', scrollSnapAlign: 'start', position: 'relative', 
+                                        height: { xs: 350, sm: 450 }, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        overflow: 'hidden', background: '#000'
+                                    }}>
+                                        {/* Blurred Background Layer (Fill empty space gracefully) */}
+                                        <Box sx={{ 
+                                            position: 'absolute', top: -20, left: -20, right: -20, bottom: -20,
+                                            backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                                            filter: 'blur(15px)', opacity: 0.5, zIndex: 0
+                                        }} />
+                                        
+                                        {/* Actual Image (100% visible, never cropped) */}
+                                        <img src={img} alt={`Update ${idx + 1}`} style={{ position: 'relative', zIndex: 1, maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                                     </Box>
                                 ))}
                             </Box>
