@@ -1332,7 +1332,7 @@ const CustomerLandingPage: React.FC = () => {
                     '&:hover': { animationPlayState: 'paused' }
                 }}>
                     {[...SERVICE_AREAS, ...SERVICE_AREAS].map((area, idx) => (
-                        <Chip key={`r1-${idx}`} label={area} size="medium" sx={{ fontWeight: 700, px: 1.5, fontSize: '0.85rem', height: 36, background: '#F8F9FA', color: '#3C4043', border: '1px solid rgba(0,0,0,0.06)' }} />
+                        <Chip key={`r1-${idx}`} label={area} icon={<VerifiedIcon sx={{ color: '#34A853 !important', fontSize: '1rem !important' }}/>} size="medium" sx={{ fontWeight: 700, px: 1, fontSize: '0.85rem', height: 36, background: '#F8F9FA', color: '#111827', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }} />
                     ))}
                 </Box>
 
@@ -1435,7 +1435,7 @@ const CustomerLandingPage: React.FC = () => {
     </Container>
 
             {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4, mb: 10 }}>
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 7 }}>
                 <motion.div
                     initial={shouldReduce ? false : { opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
