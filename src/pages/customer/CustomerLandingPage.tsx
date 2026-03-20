@@ -629,6 +629,9 @@ const CustomerLandingPage: React.FC = () => {
     const [showLocationDialog, setShowLocationDialog] = useState(false);
     const [locError, setLocError] = useState<string | null>(null);
 
+    // UI state for Service Updates modal gallery
+    const [selectedUpdate, setSelectedUpdate] = useState<ServiceUpdate | null>(null);
+
     // Track if this is the first visit this session to avoid playing heavy staggers on 'back' nav
     const [isFirstVisit] = useState(() => {
         const visited = sessionStorage.getItem('jt_landing_visited');
@@ -1391,10 +1394,13 @@ const CustomerLandingPage: React.FC = () => {
                                         transition={{ duration: 0.35, delay: i * 0.08 }}
                                         style={{ minWidth: 260, maxWidth: 280, flexShrink: 0 }}
                                     >
-                                        <Card sx={{
+                                        <Card 
+                                            onClick={() => setSelectedUpdate(post)}
+                                            sx={{
                                             background: '#202124', // Perfect Google Dark Theme Gray
                                             borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)',
                                             display: 'flex', flexDirection: 'column', height: '100%',
+                                            cursor: 'pointer',
                                             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                                             color: '#E8EAED',
                                             transition: 'all 0.2s',
@@ -1451,7 +1457,8 @@ const CustomerLandingPage: React.FC = () => {
                                                 <Box sx={{ mt: 'auto', pt: 0.5 }}>
                                                     <Button
                                                         size="small"
-                                                        onClick={() => {
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
                                                             if (post.cta_type === 'call_now') window.location.href = 'tel:09052222901';
                                                             else navigate(post.cta_link || '/book');
                                                         }}
@@ -1535,6 +1542,102 @@ const CustomerLandingPage: React.FC = () => {
                     </Box>
                 </motion.div>
             </Box>
+
+            {/* ════ SERVICE UPDATE DETAILS DIALOG ════ */}
+            <Dialog
+                open={!!selectedUpdate}
+                onClose={() => setSelectedUpdate(null)}
+                fullWidth maxWidth="sm"
+                PaperProps={{
+                    sx: { borderRadius: '24px', background: '#202124', color: '#E8EAED', overflow: 'hidden', m: 2 }
+                }}
+            >
+                {selectedUpdate && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}>
+                        {/* Header with Close */}
+                        <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+                            <IconButton onClick={() => setSelectedUpdate(null)} sx={{ background: 'rgba(0,0,0,0.5)', color: '#FFF', backdropFilter: 'blur(4px)', '&:hover': { background: 'rgba(0,0,0,0.7)' } }}>
+                                <CloseIcon />
+                            </IconButton>
+                        </Box>
+
+                        {/* Images Scrollable Row */}
+                        {selectedUpdate.images && selectedUpdate.images.length > 0 && (
+                            <Box sx={{ 
+                                display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', 
+                                '&::-webkit-scrollbar': { display: 'none' } 
+                            }}>
+                                {selectedUpdate.images.map((img, idx) => (
+                                    <Box key={idx} sx={{ minWidth: '100%', scrollSnapAlign: 'start', position: 'relative', pt: '75%' }}>
+                                        <img src={img} alt={`Update ${idx + 1}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </Box>
+                                ))}
+                            </Box>
+                        )}
+
+                        {/* Add Pagination Dots if multiple images */}
+                        {selectedUpdate.images && selectedUpdate.images.length > 1 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, p: 1, background: '#303134' }}>
+                                 <Typography sx={{ fontSize: '0.7rem', color: '#9AA0A6' }}>Swipe for more photos</Typography>
+                            </Box>
+                        )}
+                        
+                        {/* Just JamesTronic Header if no images */}
+                        {(!selectedUpdate.images || selectedUpdate.images.length === 0) && (
+                            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#303134', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <Avatar sx={{ width: 40, height: 40, background: '#000', fontSize: '0.9rem', fontWeight: 900 }}>JT</Avatar>
+                                <Box>
+                                    <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#E8EAED', lineHeight: 1 }}>JamesTronic</Typography>
+                                    <Typography sx={{ fontSize: '0.75rem', color: '#9AA0A6', mt: 0.5 }}>{relativeTime(selectedUpdate.created_at)}</Typography>
+                                </Box>
+                            </Box>
+                        )}
+
+                        {/* Content Scrollable Area */}
+                        <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: '1.2rem', color: '#FFF', mb: 1.5, lineHeight: 1.3 }}>
+                                📍 {selectedUpdate.title}
+                            </Typography>
+                            
+                            {/* Area Tags */}
+                            {selectedUpdate.area_tags && selectedUpdate.area_tags.length > 0 && (
+                                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                                    {selectedUpdate.area_tags.map(tag => (
+                                        <Chip key={tag} label={tag} size="small" sx={{ fontWeight: 600, background: '#303134', color: '#9AA0A6' }} />
+                                    ))}
+                                </Box>
+                            )}
+                            
+                            <Typography sx={{ fontSize: '0.95rem', color: '#D1D5DB', lineHeight: 1.6, whiteSpace: 'pre-wrap', mb: 3 }}>
+                                {selectedUpdate.description}
+                            </Typography>
+                            
+                            {selectedUpdate.images && selectedUpdate.images.length > 0 && (
+                                <Typography sx={{ fontSize: '0.8rem', color: '#9AA0A6', mb: 3, fontWeight: 500 }}>
+                                    Posted {relativeTime(selectedUpdate.created_at)}
+                                </Typography>
+                            )}
+
+                            {/* Full CTA */}
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={() => {
+                                    if (selectedUpdate.cta_type === 'call_now') window.location.href = 'tel:09052222901';
+                                    else navigate(selectedUpdate.cta_link || '/book');
+                                }}
+                                sx={{
+                                    py: 1.5, borderRadius: '12px', textTransform: 'none', fontWeight: 800, fontSize: '1rem',
+                                    background: '#8AB4F8', color: '#202124',
+                                    '&:hover': { background: '#A8C7FA' }
+                                }}
+                            >
+                                {selectedUpdate.cta_type === 'call_now' ? 'Call now' : selectedUpdate.cta_type === 'book_now' ? 'Book Now' : 'Learn more'}
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
+            </Dialog>
         </Box>
     );
 };
