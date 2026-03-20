@@ -1435,7 +1435,7 @@ const CustomerLandingPage: React.FC = () => {
     </Container>
 
             {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4, mb: 7 }}>
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 2 }}>
                 <motion.div
                     initial={shouldReduce ? false : { opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1519,6 +1519,9 @@ const CustomerLandingPage: React.FC = () => {
                     </Card>
                 </motion.div>
             </Container>
+
+            {/* SPACER for Fixed Bottom Nav Bar (70px Nav + 10px breathing room) */}
+            <Box sx={{ height: 80, width: '100%', background: 'transparent' }} />
 
             {/* ════ BOTTOM NAVIGATION BAR — FIXED ════ */}
             <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, width: '100%' }}>
