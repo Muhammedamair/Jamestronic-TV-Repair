@@ -1195,179 +1195,8 @@ const CustomerLandingPage: React.FC = () => {
                 </motion.div>
             </Container>
 
-            {/* ════ 4. EXPLORE ALL SERVICES — PREMIUM PUZZLE BLOCK ════ */}
+            {/* ════ 3. PUZZLE BLOCK: UPDATES + SERVICE AREAS ════ */}
             <Container maxWidth="sm" sx={{ mt: 4 }}>
-                <Card sx={{
-                    background: '#FFFFFF', // Forces light mode surface
-                    borderRadius: '32px',
-                    border: '1px solid rgba(0,0,0,0.06)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
-                    overflow: 'hidden',
-                }}>
-                    <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
-                        <motion.div
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
-                        >
-                            <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2, letterSpacing: '-0.3px' }}>
-                                Explore all services
-                            </Typography>
-                        </motion.div>
-
-                <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateRows: 'repeat(2, 1fr)', 
-                    gridAutoFlow: 'column',
-                    gridAutoColumns: { xs: 'calc(50% - 12px)', sm: 'calc(33.33% - 16px)', md: 'calc(25% - 20px)' },
-                    columnGap: { xs: 1.5, sm: 2.5 }, 
-                    rowGap: { xs: 3, sm: 4 },
-                    px: 1,
-                    pb: 1, 
-                    overflowX: 'auto', 
-                    scrollSnapType: 'x mandatory',
-                    scrollPaddingLeft: '8px',
-                    WebkitOverflowScrolling: 'touch',
-                    '&::-webkit-scrollbar': { display: 'none' },
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                }}>
-                    {SERVICES.map((svc, i) => (
-                        <motion.div
-                            key={svc.id}
-                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: isFirstVisit ? 0.3 + (i % 5) * 0.08 : 0 }}
-                            style={{ scrollSnapAlign: 'start' }}
-                        >
-                            <CardActionArea
-                                onClick={() => navigate(svc.route)}
-                                disableRipple
-                                sx={{
-                                    display: 'flex', flexDirection: 'column',
-                                    p: 0, transition: 'all 0.25s cubic-bezier(0.2, 0, 0, 1)',
-                                    '&:hover': { transform: 'translateY(-6px)' },
-                                    '&:active': { transform: 'scale(0.98)' },
-                                    borderRadius: '28px',
-                                }}
-                            >
-                                <Box sx={{
-                                    width: '100%',
-                                    aspectRatio: '1/1.15', // Taller card for icon + badge
-                                    background: 'linear-gradient(160deg, #FAFAFA 0%, #F3F4F6 100%)',
-                                    borderRadius: '24px',
-                                    display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    mb: 1.5,
-                                    border: '1px solid rgba(0,0,0,0.06)',
-                                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                                    position: 'relative',
-                                }}>
-                                    <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
-                                </Box>
-                                <Typography sx={{
-                                    color: '#111827', fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                                    fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.3px',
-                                    px: 0.5
-                                }}>
-                                    {svc.label}
-                                </Typography>
-                            </CardActionArea>
-                        </motion.div>
-                    ))}
-                </Box>
-            </Box>
-        </Card>
-    </Container>
-
-            {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
-                <motion.div
-                    initial={shouldReduce ? false : { opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.9 }}
-                >
-                    <Card sx={{
-                        background: '#FFFFFF', // Forces light mode surface, fixing invisible text
-                        borderRadius: '32px',
-                        border: '1px solid rgba(0,0,0,0.06)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
-                        overflow: 'hidden',
-                    }}>
-                        {/* Top Half: Why Choose Us */}
-                        <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
-                            <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2 }}>Why choose JamesTronic?</Typography>
-                            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
-                                {WHY_CHOOSE_US.map((item, i) => (
-                                    <motion.div key={item.title}
-                                        initial={shouldReduce ? false : { opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: 1.0 + i * 0.08 }}
-                                    >
-                                        <Box sx={{
-                                            p: 2.5, borderRadius: '32px', // Ultra-rounded corners to match screenshot
-                                            background: '#F9FAFB', border: '1px solid rgba(0,0,0,0.03)',
-                                            height: '100%', display: 'flex', flexDirection: 'column',
-                                            transition: 'all 0.2s',
-                                            '&:active': { transform: 'scale(0.97)' },
-                                        }}>
-                                            {/* Pulsing Icon */}
-                                            <motion.div
-                                                animate={{ 
-                                                    scale: [1, 1.15, 1],
-                                                    boxShadow: ['0 0 0px rgba(0,0,0,0)', `0 0 20px ${item.color}80`, '0 0 0px rgba(0,0,0,0)']
-                                                }}
-                                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
-                                                style={{ display: 'inline-flex', marginBottom: '12px', alignSelf: 'flex-start', borderRadius: '50%' }}
-                                            >
-                                                <Box sx={{ 
-                                                    background: item.bg, width: 42, height: 42, 
-                                                    borderRadius: '50%', color: item.color, 
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                                                }}>
-                                                    {React.cloneElement(item.icon, { sx: { fontSize: 22 } })}
-                                                </Box>
-                                            </motion.div>
-                                            
-                                            <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#111827', mb: 0.4, lineHeight: 1.2 }}>{item.title}</Typography>
-                                            <Typography sx={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
-                                        </Box>
-                                    </motion.div>
-                                ))}
-                            </Box>
-                        </Box>
-
-                        {/* Bottom Half: Warranty Footer */}
-                        <Box sx={{
-                            background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
-                            borderTop: '1px solid rgba(16, 185, 129, 0.15)',
-                            p: { xs: 2.5, sm: 3 },
-                            display: 'flex', alignItems: 'center', gap: 2.5
-                        }}>
-                            {/* The 5th Pulsing Icon - Warranty */}
-                            <motion.div
-                                animate={{ 
-                                    scale: [1, 1.12, 1],
-                                    boxShadow: ['0 4px 12px rgba(16,185,129,0.3)', '0 4px 28px rgba(16,185,129,0.8)', '0 4px 12px rgba(16,185,129,0.3)']
-                                }}
-                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                                style={{ borderRadius: '50%', flexShrink: 0 }}
-                            >
-                                <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex' }}>
-                                    <VerifiedIcon fontSize="medium" />
-                                </Box>
-                            </motion.div>
-                            <Box>
-                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
-                                <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
-                            </Box>
-                        </Box>
-                    </Card>
-                </motion.div>
-            </Container>
-
-            {/* ════ 6. PUZZLE BLOCK: UPDATES + SERVICE AREAS ════ */}
-            <Container maxWidth="sm" sx={{ mt: 4, mb: 12 }}>
                 <Card sx={{
                     background: '#FFFFFF', // Forces light mode surface, fixing dark mode bug
                     borderRadius: '32px',
@@ -1500,6 +1329,178 @@ const CustomerLandingPage: React.FC = () => {
                         </Box>
                     </Box>
                 </Card>
+
+            {/* ════ 4. EXPLORE ALL SERVICES — PREMIUM PUZZLE BLOCK ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4 }}>
+                <Card sx={{
+                    background: '#FFFFFF', // Forces light mode surface
+                    borderRadius: '32px',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+                    overflow: 'hidden',
+                }}>
+                    <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+                        <motion.div
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, x: -15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.35, delay: isFirstVisit ? 0.4 : 0 }}
+                        >
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2, letterSpacing: '-0.3px' }}>
+                                Explore all services
+                            </Typography>
+                        </motion.div>
+
+                <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateRows: 'repeat(2, 1fr)', 
+                    gridAutoFlow: 'column',
+                    gridAutoColumns: { xs: 'calc(50% - 12px)', sm: 'calc(33.33% - 16px)', md: 'calc(25% - 20px)' },
+                    columnGap: { xs: 1.5, sm: 2.5 }, 
+                    rowGap: { xs: 3, sm: 4 },
+                    px: 1,
+                    pb: 1, 
+                    overflowX: 'auto', 
+                    scrollSnapType: 'x mandatory',
+                    scrollPaddingLeft: '8px',
+                    WebkitOverflowScrolling: 'touch',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                }}>
+                    {SERVICES.map((svc, i) => (
+                        <motion.div
+                            key={svc.id}
+                            initial={(shouldReduce || !isFirstVisit) ? false : { opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25, delay: isFirstVisit ? 0.3 + (i % 5) * 0.08 : 0 }}
+                            style={{ scrollSnapAlign: 'start' }}
+                        >
+                            <CardActionArea
+                                onClick={() => navigate(svc.route)}
+                                disableRipple
+                                sx={{
+                                    display: 'flex', flexDirection: 'column',
+                                    p: 0, transition: 'all 0.25s cubic-bezier(0.2, 0, 0, 1)',
+                                    '&:hover': { transform: 'translateY(-6px)' },
+                                    '&:active': { transform: 'scale(0.98)' },
+                                    borderRadius: '28px',
+                                }}
+                            >
+                                <Box sx={{
+                                    width: '100%',
+                                    aspectRatio: '1/1.15', // Taller card for icon + badge
+                                    background: 'linear-gradient(160deg, #FAFAFA 0%, #F3F4F6 100%)',
+                                    borderRadius: '24px',
+                                    display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center',
+                                    mb: 1.5,
+                                    border: '1px solid rgba(0,0,0,0.06)',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                                    position: 'relative',
+                                }}>
+                                    <AnimatedServiceIcon id={svc.id} image={svc.image} label={svc.label} />
+                                </Box>
+                                <Typography sx={{
+                                    color: '#111827', fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                                    fontWeight: 800, textAlign: 'center', lineHeight: 1.2, letterSpacing: '-0.3px',
+                                    px: 0.5
+                                }}>
+                                    {svc.label}
+                                </Typography>
+                            </CardActionArea>
+                        </motion.div>
+                    ))}
+                </Box>
+            </Box>
+        </Card>
+    </Container>
+
+            {/* ════ 5. PUZZLE BLOCK: WHY CHOOSE US + WARRANTY ════ */}
+            <Container maxWidth="sm" sx={{ mt: 4, mb: 12 }}>
+                <motion.div
+                    initial={shouldReduce ? false : { opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.9 }}
+                >
+                    <Card sx={{
+                        background: '#FFFFFF', // Forces light mode surface, fixing invisible text
+                        borderRadius: '32px',
+                        border: '1px solid rgba(0,0,0,0.06)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+                        overflow: 'hidden',
+                    }}>
+                        {/* Top Half: Why Choose Us */}
+                        <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#111827', mb: 2 }}>Why choose JamesTronic?</Typography>
+                            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
+                                {WHY_CHOOSE_US.map((item, i) => (
+                                    <motion.div key={item.title}
+                                        initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 1.0 + i * 0.08 }}
+                                    >
+                                        <Box sx={{
+                                            p: 2.5, borderRadius: '32px', // Ultra-rounded corners to match screenshot
+                                            background: '#F9FAFB', border: '1px solid rgba(0,0,0,0.03)',
+                                            height: '100%', display: 'flex', flexDirection: 'column',
+                                            transition: 'all 0.2s',
+                                            '&:active': { transform: 'scale(0.97)' },
+                                        }}>
+                                            {/* Pulsing Icon */}
+                                            <motion.div
+                                                animate={{ 
+                                                    scale: [1, 1.15, 1],
+                                                    boxShadow: ['0 0 0px rgba(0,0,0,0)', `0 0 20px ${item.color}80`, '0 0 0px rgba(0,0,0,0)']
+                                                }}
+                                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+                                                style={{ display: 'inline-flex', marginBottom: '12px', alignSelf: 'flex-start', borderRadius: '50%' }}
+                                            >
+                                                <Box sx={{ 
+                                                    background: item.bg, width: 42, height: 42, 
+                                                    borderRadius: '50%', color: item.color, 
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                                                }}>
+                                                    {React.cloneElement(item.icon, { sx: { fontSize: 22 } })}
+                                                </Box>
+                                            </motion.div>
+                                            
+                                            <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: '#111827', mb: 0.4, lineHeight: 1.2 }}>{item.title}</Typography>
+                                            <Typography sx={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 500, lineHeight: 1.3 }}>{item.desc}</Typography>
+                                        </Box>
+                                    </motion.div>
+                                ))}
+                            </Box>
+                        </Box>
+
+                        {/* Bottom Half: Warranty Footer */}
+                        <Box sx={{
+                            background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
+                            borderTop: '1px solid rgba(16, 185, 129, 0.15)',
+                            p: { xs: 2.5, sm: 3 },
+                            display: 'flex', alignItems: 'center', gap: 2.5
+                        }}>
+                            {/* The 5th Pulsing Icon - Warranty */}
+                            <motion.div
+                                animate={{ 
+                                    scale: [1, 1.12, 1],
+                                    boxShadow: ['0 4px 12px rgba(16,185,129,0.3)', '0 4px 28px rgba(16,185,129,0.8)', '0 4px 12px rgba(16,185,129,0.3)']
+                                }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                                style={{ borderRadius: '50%', flexShrink: 0 }}
+                            >
+                                <Box sx={{ p: 1.5, background: '#10B981', borderRadius: '50%', color: '#FFF', display: 'flex' }}>
+                                    <VerifiedIcon fontSize="medium" />
+                                </Box>
+                            </motion.div>
+                            <Box>
+                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
+                                <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
+                            </Box>
+                        </Box>
+                    </Card>
+                </motion.div>
+            </Container>
+
             </Container>
 
             {/* ════ BOTTOM NAVIGATION BAR — FIXED ════ */}
