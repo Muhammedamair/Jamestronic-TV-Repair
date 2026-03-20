@@ -1543,20 +1543,36 @@ const CustomerLandingPage: React.FC = () => {
                 </motion.div>
             </Box>
 
-            {/* ════ SERVICE UPDATE DETAILS DIALOG ════ */}
+            {/* ════ SERVICE UPDATE DETAILS DIALOG (BOTTOM SHEET ON MOBILE) ════ */}
             <Dialog
                 open={!!selectedUpdate}
                 onClose={() => setSelectedUpdate(null)}
                 fullWidth maxWidth="sm"
+                sx={{ zIndex: 10000 }} // Ensures it sits above bottom nav (z-index 9999)
                 PaperProps={{
-                    sx: { borderRadius: '24px', background: '#202124', color: '#E8EAED', overflow: 'hidden', m: 2 }
+                    sx: { 
+                        m: { xs: 0, sm: 2 },
+                        position: { xs: 'absolute', sm: 'relative' },
+                        bottom: { xs: 0, sm: 'auto' },
+                        width: '100%',
+                        borderRadius: { xs: '24px 24px 0 0', sm: '24px' }, 
+                        background: '#202124', 
+                        color: '#E8EAED', 
+                        overflow: 'hidden' 
+                    }
                 }}
             >
                 {selectedUpdate && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: { xs: '90dvh', sm: '85vh' } }}>
+                        
+                        {/* Drag Indicator (Mobile only) */}
+                        <Box sx={{ display: { xs: 'flex', sm: 'none' }, justifyContent: 'center', pt: 1.5, pb: 0.5, background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 100%)', position: 'absolute', top: 0, left: 0, right: 0, zIndex: 11 }}>
+                            <Box sx={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.4)', userSelect: 'none' }} />
+                        </Box>
+
                         {/* Header with Close */}
-                        <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
-                            <IconButton onClick={() => setSelectedUpdate(null)} sx={{ background: 'rgba(0,0,0,0.5)', color: '#FFF', backdropFilter: 'blur(4px)', '&:hover': { background: 'rgba(0,0,0,0.7)' } }}>
+                        <Box sx={{ position: 'absolute', top: { xs: 16, sm: 12 }, right: { xs: 16, sm: 12 }, zIndex: 12 }}>
+                            <IconButton onClick={() => setSelectedUpdate(null)} sx={{ background: 'rgba(0,0,0,0.5)', color: '#FFF', backdropFilter: 'blur(4px)', '&:hover': { background: 'rgba(0,0,0,0.8)' } }}>
                                 <CloseIcon />
                             </IconButton>
                         </Box>
@@ -1575,10 +1591,12 @@ const CustomerLandingPage: React.FC = () => {
                             </Box>
                         )}
 
-                        {/* Add Pagination Dots if multiple images */}
+                        {/* Elegant Pagination Dots if multiple images */}
                         {selectedUpdate.images && selectedUpdate.images.length > 1 && (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, p: 1, background: '#303134' }}>
-                                 <Typography sx={{ fontSize: '0.7rem', color: '#9AA0A6' }}>Swipe for more photos</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, p: 1.5, background: '#303134' }}>
+                                {selectedUpdate.images.map((_, idx) => (
+                                    <Box key={idx} sx={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.4)' }} />
+                                ))}
                             </Box>
                         )}
                         
