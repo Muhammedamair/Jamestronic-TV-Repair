@@ -1605,46 +1605,89 @@ const CustomerLandingPage: React.FC = () => {
                                 </Box>
                             )}
 
-                            <Typography sx={{ fontWeight: 700, fontSize: '1.3rem', color: '#FFF', mb: 2, lineHeight: 1.3 }}>
-                                📍 {selectedUpdate.title}
+                            {/* 🌟 New Social Proof Header */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                <Box sx={{ display: 'flex', color: '#FABB05', gap: 0.2 }}>
+                                    {'★★★★★'.split('').map((star, i) => <Typography key={i} sx={{ fontSize: '1.2rem', lineHeight: 1 }}>{star}</Typography>)}
+                                </Box>
+                                <Chip 
+                                    icon={<CheckCircleIcon sx={{ fontSize: '1rem !important', color: '#34A853' }} />} 
+                                    label="Verified Job" 
+                                    size="small" 
+                                    sx={{ background: 'rgba(52, 168, 83, 0.15)', color: '#34A853', fontWeight: 800, fontSize: '0.75rem', border: '1px solid rgba(52, 168, 83, 0.3)' }} 
+                                />
+                            </Box>
+
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: '#FFF', mb: 2, lineHeight: 1.3, letterSpacing: '-0.02em' }}>
+                                {selectedUpdate.title}
                             </Typography>
                             
-                            {/* Area Tags */}
+                            {/* Area Tags (Updated styling to pop more) */}
                             {selectedUpdate.area_tags && selectedUpdate.area_tags.length > 0 && (
                                 <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-                                    {selectedUpdate.area_tags.map(tag => (
-                                        <Chip key={tag} label={tag} size="small" sx={{ fontWeight: 600, background: '#202124', color: '#9AA0A6' }} />
+                                    {selectedUpdate.area_tags.map((tag, idx) => (
+                                        <Chip key={tag} icon={idx === 0 ? <LocationIcon sx={{ fontSize: '0.9rem !important' }} /> : undefined} label={tag} size="small" sx={{ fontWeight: 600, background: '#202124', color: '#E8EAED', border: '1px solid #303134' }} />
                                     ))}
                                 </Box>
                             )}
                             
-                            <Typography sx={{ fontSize: '1rem', color: '#E8EAED', lineHeight: 1.6, whiteSpace: 'pre-wrap', mb: 4 }}>
+                            <Typography sx={{ fontSize: '1.05rem', color: '#E8EAED', lineHeight: 1.7, whiteSpace: 'pre-wrap', mb: 4, letterSpacing: '0.01em' }}>
                                 {selectedUpdate.description}
                             </Typography>
                             
+                            <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 3 }} />
+
                             {selectedUpdate.images && selectedUpdate.images.length > 0 && (
-                                <Typography sx={{ fontSize: '0.85rem', color: '#9AA0A6', mb: 4, fontWeight: 500 }}>
+                                <Typography sx={{ fontSize: '0.85rem', color: '#9AA0A6', mb: 3, fontWeight: 500 }}>
                                     Posted {relativeTime(selectedUpdate.created_at)}
                                 </Typography>
                             )}
 
-                            {/* Full CTA */}
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                onClick={() => {
-                                    if (selectedUpdate.cta_type === 'call_now') window.location.href = 'tel:09052222901';
-                                    else navigate(selectedUpdate.cta_link || '/book');
-                                }}
-                                sx={{
-                                    py: 1.8, borderRadius: '16px', textTransform: 'none', fontWeight: 800, fontSize: '1.05rem',
-                                    background: '#8AB4F8', color: '#111',
-                                    '&:hover': { background: '#A8C7FA' },
-                                    mb: 4
-                                }}
+                            {/* Premium Framer Motion CTA */}
+                            <Box 
+                                component={motion.div}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.96 }}
+                                sx={{ mb: { xs: 10, sm: 6 }, pr: { xs: 9, sm: 10 } }} // Padding right to sit beautifully next to the FAB
                             >
-                                {selectedUpdate.cta_type === 'call_now' ? 'Call now' : selectedUpdate.cta_type === 'book_now' ? 'Book Now' : 'Learn more'}
-                            </Button>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={() => {
+                                        if (selectedUpdate.cta_type === 'call_now') window.location.href = 'tel:09052222901';
+                                        else navigate(selectedUpdate.cta_link || '/book');
+                                    }}
+                                    startIcon={selectedUpdate.cta_type === 'call_now' ? <PhoneIcon /> : undefined}
+                                    sx={{
+                                        py: 2, 
+                                        borderRadius: '16px', 
+                                        textTransform: 'none', 
+                                        fontWeight: 800, 
+                                        fontSize: '1.15rem',
+                                        background: 'linear-gradient(135deg, #4285F4 0%, #1A73E8 100%)', 
+                                        color: '#FFF',
+                                        boxShadow: '0 8px 24px rgba(66, 133, 244, 0.4)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        // Subtle internal animated gradient sweep to make it feel strictly premium and alive
+                                        '&::after': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0, left: '-100%',
+                                            width: '50%', height: '100%',
+                                            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                                            animation: 'shimmerSweep 3s infinite',
+                                        },
+                                        '@keyframes shimmerSweep': {
+                                            '0%': { left: '-100%' },
+                                            '100%': { left: '200%' }
+                                        }
+                                    }}
+                                >
+                                    {selectedUpdate.cta_type === 'call_now' ? 'Call Now' : selectedUpdate.cta_type === 'book_now' ? 'Book Service Now' : 'Learn More'}
+                                </Button>
+                            </Box>
                         </Box>
 
                         {/* Premium Floating Close Button (Bottom Right FAB) */}
