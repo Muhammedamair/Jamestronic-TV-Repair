@@ -37,7 +37,7 @@ const CustomerBookingPage: React.FC = () => {
     const initialIssue = initialIssueKey ? (ISSUE_MAP[initialIssueKey] || '') : '';
 
     const [step, setStep] = useState(0);
-    const [isCheckingSession, setIsCheckingSession] = useState(!!(typeof window !== 'undefined' ? localStorage : { getItem:()=>null, setItem:()=>{}, removeItem:()=>{}, clear:()=>{} }).getItem('jamestronic_customer_token'));
+    const [isCheckingSession, setIsCheckingSession] = useState(true); // Default true to avoid SSR flicker if token exists
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<{ ticketNumber: string } | null>(null);
@@ -81,6 +81,8 @@ const CustomerBookingPage: React.FC = () => {
                 }
                 setIsCheckingSession(false);
             });
+        } else {
+            setIsCheckingSession(false);
         }
     }, []);
 
