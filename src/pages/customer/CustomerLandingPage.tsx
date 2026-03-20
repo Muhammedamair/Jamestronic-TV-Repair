@@ -1562,8 +1562,19 @@ const CustomerLandingPage: React.FC = () => {
                             flexDirection: 'column'
                         }}
                     >
-                        {/* Floating Header with Close Icon */}
-                        <Box sx={{ position: 'sticky', top: 0, right: 0, width: '100%', display: 'flex', justifyContent: 'flex-end', p: 2, zIndex: 12, pointerEvents: 'none' }}>
+                        {/* Floating Header with Close Icon (Safe Area padded) */}
+                        <Box sx={{ 
+                            position: 'fixed', 
+                            top: 0, 
+                            right: 0, 
+                            width: '100%', 
+                            display: 'flex', 
+                            justifyContent: 'flex-end', 
+                            pt: { xs: 'max(env(safe-area-inset-top), 16px)', sm: 3 }, 
+                            pr: { xs: 2, sm: 3 }, 
+                            zIndex: 12, 
+                            pointerEvents: 'none' 
+                        }}>
                             <IconButton 
                                 onClick={() => setSelectedUpdate(null)} 
                                 sx={{ background: 'rgba(0,0,0,0.6)', color: '#FFF', pointerEvents: 'auto', backdropFilter: 'blur(8px)', '&:hover': { background: 'rgba(0,0,0,0.8)' } }}
@@ -1573,7 +1584,7 @@ const CustomerLandingPage: React.FC = () => {
                         </Box>
 
                         {/* Images Scrollable Row - Natural Viewport Width */}
-                        <Box sx={{ mt: -8 }}> {/* Negative top margin to push images under the transparent header */}
+                        <Box>
                             {selectedUpdate.images && selectedUpdate.images.length > 0 && (
                                 <Box sx={{ 
                                     display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', 
