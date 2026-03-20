@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 
 // Ordered customer routes — index determines "forward" or "back"
 const ROUTE_ORDER = ['/', '/book', '/track', '/my-tickets', '/account', '/buy'];
@@ -19,13 +19,14 @@ function getRouteIndex(pathname: string): number {
  * Compares the current route against the previous route using ROUTE_ORDER.
  */
 export function useNavigationDirection(): 'forward' | 'back' {
-    const location = useLocation();
-    const prevPathRef = useRef(location.pathname);
+    const pathname = usePathname();
+    const prevPathRef = useRef(pathname || '/');
     const [direction, setDirection] = useState<'forward' | 'back'>('forward');
 
     useEffect(() => {
+        if (!pathname) return;
         const prevIndex = getRouteIndex(prevPathRef.current);
-        const currIndex = getRouteIndex(location.pathname);
+        const currIndex = getRouteIndex(pathname);
 
         if (prevIndex >= 0 && currIndex >= 0) {
             setDirection(currIndex >= prevIndex ? 'forward' : 'back');
@@ -33,8 +34,8 @@ export function useNavigationDirection(): 'forward' | 'back' {
             setDirection('forward');
         }
 
-        prevPathRef.current = location.pathname;
-    }, [location.pathname]);
+        prevPathRef.current = pathname;
+    }, [pathname]);
 
     return direction;
 }
