@@ -22,6 +22,8 @@
 html, body, #root {
   height: 100%;
   width: 100%;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
 }
 
 a {
