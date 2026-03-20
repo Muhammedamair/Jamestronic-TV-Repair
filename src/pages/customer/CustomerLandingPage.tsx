@@ -1562,27 +1562,6 @@ const CustomerLandingPage: React.FC = () => {
                             flexDirection: 'column'
                         }}
                     >
-                        {/* Floating Header with Close Icon (Safe Area padded) */}
-                        <Box sx={{ 
-                            position: 'fixed', 
-                            top: 0, 
-                            right: 0, 
-                            width: '100%', 
-                            display: 'flex', 
-                            justifyContent: 'flex-end', 
-                            pt: { xs: 'max(env(safe-area-inset-top), 16px)', sm: 3 }, 
-                            pr: { xs: 2, sm: 3 }, 
-                            zIndex: 12, 
-                            pointerEvents: 'none' 
-                        }}>
-                            <IconButton 
-                                onClick={() => setSelectedUpdate(null)} 
-                                sx={{ background: 'rgba(0,0,0,0.6)', color: '#FFF', pointerEvents: 'auto', backdropFilter: 'blur(8px)', '&:hover': { background: 'rgba(0,0,0,0.8)' } }}
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                        </Box>
-
                         {/* Images Scrollable Row - Natural Viewport Width */}
                         <Box>
                             {selectedUpdate.images && selectedUpdate.images.length > 0 && (
@@ -1666,6 +1645,37 @@ const CustomerLandingPage: React.FC = () => {
                             >
                                 {selectedUpdate.cta_type === 'call_now' ? 'Call now' : selectedUpdate.cta_type === 'book_now' ? 'Book Now' : 'Learn more'}
                             </Button>
+                        </Box>
+
+                        {/* Premium Floating Close Button (Bottom Right FAB) */}
+                        <Box 
+                            component={motion.div}
+                            initial={{ opacity: 0, scale: 0.5, y: 50 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.5, y: 50 }}
+                            transition={{ delay: 0.15, type: 'spring', damping: 20, stiffness: 300 }}
+                            sx={{
+                                position: 'fixed',
+                                bottom: { xs: 32, sm: 40 },
+                                right: { xs: 24, sm: 40 },
+                                zIndex: 10001,
+                            }}
+                        >
+                            <IconButton 
+                                onClick={() => setSelectedUpdate(null)} 
+                                sx={{ 
+                                    width: 56, 
+                                    height: 56, 
+                                    background: 'rgba(255, 255, 255, 0.95)', 
+                                    color: '#000', 
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                                    backdropFilter: 'blur(10px)',
+                                    '&:hover': { background: '#FFF', transform: 'scale(1.05)' },
+                                    transition: 'transform 0.2s ease',
+                                }}
+                            >
+                                <CloseIcon fontSize="medium" />
+                            </IconButton>
                         </Box>
                     </Box>
                 )}
