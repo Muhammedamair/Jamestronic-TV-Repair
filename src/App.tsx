@@ -60,12 +60,35 @@ const StaffLoginRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 const DomainRouter = () => {
   const location = useLocation();
-  const isStaffDomain = window.location.hostname.includes('.xyz') || window.location.hostname.includes('vercel.app');
+  const hostname = window.location.hostname;
+  
+  // Define what domains are allowed to see the admin panel
+  const isStaffDomain = hostname.includes('.xyz') || 
+                        hostname.includes('vercel.app') || 
+                        hostname === 'localhost' || 
+                        hostname === '127.0.0.1';
   
   // If a user hits the root domain of the staff/testing url, instantly bounce them to staff-login
   if (isStaffDomain && location.pathname === '/') {
     return <Navigate to="/staff-login" replace />;
   }
+  
+  // STRICT CONSUMER DOMAIN LOCKDOWN
+  // If they are on the .com domain (not a staff domain), block ALL staff paths
+  if (!isStaffDomain) {
+    const isTryingToAccessStaffArea = 
+      location.pathname.startsWith('/staff-login') ||
+      location.pathname.startsWith('/login') ||
+      location.pathname.startsWith('/admin') ||
+      location.pathname.startsWith('/tech') ||
+      location.pathname.startsWith('/dealer') ||
+      location.pathname.startsWith('/transport');
+      
+    if (isTryingToAccessStaffArea) {
+      return <Navigate to="/" replace />; // Bounce them instantly back to the consumer landing page
+    }
+  }
+
   return null;
 };
 
