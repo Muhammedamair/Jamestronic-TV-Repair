@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -58,11 +58,23 @@ const StaffLoginRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <>{children}</>;
 };
 
+const DomainRouter = () => {
+  const location = useLocation();
+  const isStaffDomain = window.location.hostname.includes('.xyz') || window.location.hostname.includes('vercel.app');
+  
+  // If a user hits the root domain of the staff/testing url, instantly bounce them to staff-login
+  if (isStaffDomain && location.pathname === '/') {
+    return <Navigate to="/staff-login" replace />;
+  }
+  return null;
+};
+
 const App: React.FC = () => (
   <ThemeProvider theme={theme}>
     <CssBaseline />
     <AuthProvider>
         <BrowserRouter>
+          <DomainRouter />
           <Routes>
             {/* ═══ Staff Login ═══ */}
             <Route path="/staff-login" element={<StaffLoginRoute><LoginPage /></StaffLoginRoute>} />
