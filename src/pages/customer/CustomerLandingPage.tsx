@@ -1543,107 +1543,97 @@ const CustomerLandingPage: React.FC = () => {
                 </motion.div>
             </Box>
 
-            {/* ════ SERVICE UPDATE DETAILS DIALOG (BOTTOM SHEET ON MOBILE) ════ */}
-            <Dialog
-                open={!!selectedUpdate}
-                onClose={() => setSelectedUpdate(null)}
-                fullWidth maxWidth="sm"
-                sx={{ zIndex: 10000 }} // Ensures it sits above bottom nav (z-index 9999)
-                PaperProps={{
-                    sx: { 
-                        m: { xs: 0, sm: 2 },
-                        position: { xs: 'absolute', sm: 'relative' },
-                        bottom: { xs: 0, sm: 'auto' },
-                        width: '100%',
-                        borderRadius: { xs: '24px 24px 0 0', sm: '24px' }, 
-                        background: '#202124', 
-                        color: '#E8EAED', 
-                        overflow: 'hidden' 
-                    }
-                }}
-            >
+            {/* ════ FULL SCREEN FRAMER MOTION SERVICE UPDATE OVERLAY ════ */}
+            <AnimatePresence>
                 {selectedUpdate && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: { xs: '90dvh', sm: '85vh' } }}>
-                        
-                        {/* Drag Indicator (Mobile only) */}
-                        <Box sx={{ display: { xs: 'flex', sm: 'none' }, justifyContent: 'center', pt: 1.5, pb: 0.5, background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 100%)', position: 'absolute', top: 0, left: 0, right: 0, zIndex: 11 }}>
-                            <Box sx={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.4)', userSelect: 'none' }} />
-                        </Box>
-
-                        {/* Header with Close */}
-                        <Box sx={{ position: 'absolute', top: { xs: 16, sm: 12 }, right: { xs: 16, sm: 12 }, zIndex: 12 }}>
-                            <IconButton onClick={() => setSelectedUpdate(null)} sx={{ background: 'rgba(0,0,0,0.5)', color: '#FFF', backdropFilter: 'blur(4px)', '&:hover': { background: 'rgba(0,0,0,0.8)' } }}>
+                    <Box
+                        component={motion.div}
+                        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 30, scale: 0.98 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        sx={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 10000,
+                            background: '#111111',
+                            overflowY: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}
+                    >
+                        {/* Floating Header with Close Icon */}
+                        <Box sx={{ position: 'sticky', top: 0, right: 0, width: '100%', display: 'flex', justifyContent: 'flex-end', p: 2, zIndex: 12, pointerEvents: 'none' }}>
+                            <IconButton 
+                                onClick={() => setSelectedUpdate(null)} 
+                                sx={{ background: 'rgba(0,0,0,0.6)', color: '#FFF', pointerEvents: 'auto', backdropFilter: 'blur(8px)', '&:hover': { background: 'rgba(0,0,0,0.8)' } }}
+                            >
                                 <CloseIcon />
                             </IconButton>
                         </Box>
 
-                        {/* Images Scrollable Row */}
-                        {selectedUpdate.images && selectedUpdate.images.length > 0 && (
-                            <Box sx={{ 
-                                display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', 
-                                '&::-webkit-scrollbar': { display: 'none' } 
-                            }}>
-                                {selectedUpdate.images.map((img, idx) => (
-                                    <Box key={idx} sx={{ 
-                                        minWidth: '100%', scrollSnapAlign: 'start', position: 'relative', 
-                                        height: { xs: 350, sm: 450 }, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        overflow: 'hidden', background: '#000'
-                                    }}>
-                                        {/* Blurred Background Layer (Fill empty space gracefully) */}
-                                        <Box sx={{ 
-                                            position: 'absolute', top: -20, left: -20, right: -20, bottom: -20,
-                                            backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                                            filter: 'blur(15px)', opacity: 0.5, zIndex: 0
-                                        }} />
-                                        
-                                        {/* Actual Image (Strict fit to guarantee 100% visibility) */}
-                                        <img src={img} alt={`Update ${idx + 1}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', zIndex: 1 }} />
-                                    </Box>
-                                ))}
-                            </Box>
-                        )}
+                        {/* Images Scrollable Row - Natural Viewport Width */}
+                        <Box sx={{ mt: -8 }}> {/* Negative top margin to push images under the transparent header */}
+                            {selectedUpdate.images && selectedUpdate.images.length > 0 && (
+                                <Box sx={{ 
+                                    display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', 
+                                    '&::-webkit-scrollbar': { display: 'none' } 
+                                }}>
+                                    {selectedUpdate.images.map((img, idx) => (
+                                        <Box key={idx} sx={{ 
+                                            width: '100vw', flexShrink: 0, scrollSnapAlign: 'start', 
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            background: '#000',
+                                            py: 4 // Padding top/bottom ensures the image has breathing room
+                                        }}>
+                                            <img src={img} alt={`Update ${idx + 1}`} style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }} />
+                                        </Box>
+                                    ))}
+                                </Box>
+                            )}
+                        </Box>
 
-                        {/* Elegant Pagination Dots if multiple images */}
+                        {/* Elegant Pagination Dots */}
                         {selectedUpdate.images && selectedUpdate.images.length > 1 && (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, p: 1.5, background: '#303134' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, p: 2, background: '#111' }}>
                                 {selectedUpdate.images.map((_, idx) => (
                                     <Box key={idx} sx={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.4)' }} />
                                 ))}
                             </Box>
                         )}
                         
-                        {/* Just JamesTronic Header if no images */}
-                        {(!selectedUpdate.images || selectedUpdate.images.length === 0) && (
-                            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5, background: '#303134', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <Avatar sx={{ width: 40, height: 40, background: '#000', fontSize: '0.9rem', fontWeight: 900 }}>JT</Avatar>
-                                <Box>
-                                    <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#E8EAED', lineHeight: 1 }}>JamesTronic</Typography>
-                                    <Typography sx={{ fontSize: '0.75rem', color: '#9AA0A6', mt: 0.5 }}>{relativeTime(selectedUpdate.created_at)}</Typography>
+                        {/* Content Area */}
+                        <Box sx={{ p: 3, flex: 1, background: '#111' }}>
+                            {/* Just JamesTronic Header if no images */}
+                            {(!selectedUpdate.images || selectedUpdate.images.length === 0) && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                                    <Avatar sx={{ width: 44, height: 44, background: '#000', fontSize: '1rem', fontWeight: 900 }}>JT</Avatar>
+                                    <Box>
+                                        <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#E8EAED', lineHeight: 1 }}>JamesTronic</Typography>
+                                        <Typography sx={{ fontSize: '0.8rem', color: '#9AA0A6', mt: 0.5 }}>{relativeTime(selectedUpdate.created_at)}</Typography>
+                                    </Box>
                                 </Box>
-                            </Box>
-                        )}
+                            )}
 
-                        {/* Content Scrollable Area */}
-                        <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
-                            <Typography sx={{ fontWeight: 700, fontSize: '1.2rem', color: '#FFF', mb: 1.5, lineHeight: 1.3 }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: '1.3rem', color: '#FFF', mb: 2, lineHeight: 1.3 }}>
                                 📍 {selectedUpdate.title}
                             </Typography>
                             
                             {/* Area Tags */}
                             {selectedUpdate.area_tags && selectedUpdate.area_tags.length > 0 && (
-                                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                                <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
                                     {selectedUpdate.area_tags.map(tag => (
-                                        <Chip key={tag} label={tag} size="small" sx={{ fontWeight: 600, background: '#303134', color: '#9AA0A6' }} />
+                                        <Chip key={tag} label={tag} size="small" sx={{ fontWeight: 600, background: '#202124', color: '#9AA0A6' }} />
                                     ))}
                                 </Box>
                             )}
                             
-                            <Typography sx={{ fontSize: '0.95rem', color: '#D1D5DB', lineHeight: 1.6, whiteSpace: 'pre-wrap', mb: 3 }}>
+                            <Typography sx={{ fontSize: '1rem', color: '#E8EAED', lineHeight: 1.6, whiteSpace: 'pre-wrap', mb: 4 }}>
                                 {selectedUpdate.description}
                             </Typography>
                             
                             {selectedUpdate.images && selectedUpdate.images.length > 0 && (
-                                <Typography sx={{ fontSize: '0.8rem', color: '#9AA0A6', mb: 3, fontWeight: 500 }}>
+                                <Typography sx={{ fontSize: '0.85rem', color: '#9AA0A6', mb: 4, fontWeight: 500 }}>
                                     Posted {relativeTime(selectedUpdate.created_at)}
                                 </Typography>
                             )}
@@ -1657,9 +1647,10 @@ const CustomerLandingPage: React.FC = () => {
                                     else navigate(selectedUpdate.cta_link || '/book');
                                 }}
                                 sx={{
-                                    py: 1.5, borderRadius: '12px', textTransform: 'none', fontWeight: 800, fontSize: '1rem',
-                                    background: '#8AB4F8', color: '#202124',
-                                    '&:hover': { background: '#A8C7FA' }
+                                    py: 1.8, borderRadius: '16px', textTransform: 'none', fontWeight: 800, fontSize: '1.05rem',
+                                    background: '#8AB4F8', color: '#111',
+                                    '&:hover': { background: '#A8C7FA' },
+                                    mb: 4
                                 }}
                             >
                                 {selectedUpdate.cta_type === 'call_now' ? 'Call now' : selectedUpdate.cta_type === 'book_now' ? 'Book Now' : 'Learn more'}
@@ -1667,7 +1658,7 @@ const CustomerLandingPage: React.FC = () => {
                         </Box>
                     </Box>
                 )}
-            </Dialog>
+            </AnimatePresence>
         </Box>
     );
 };
