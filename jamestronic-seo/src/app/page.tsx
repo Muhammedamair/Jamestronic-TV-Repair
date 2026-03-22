@@ -34,6 +34,15 @@ export default async function Home() {
 
   const serviceUpdates = (updates || []) as ServiceUpdate[];
 
+  // 3. Fetch Brand Metrics
+  const { data: metrics } = await supabase
+    .from('brand_metrics')
+    .select('*')
+    .eq('id', 1)
+    .single();
+
+  const brandMetrics = (metrics || { rating_score: '4.9', reviews_count: '250+', interactions_count: '1.2K+' }) as any;
+
   return (
     <main className="min-h-screen bg-[#F9FAFB]">
       {/* 
@@ -44,6 +53,7 @@ export default async function Home() {
       <CustomerLandingPage 
         initialServiceUpdates={serviceUpdates}
         initialHeroBanners={heroBanners}
+        initialBrandMetrics={brandMetrics}
       />
     </main>
   );

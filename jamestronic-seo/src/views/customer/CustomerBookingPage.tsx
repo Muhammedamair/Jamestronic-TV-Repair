@@ -9,7 +9,7 @@ import {
 } from '@mui/icons-material';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '../../supabaseClient';
-import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Sub-components (split for maintainability & animation readiness)
 import BookingStep1 from './booking/BookingStep1';
@@ -20,9 +20,6 @@ import BookingSuccess from './booking/BookingSuccess';
 const CustomerBookingPage: React.FC = () => {
     const { push: navigate } = useRouter();
     const searchParams = useSearchParams();
-    const initialMobile = searchParams.get('mobile') || '';
-    const initialService = searchParams.get('service') || 'repair';
-    const initialIssueKey = searchParams.get('issue');
 
     // Map URL keys to EXACT labels used in BookingStep2
     const ISSUE_MAP: Record<string, string> = {
@@ -34,7 +31,6 @@ const CustomerBookingPage: React.FC = () => {
         'screen_repair': 'Screen Repair', // Using 'Screen Repair' since it wasn't in COMMON_ISSUES but matches textfield 
         'not_sure': 'Not sure'
     };
-    const initialIssue = initialIssueKey ? (ISSUE_MAP[initialIssueKey] || '') : '';
 
     const [step, setStep] = useState(0);
     const [isCheckingSession, setIsCheckingSession] = useState(true); // Default true to avoid SSR flicker if token exists
@@ -48,18 +44,33 @@ const CustomerBookingPage: React.FC = () => {
 
     // Form Data
     const [form, setForm] = useState({
-        mobile: initialMobile,
+        mobile: '',
         customerName: '',
-        serviceType: initialService,
+        serviceType: 'repair',
         tvBrand: '',
         tvModel: '',
         tvSize: '',
-        issueDescription: initialIssue,
+        issueDescription: '',
         address: '',
         lat: 0,
         lng: 0,
         bracketStatus: '',
     });
+
+    // ═══ READ URL PARAMS (HYDRATION SAFE) ═══
+    useEffect(() => {
+        const urlMobile = searchParams?.get('mobile') || '';
+        const urlService = searchParams?.get('service');
+        const urlIssueKey = searchParams?.get('issue');
+        const urlIssue = urlIssueKey ? (ISSUE_MAP[urlIssueKey] || '') : '';
+
+        setForm(prev => ({
+            ...prev,
+            mobile: prev.mobile || urlMobile,
+            serviceType: urlService || prev.serviceType || 'repair',
+            issueDescription: prev.issueDescription || urlIssue,
+        }));
+    }, [searchParams]);
 
     // ═══ SESSION-AWARE AUTO-FILL for returning customers ═══
     useEffect(() => {
@@ -205,8 +216,6 @@ const CustomerBookingPage: React.FC = () => {
         }
     };
 
-    const shouldReduce = useReducedMotion();
-
     const STEPS_CONFIG = [
         { label: 'Your Details', desc: "We'll use this to send you updates" },
         { label: 'TV Information', desc: "Tell us about your TV and the issue" },
@@ -275,9 +284,9 @@ const CustomerBookingPage: React.FC = () => {
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={step} 
-                                initial={shouldReduce ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                                initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                exit={shouldReduce ? { opacity: 0, x: 0 } : { opacity: 0, x: -20 }}
+                                exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.25, ease: 'easeOut' }}
                                 style={{ width: '100%' }}
                             >
@@ -329,7 +338,7 @@ const CustomerBookingPage: React.FC = () => {
                         {step < 2 ? (
                             <Box sx={{ flex: 2, display: 'flex' }}>
                                 <motion.div
-                                    animate={shouldReduce ? false : { 
+                                    animate={{ 
                                         scale: canProceed() ? [1, 1.05, 1] : 1,
                                         boxShadow: canProceed() ? ['0 4px 14px rgba(91,76,242,0)', '0 4px 14px rgba(91,76,242,0.5)', '0 4px 14px rgba(91,76,242,0.3)'] : 'none'
                                     }}

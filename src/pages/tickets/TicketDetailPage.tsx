@@ -23,6 +23,7 @@ import {
 import { formatDateTime, formatRelative, formatCurrency } from '../../utils/formatters';
 import { triggerStatusWhatsApp, getAvailableNextStatuses } from '../../utils/statusUpdates';
 import { generatePDF } from '../../utils/pdfGenerator';
+import { sendInteraktMessage } from '../../utils/interakt';
 
 const TicketDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -387,8 +388,23 @@ const TicketDetailPage: React.FC = () => {
                                             tech_status: 'ASSIGNED',
                                         });
 
-                                        // Trigger Push Notification to Technician
                                         const assignedTech = technicians.find(t => t.id === techId);
+
+                                        // Trigger WhatsApp Notification to Customer
+                                        if (ticket.customer?.mobile) {
+                                            sendInteraktMessage({
+                                                phoneNumber: ticket.customer.mobile,
+                                                templateName: 'technician_assigned_alert',
+                                                bodyValues: [
+                                                    ticket.customer.name || 'Customer',
+                                                    ticket.ticket_number || '',
+                                                    assignedTech?.name || 'a designated technician',
+                                                    assignedTech?.mobile || ''
+                                                ]
+                                            }).catch(console.error);
+                                        }
+
+                                        // Trigger Push Notification to Technician
                                         if (assignedTech?.user_id) {
                                             supabase.functions.invoke('send-push-notification', {
                                                 body: {

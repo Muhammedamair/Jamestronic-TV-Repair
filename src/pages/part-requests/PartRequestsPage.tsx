@@ -18,6 +18,7 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { supabase } from '../../supabaseClient';
 import { PartRequest, PartBid, Dealer, PartRequestStatus, Transporter } from '../../types/database';
 import { formatDateTime, formatCurrency, formatRelative } from '../../utils/formatters';
+import { sendInteraktMessage } from '../../utils/interakt';
 
 // Dark Store (JamesTronic) fixed address
 const DARK_STORE_ADDRESS = 'Jamestronic TV Repair & Installation, Main Road, Laxman Nagar, Friends Colony, Gulshan Colony, Qutub Shahi Tombs, Manikonda, Hyderabad, Telangana 500008';
@@ -72,7 +73,7 @@ const PartRequestsPage: React.FC = () => {
     const fetchRequests = async () => {
         const { data } = await supabase
             .from('part_requests')
-            .select('*, bids:part_bids(*, dealer:dealers(*)), transport_jobs(*)')
+            .select('*, ticket:tickets(ticket_number, customer:customers(name, mobile)), bids:part_bids(*, dealer:dealers(*)), transport_jobs(*)')
             .order('created_at', { ascending: false });
         
         if (data) setRequests(data as PartRequest[]);
@@ -249,6 +250,20 @@ const PartRequestsPage: React.FC = () => {
                 approved_price: bid.price
             })
             .eq('id', request.id);
+
+        // Trigger Part Order Update WhatsApp to Customer
+        if ((request as any).ticket?.customer?.mobile) {
+            sendInteraktMessage({
+                phoneNumber: (request as any).ticket.customer.mobile,
+                templateName: 'part_ordered_alert',
+                bodyValues: [
+                    (request as any).ticket.customer.name || 'Customer',
+                    (request as any).ticket.ticket_number || '',
+                    request.part_name || 'the required part',
+                    'Ordered & Expected Soon'
+                ]
+            }).catch(console.error);
+        }
             
         fetchRequests();
     };

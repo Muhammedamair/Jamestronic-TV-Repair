@@ -26,6 +26,7 @@ const navItems = [
     { label: 'Tickets', icon: <TicketIcon />, path: '/admin/tickets' },
     { label: 'Banners', icon: <ViewCarouselIcon />, path: '/admin/banners' },
     { label: 'Service Updates', icon: <ArticleIcon />, path: '/admin/service-updates' },
+    { label: 'Brand Metrics', icon: <StoreIcon />, path: '/admin/brand-metrics' },
     { label: 'Customers', icon: <PeopleIcon />, path: '/admin/customers' },
     { label: 'Tech Network', icon: <TechIcon />, path: '/admin/technicians' },
     { label: 'Transporters', icon: <TransportIcon />, path: '/admin/transporters' },

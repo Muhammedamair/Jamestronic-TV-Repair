@@ -635,7 +635,7 @@ const AnimatedHeroBanner: React.FC<AnimatedHeroBannerProps> = ({
                 backgroundSize: '200% 200%',
                 animation: shouldReduce ? 'none' : 'gradientShift 8s ease-in-out infinite',
                 transition: 'background 0.8s ease-in-out',
-                pt: { xs: 'calc(env(safe-area-inset-top) + 24px)', sm: 'calc(env(safe-area-inset-top) + 32px)' },
+                pt: { xs: 'calc(env(safe-area-inset-top) + 12px)', sm: 'calc(env(safe-area-inset-top) + 24px)' },
                 pb: { xs: 5, sm: 6 },
                 px: { xs: 2.5, sm: 4 },
                 borderBottomLeftRadius: 32, borderBottomRightRadius: 32,

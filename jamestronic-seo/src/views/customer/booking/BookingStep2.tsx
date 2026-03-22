@@ -2,7 +2,7 @@
 import React from 'react';
 import { Box, Typography, TextField, Dialog, DialogContent } from '@mui/material';
 import { CheckCircleOutline as CheckCircleOutlineIcon } from '@mui/icons-material';
-import { motion, useReducedMotion, Variants } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 // Brand config — all popular TV brands in India (especially Hyderabad market)
 const TV_BRANDS = [
@@ -69,8 +69,6 @@ interface BookingStep2Props {
 }
 
 const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBrandPicker, setShowBrandPicker, showSizePicker, setShowSizePicker }) => {
-    const shouldReduce = useReducedMotion();
-
     // Shake animation variant for issue cards
     const shakeVariants = {
         shake: { x: [0, -4, 4, -4, 4, 0], transition: { duration: 0.4 } },
@@ -111,14 +109,14 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                     <Typography sx={{ color: '#9CA3AF', fontSize: '0.78rem', mb: 3, px: 0.5 }}>
                         Popular brands in Hyderabad
                     </Typography>
-                    <motion.div variants={shouldReduce ? {} : containerVariants} initial="hidden" animate="show">
+                    <motion.div variants={containerVariants} initial="hidden" animate="show">
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
                             {TV_BRANDS.map(brand => {
                                 const isSelected = form.tvBrand === brand.name;
                                 return (
-                                    <motion.div key={brand.name} variants={shouldReduce ? {} : itemVariants}>
+                                    <motion.div key={brand.name} variants={itemVariants}>
                                         <motion.div
-                                            whileTap={shouldReduce ? {} : { scale: 0.9 }}
+                                            whileTap={{ scale: 0.9 }}
                                             onClick={() => { updateField('tvBrand', brand.name); setShowBrandPicker(false); }}
                                             style={{
                                                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -182,14 +180,14 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                     <Typography sx={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827', mb: 3, px: 0.5 }}>
                         Select TV Size
                     </Typography>
-                    <motion.div variants={shouldReduce ? {} : containerVariants} initial="hidden" animate="show">
+                    <motion.div variants={containerVariants} initial="hidden" animate="show">
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
                             {TV_SIZES.map(size => {
                                 const isSelected = form.tvSize === size;
                                 return (
-                                    <motion.div key={size} variants={shouldReduce ? {} : itemVariants}>
+                                    <motion.div key={size} variants={itemVariants}>
                                         <motion.div
-                                            whileTap={shouldReduce ? {} : { scale: 0.9 }}
+                                            whileTap={{ scale: 0.9 }}
                                             onClick={() => { updateField('tvSize', size); setShowSizePicker(false); }}
                                             style={{
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -243,7 +241,7 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                                     mb: 0.5
                                 }}>
                                     {/* Animated SVG Ring */}
-                                    {isActive && !shouldReduce && (
+                                    {isActive && (
                                         <svg width="90" height="90" viewBox="0 0 90 90" style={{ position: 'absolute', top: 0, left: 0 }}>
                                             <motion.circle
                                                 cx="45" cy="45" r="43.5"
@@ -349,9 +347,9 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                             return (
                                 <motion.div
                                     key={issue.label}
-                                    variants={shouldReduce ? {} : shakeVariants}
+                                    variants={shakeVariants}
                                     animate={isSelected ? "shake" : ""}
-                                    whileTap={shouldReduce ? {} : "tap"}
+                                    whileTap="tap"
                                     onClick={() => updateField('issueDescription', issue.label)}
                                     style={{
                                         flex: '0 0 auto', width: 135,
@@ -417,9 +415,9 @@ const BookingStep2: React.FC<BookingStep2Props> = ({ form, updateField, showBran
                             return (
                                 <motion.div
                                     key={opt.val}
-                                    variants={shouldReduce ? {} : shakeVariants}
+                                    variants={shakeVariants}
                                     animate={isSelected ? "shake" : ""}
-                                    whileTap={shouldReduce ? {} : "tap"}
+                                    whileTap="tap"
                                     onClick={() => updateField('bracketStatus', opt.val)}
                                     style={{
                                         flex: '0 0 auto', width: 140,

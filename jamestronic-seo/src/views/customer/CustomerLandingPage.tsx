@@ -34,12 +34,14 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 
 import PWAInstallPrompt from '../../components/PWAInstallPrompt';
 import AnimatedHeroBanner from '../../components/customer/AnimatedHeroBanner';
+import PWAUpdatePrompt from '../../components/customer/PWAUpdatePrompt';
 import { supabase } from '../../supabaseClient';
 import { PromotionalBanner, ServiceUpdate } from '../../types/database';
 
 interface CustomerLandingPageProps {
   initialServiceUpdates?: ServiceUpdate[];
   initialHeroBanners?: PromotionalBanner[];
+  initialBrandMetrics?: any;
 }
 
 // Static local assets
@@ -138,18 +140,67 @@ const TypewriterSearch: React.FC = () => {
             >
                 &rsquo;
             </Typography>
+
+        </Box>
+    );
+};
+
+// ─── Animated Warranty Carousel ───
+const WARRANTY_ITEMS = [
+    "1 Year Warranty on Backlight",
+    "1 Year Warranty on Motherboard",
+    "6 Months Warranty on Power Supply"
+];
+
+const AnimatedWarrantyCarousel: React.FC<{ fontSize?: string, color?: string, fontWeight?: number }> = ({ fontSize = '1rem', color = '#111827', fontWeight = 800 }) => {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % WARRANTY_ITEMS.length);
+        }, 3000); // 3 seconds per item
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <Box sx={{ position: 'relative', height: '1.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={index}
+                    initial={{ y: 15, opacity: 0, scale: 0.95 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: -15, opacity: 0, scale: 1.05 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    style={{ position: 'absolute', width: '100%', textAlign: 'inherit' }}
+                >
+                    <Typography sx={{ fontWeight, fontSize, color, whiteSpace: 'nowrap' }}>
+                        {WARRANTY_ITEMS[index]}
+                    </Typography>
+                </motion.div>
+            </AnimatePresence>
         </Box>
     );
 };
 
 // ─── Animated Trust Strip ───
-const AnimatedTrustStrip: React.FC = () => {
+const AnimatedTrustStrip: React.FC<{ metrics: any }> = ({ metrics }) => {
     return (
-        <Box sx={{ 
-            background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
-            position: 'relative', overflow: 'hidden',
-            p: 2, display: 'flex', alignItems: 'center', gap: 1.5 
-        }}>
+        <Box 
+            component={motion.a}
+            href="https://www.google.com/search?q=JamesTronic+TV+Repair+Hyderabad"
+            target="_blank"
+            rel="noopener noreferrer"
+            whileTap={{ scale: 0.96 }}
+            sx={{ 
+                background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%)',
+                position: 'relative', overflow: 'hidden',
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'block',
+                cursor: 'pointer',
+                borderBottom: '1px solid rgba(0,0,0,0.05)',
+            }}
+        >
             {/* Shimmer Effect */}
             <motion.div
                 animate={{ x: ['-200%', '300%'] }}
@@ -161,67 +212,78 @@ const AnimatedTrustStrip: React.FC = () => {
                 }}
             />
 
-            {/* Google Rating */}
-            <Box sx={{ textAlign: 'center', minWidth: 65, position: 'relative', zIndex: 2 }}>
-                <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1 }}>
-                    4.9
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.4 }}>
-                    {[1,2,3,4,5].map((s, i) => (
+            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative', zIndex: 2 }}>
+                {/* Google Rating */}
+                <Box sx={{ textAlign: 'center', minWidth: 65, position: 'relative', zIndex: 2 }}>
+                    <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#D97706', lineHeight: 1 }}>
+                        {metrics?.rating_score || '4.9'}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.2, my: 0.4 }}>
+                        {[1,2,3,4,5].map((s, i) => (
+                            <motion.div
+                                key={s}
+                                animate={{ scale: [1, 1.25, 1], rotate: [0, 8, -8, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 + i * 0.1, delay: i * 0.1 }}
+                            >
+                                <StarIcon sx={{ fontSize: 13, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />
+                            </motion.div>
+                        ))}
+                    </Box>
+                    {/* Google and Animated Badge */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
+                        <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 800 }}>Google</Typography>
                         <motion.div
-                            key={s}
-                            animate={{ scale: [1, 1.25, 1], rotate: [0, 8, -8, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 + i * 0.1, delay: i * 0.1 }}
+                            animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                            style={{ display: 'flex' }}
                         >
-                            <StarIcon sx={{ fontSize: 13, color: s <= 4 ? '#F59E0B' : '#FCD34D' }} />
+                            <Box sx={{ 
+                                background: '#10B981', color: '#FFF', 
+                                fontSize: '0.45rem', fontWeight: 800, 
+                                px: 0.5, py: 0.2, borderRadius: 1, 
+                                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.3)',
+                                whiteSpace: 'nowrap',
+                                display: 'flex', alignItems: 'center', gap: 0.2
+                            }}>
+                                <VerifiedIcon sx={{ fontSize: '0.5rem' }} /> VERIFIED
+                            </Box>
                         </motion.div>
-                    ))}
+                    </Box>
                 </Box>
-                {/* Google and Animated Badge */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
-                    <Typography sx={{ fontSize: '0.6rem', color: '#92400E', fontWeight: 800 }}>Google</Typography>
-                    <motion.div
-                        animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        style={{ display: 'flex' }}
-                    >
-                        <Box sx={{ 
-                            background: '#EF4444', color: '#FFF', 
-                            fontSize: '0.45rem', fontWeight: 800, 
-                            px: 0.5, py: 0.2, borderRadius: 1, 
-                            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
-                            whiteSpace: 'nowrap'
-                        }}>
-                            TOP RATED
+                
+                <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A', zIndex: 2 }} />
+                
+                {/* Stats */}
+                <Box sx={{ display: 'flex', flex: 1, justifyContent: 'space-around', alignItems: 'center', zIndex: 2 }}>
+                    {[
+                        { val: metrics?.reviews_count || '268', label: 'Reviews' },
+                        { val: metrics?.interactions_count || '2.5K+', label: 'Interactions' },
+                    ].map((stat) => (
+                        <Box key={stat.label} sx={{ textAlign: 'center' }}>
+                            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>
+                                {stat.val}
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 700 }}>
+                                {stat.label}
+                            </Typography>
                         </Box>
+                    ))}
+
+                    {/* Warranty Carousel Block */}
+                    <Box sx={{ textAlign: 'center' }}>
+                         <AnimatedWarrantyCarousel fontSize="1rem" color="#111827" fontWeight={800} />
+                         <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 700, mt: 0.2 }}>
+                                Comprehensive Protection
+                         </Typography>
+                    </Box>
+                    {/* Little arrow indicating interaction */}
+                    <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                        <ArrowForwardIcon sx={{ color: '#D97706', fontSize: 16, opacity: 0.7 }} />
                     </motion.div>
                 </Box>
-            </Box>
-            
-            <Divider orientation="vertical" flexItem sx={{ borderColor: '#FDE68A', zIndex: 2 }} />
-            
-            {/* Stats */}
-            <Box sx={{ display: 'flex', flex: 1, justifyContent: 'space-around', zIndex: 2 }}>
-                {[
-                    { val: '268', label: 'Reviews' },
-                    { val: '2.5K+', label: 'Interactions' },
-                    { val: '180', label: 'Days Warranty' }
-                ].map((stat) => (
-                    <motion.div 
-                        key={stat.label}
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                        style={{ textAlign: 'center', cursor: 'default' }}
-                    >
-                        <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>
-                            {stat.val}
-                        </Typography>
-                        <Typography sx={{ fontSize: '0.55rem', color: '#6B7280', fontWeight: 700 }}>
-                            {stat.label}
-                        </Typography>
-                    </motion.div>
-                ))}
             </Box>
         </Box>
     );
@@ -626,7 +688,7 @@ const LABEL_ICONS: Record<string, React.ReactNode> = {
     'Other': <PlaceIcon sx={{ fontSize: 22, color: '#10B981' }} />,
 };
 
-const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServiceUpdates = [], initialHeroBanners = [] }) => {
+const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServiceUpdates = [], initialHeroBanners = [], initialBrandMetrics = null }) => {
     const { push: navigate } = useRouter();
     const shouldReduce = useReducedMotion();
     const [locationArea, setLocationArea] = useState<string>('');
@@ -639,14 +701,51 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
     const [selectedUpdate, setSelectedUpdate] = useState<ServiceUpdate | null>(null);
 
     // Track if this is the first visit this session to avoid playing heavy staggers on 'back' nav
-    const [isFirstVisit] = useState(() => {
-        const visited = (typeof window !== 'undefined' ? sessionStorage : { getItem:()=>null, setItem:()=>{}, removeItem:()=>{}, clear:()=>{} }).getItem('jt_landing_visited');
-        if (!visited) {
-            (typeof window !== 'undefined' ? sessionStorage : { getItem:()=>null, setItem:()=>{}, removeItem:()=>{}, clear:()=>{} }).setItem('jt_landing_visited', 'true');
-            return true;
+    const [isFirstVisit, setIsFirstVisit] = useState(true);
+
+    const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+
+    // PWA Version Polling Mechanism
+    useEffect(() => {
+        const checkVersion = async () => {
+            try {
+                const res = await fetch(`/version.json?t=${Date.now()}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                const currentVersion = localStorage.getItem('jt_app_version');
+                if (currentVersion && currentVersion !== data.version) {
+                    setShowUpdatePrompt(true);
+                } else if (!currentVersion && data.version) {
+                    localStorage.setItem('jt_app_version', data.version);
+                }
+            } catch (e) {
+                // Silently ignore network errors
+            }
+        };
+
+        checkVersion();
+        
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') checkVersion();
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        const interval = setInterval(checkVersion, 30 * 60 * 1000); // 30 mins
+        
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(interval);
+        };
+    }, []);
+
+    useEffect(() => {
+        const visited = sessionStorage.getItem('jt_landing_visited');
+        if (visited) {
+            setIsFirstVisit(false);
+        } else {
+            sessionStorage.setItem('jt_landing_visited', 'true');
         }
-        return false;
-    });
+    }, []);
 
     // Saved addresses
     const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -1195,7 +1294,7 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
                         <Divider sx={{ borderColor: 'rgba(0,0,0,0.06)' }} />
 
                         {/* Trust Stats — Bottom Section (Animated) */}
-                        <AnimatedTrustStrip />
+                        <AnimatedTrustStrip metrics={initialBrandMetrics} />
                     </Card>
                     </Box>
                 </motion.div>
@@ -1517,8 +1616,10 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
                                     <VerifiedIcon fontSize="medium" />
                                 </Box>
                             </motion.div>
-                            <Box>
-                                <Typography sx={{ fontWeight: 800, color: '#065F46', fontSize: '1.1rem', mb: 0.5 }}>Up to 180 days warranty</Typography>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Box sx={{ mb: 0.5, display: 'flex', justifyContent: 'flex-start' }}>
+                                     <AnimatedWarrantyCarousel fontSize="1.1rem" color="#065F46" fontWeight={800} />
+                                </Box>
                                 <Typography sx={{ color: '#047857', fontSize: '0.85rem', fontWeight: 500 }}>Comprehensive protection on all TV parts & screen repairs.</Typography>
                             </Box>
                         </Box>
@@ -1780,6 +1881,19 @@ const CustomerLandingPage: React.FC<CustomerLandingPageProps> = ({ initialServic
                     </Box>
                 )}
             </AnimatePresence>
+
+            <PWAUpdatePrompt 
+                open={showUpdatePrompt} 
+                onUpdate={() => {
+                    fetch(`/version.json?t=${Date.now()}`)
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.version) localStorage.setItem('jt_app_version', d.version);
+                            window.location.reload();
+                        })
+                        .catch(() => window.location.reload());
+                }} 
+            />
         </Box>
     );
 };

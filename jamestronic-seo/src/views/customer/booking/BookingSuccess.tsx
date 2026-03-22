@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Lottie from 'lottie-react';
 
 interface BookingSuccessProps {
@@ -72,13 +72,8 @@ const SofaRelaxAnimation: React.FC = () => (
 /* ═══ Typing Text Effect ═══ */
 const TypingText: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0.8 }) => {
     const [displayedText, setDisplayedText] = useState('');
-    const shouldReduce = useReducedMotion();
 
     useEffect(() => {
-        if (shouldReduce) {
-            setDisplayedText(text);
-            return;
-        }
         let i = 0;
         const timeout = setTimeout(() => {
             const interval = setInterval(() => {
@@ -89,7 +84,7 @@ const TypingText: React.FC<{ text: string; delay?: number }> = ({ text, delay = 
             return () => clearInterval(interval);
         }, delay * 1000);
         return () => clearTimeout(timeout);
-    }, [text, delay, shouldReduce]);
+    }, [text, delay]);
 
     return (
         <Typography sx={{ color: '#111827', fontWeight: 800, fontSize: '1.6rem', mb: 1, letterSpacing: '-0.3px', minHeight: '2.2rem' }}>
@@ -105,18 +100,15 @@ const TypingText: React.FC<{ text: string; delay?: number }> = ({ text, delay = 
 /* ═══ Main Component ═══ */
 const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
     const { push: navigate } = useRouter();
-    const shouldReduce = useReducedMotion();
     const [confettiData, setConfettiData] = useState<any>(null);
 
     // Load confetti JSON from public directory at runtime
     useEffect(() => {
-        if (!shouldReduce) {
-            fetch('/lottie/confetti.json')
-                .then(res => res.json())
-                .then(data => setConfettiData(data))
-                .catch(() => {}); // Graceful — confetti is cosmetic
-        }
-    }, [shouldReduce]);
+        fetch('/lottie/confetti.json')
+            .then(res => res.json())
+            .then(data => setConfettiData(data))
+            .catch(() => {}); // Graceful — confetti is cosmetic
+    }, []);
 
     return (
         <Box sx={{ 
@@ -126,7 +118,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
             colorScheme: 'light' // Force light color scheme for device accessibility
         }}>
             {/* ═══ Lottie Confetti — plays once then stops ═══ */}
-            {!shouldReduce && confettiData && (
+            {confettiData && (
                 <Box sx={{
                     position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)',
                     width: '100%', maxWidth: 500, pointerEvents: 'none', zIndex: 10000
@@ -141,7 +133,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
             )}
 
             <motion.div
-                initial={shouldReduce ? {} : { y: 60, opacity: 0 }}
+                initial={{ y: 60, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.15 }}
                 style={{ width: '100%', maxWidth: 440, willChange: 'transform, opacity' }}
@@ -158,7 +150,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                         <TypingText text="Booking Confirmed! 🎉" delay={1.6} />
 
                         <motion.div
-                            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 2.4, duration: 0.4 }}
                         >
@@ -169,7 +161,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
 
                         {/* Ticket number card — spring slide up */}
                         <motion.div
-                            initial={shouldReduce ? {} : { y: 30, opacity: 0, scale: 0.95 }}
+                            initial={{ y: 30, opacity: 0, scale: 0.95 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
                             transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 2.4 }}
                         >
@@ -185,7 +177,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
 
                         {/* Track button — single pulse after sequence */}
                         <motion.div
-                            initial={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: [0.9, 1.04, 1] }}
                             transition={{ delay: 2.8, duration: 0.5, ease: 'easeOut' }}
                         >
@@ -200,7 +192,7 @@ const BookingSuccess: React.FC<BookingSuccessProps> = ({ ticketNumber }) => {
                             </Button>
                         </motion.div>
                         <motion.div
-                            initial={shouldReduce ? {} : { opacity: 0 }}
+                            initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 3.1, duration: 0.3 }}
                         >
